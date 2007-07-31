@@ -1,7 +1,7 @@
 include /ioc/tools/driver.makefile
 #EXCLUDE_VERSIONS = 3.13.2
 EXCLUDE_VERSIONS = 3.13
-PRIJECT=stream
+PROJECT=stream
 
 DOCUDIR = doc
 SOURCES += $(wildcard src/*.c)
