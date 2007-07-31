@@ -1,0 +1,410 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Format Converters</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Format Converters</h1>
+
+<a name="syntax"></a>
+<h2>1. Format Syntax</h2>
+<p>
+<em>StreamDevice</em> format converters work very similar to the format
+converters of the C functions <em>printf()</em> and <em>scanf()</em>.
+But <em>StreamDevice</em> provides more different converters and you can
+also write your own converters.
+Formats are specified in <a href="protocol.html#str">quoted strings</a>
+as arguments of <code>out</code> or <code>in</code>
+<a href="protocol.html#cmd">commands</a>.
+</p>
+<p>
+A format converter consists of
+</p>
+<ul>
+ <li>The <code>%</code> character</li>
+ <li>Optionally a field name in <code>()</code></li>
+ <li>Optionally flags out of the characters <code>*# +0-</code></li>
+ <li>Optionally an integer <em>width</em> field</li>
+ <li>Optionally a period character (<code>.</code>) followed
+     by an integer <em>precision</em> field (input ony for most formats)</li>
+ <li>A conversion character</li>
+ <li>Additional information required by some converters</li>
+</ul>
+
+<p>
+The <code>*</code> flag skips data in input formats.
+Input is consumed and parsed, a mismatch is an error, but the read
+data is dropped.
+This is useful if input contains more than one value.
+Example: <code>in "%*f%f";</code> reads the second floating point
+number.
+</p>
+<p>
+The <code>#</code> flag may alter the format, depending on the
+converter (see below).
+</p>
+<p>
+The '<code> </code>' (space) and <code>+</code> flags print a space
+or a <code>+</code> sign before positive numbers, where negative
+numbers would have a <code>-</code>.
+</p>
+<p>
+The <code>0</code> flag says that numbers should be left padded with
+<code>0</code> if <em>width</em> is larger than required.
+</p>
+<p>
+The <code>-</code> flag specifies that output is left justified if
+<em>width</em> is larger than required.
+</p>
+
+<h3>Examples:</h3>
+<table>
+ <tr>
+  <td><code>in "%f";</code></td>
+  <td>float</td>
+ </tr>
+ <tr>
+  <td><code>out "%(HOPR)7.4f";</code></td>
+  <td>the HOPR field as 7 char float with precision 4</td>
+ </tr>
+ <tr>
+  <td><code>out "%#010x";</code></td>
+  <td>0-padded 10 char alternate hex (with leading 0x)</td>
+ </tr>
+ <tr>
+  <td><code>in "%[_a-zA-Z0-9]";</code></td>
+  <td>string of chars out of a charset</td>
+ </tr>
+ <tr>
+  <td><code>in "%*i";</code></td>
+  <td>skipped integer number</td>
+ </tr>
+</table>
+
+<a name="types"></a>
+<h2>2. Data Types and Record Fields</h2>
+<h3>Default fields</h3>
+<p>
+Every conversion character corresponds to one of the data types DOUBLE,
+LONG, ENUM, or STRING.
+In opposite to to <em>printf()</em> and <em>scanf()</em>, it is not
+required to specify a variable for the conversion.
+The variable is typically the <code>VAL</code> or <code>RVAL</code> field
+of the record, selected automatically depending on the data type.
+Not all data types make sense for all record types.
+Refer to the description of <a href="recordtypes.html">supported record
+types</a> for details.
+</p>
+<p>
+<em>StreamDevice</em> makes no difference between <code>float</code>
+and <code>double</code> nor between <code>short</code>, <code>int</code>
+and <code>long</code> values.
+Thus, data type modifiers like <code>l</code> or <code>h</code> do not
+exist in <em>StreamDevice</em> formats.
+</p>
+
+<h3>Accessing record fields directly</h3>
+<p>
+To use other fields of the record or even fields of other records on the
+same IOC for the conversion, write the field name in parentheses directly
+after the <code>%</code>.
+For example <code>out&nbsp;"%(EGU)s";</code> outputs the <code>EGU</code>
+field formatted as a string.
+Use <code>in&nbsp;"%(<i>otherrecord</i>.VAL)f";</code> to write the floating
+point input value into the <code>VAL</code> field of
+<code><i>otherrecord</i></code>.
+(You can't skip <code>.VAL</code> here.)
+This is very useful when one line of input contains many values that should
+be distributed to many records.
+If <code><i>otherrecord</i></code> is passive and the field has the PP
+attribute (see
+<a href="http://www.aps.anl.gov/asd/controls/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-1.html"
+target="ex">Record Reference Manual</a>), the record will be processed.
+It is your responsibility that the data type of the record field is
+compatible to the the data type of the converter.
+Note that using this syntax is by far not as efficient as using the
+default field.
+</p>
+
+<h3>Pseudo-converters</h3>
+<p>
+Some formats are not actually converters.
+They format data which is not stored in a record field, such as a
+<a href="#chksum">checksum</a>.
+No data type corresponds to those <em>pseudo-converters</em> and the
+<code>%(<em>FIELD</em>)</code> syntax cannot be used.
+</p>
+
+<a name="stdd"></a>
+<h2>3. Standard DOUBLE Converters (<code>%f</code>, <code>%e</code>,
+<code>%E</code>, <code>%g</code>, <code>%G</code>)</h2>
+<p>
+In output, <code>%f</code> prints fixed point, <code>%e</code> prints
+exponential notation and <code>%g</code> prints either fixed point or
+exponential depending on the magnitude of the value.
+<code>%E</code> and <code>%G</code> use <code>E</code> instead of
+<code>e</code> to separate the exponent.
+With the <code>#</code> flag, output always contains a period character.
+</p>
+<p>
+In input, all these formats are equivalent.
+Leading whitespaces are skipped.
+</p>
+
+<a name="stdl"></a>
+<h2>4. Standard LONG Converters (<code>%d</code>, <code>%i</code>,
+<code>%u</code>, <code>%o</code>, <code>%x</code>, <code>%X</code>)</h2>
+<p>
+In output, <code>%d</code> and <code>%i</code> print signed decimal,
+<code>%u</code> unsigned decimal, <code>%o</code> unsigned octal, and
+<code>%x</code> or <code>%X</code> unsigned hexadecimal.
+<code>%X</code> uses upper case letters.
+With the <code>#</code> flag, octal values are prefixed with <code>0</code>
+and hexadecimal values with <code>0x</code> or <code>0X</code>.
+</p>
+<p>
+In input, <code>%d</code> matches signed decimal, <code>%u</code> matches
+unsigned decimal, <code>%o</code> unsigned octal.
+<code>%x</code> and <code>%X</code> both match upper or lower case unsigned
+hexadecimal.
+Octal and hexadecimal values can optionally be prefixed.
+<code>%i</code> matches any integer in decimal, or prefixed octal or
+hexadecimal notation.
+Leading whitespaces are skipped.
+</p>
+
+<a name="stds"></a>
+<h2>5. Standard STRING Converters (<code>%s</code>, <code>%c</code>)</h2>
+<p>
+In output, <code>%s</code> prints a string.
+If <em>precision</em> is specified, this is the maximum string length.
+<code>%c</code> is a LONG format in output, printing one character!
+</p>
+<p>
+In input, <code>%s</code> matches a sequence of non-whitespace characters
+and <code>%c</code> a sequence of not-null characters.
+The maximum string length is given by <em>width</em>.
+The default <em>width</em> is infinite for <code>%s</code> and
+1 for <code>%c</code>.
+Leading whitespaces are skipped with <code>%s</code> but not with
+<code>%c</code>.
+The empty string matches. 
+</p>
+
+<a name="cset"></a>
+<h2>6. Standard Charset STRING Converter (<code>%[<em>charset</em>]</code>)</h2>
+<p>
+This is an input-only format.
+It matches a sequence of characters from <em>charset</em>.
+If <em>charset</em> starts with <code>^</code>, the format matches
+all characters <u>not</u> in <em>charset</em>.
+Leading whitespaces are not skipped.
+</p>
+<p>
+Example: <code>%[_a-z]</code> matches a string consisting
+entirely of <code>_</code> (underscore) or letters from <code>a</code>
+to <code>z</code>.
+</p>
+
+<a name="enum"></a>
+<h2>7. ENUM Converter (<code>%{<em>string0</em>|<em>string1</em>|...}</code>)</h2>
+<p>
+This format maps an unsigned integer value on a set of strings.
+The value 0 corresponds to <em>string0</em> and so on.
+The strings are separated by <code>|</code>.
+If one of the strings contains <code>|</code> or <code>}</code>,
+a <code>\</code> must be used to escape the character.
+</p>
+<p>
+Example: <code>%{OFF|STANDBY|ON}</code> mapps the string <code>OFF</code>
+to the value 0, <code>STANDBY</code> to 1 and <code>ON</code> to 2.
+</p>
+<p>
+In output, depending on the value, one of the strings is printed.
+</p>
+<p>
+In input, if any of the strings matches the value is set accordingly.
+</p>
+
+<a name="bin"></a>
+<h2>8. Binary LONG Converter (<code>%b</code>, <code>%B<em>zo</em></code>)</h2>
+<p>
+This format prints or scans an unsigned integer represented as a binary
+string (one character per bit).
+The <code>%b</code> format uses the characters <code>0</code> and
+<code>1</code>.
+With the <code>%B</code> format, you can choose two other characters
+to represent zero and one.
+</p>
+<p>
+Examples: <code>%B.!</code> or <code>%B\x00\xff</code>.
+<code>%B01</code> is equivalent to <code>%b</code>.
+</p>
+<p>
+If in output <em>width</em> is larger than the number of significant bits,
+then the flag <code>0</code> means that the value should be padded with
+with the chosen zero character instead of spaces.
+If <em>precision</em> is set, it means the number of significant bits.
+Otherwise, the highest 1 bit defines the number of significant bits. 
+There is no alternate format when <code>#</code> is used.
+</p>
+<p>
+In input, leading spaces are skipped.
+A maximum of <em>width</em> characters is read.
+Conversion stops with the first character that is not the zero or the
+one character.
+</p>
+
+<a name="raw"></a>
+<h2>9. Raw LONG Converter (<code>%r</code>)</h2>
+<p>
+The raw converter does not really "convert".
+A signed integer value is written or read in the internal
+(usually two's complement) representation of the computer.
+The normal byte order is <em>big endian</em>, i.e. most significant byte
+first.
+With the <code>#</code> flag, the byte order is changed to <em>little
+endian</em>, i.e. least significant byte first.
+</p>
+<p>
+In output, the <em>width</em> least significant bytes of the value
+are written.
+If <em>width</em> is larger than the size of a <code>long</code>,
+the value is sign extended.
+</p>
+<p>
+In input, <em>width</em> bytes are read and put into the value.
+If <em>width</em> is longer than the size of a <code>long</code>, only
+the least significant bytes are used.
+</p>
+
+<a name="bcd"></a>
+<h2>10. Packed BCD (Binary Coded Decimal) LONG Converter (<code>%D</code>)</h2>
+<p>
+Packed BCD is a format where each byte contains two binary coded
+decimal digits (<code>0</code> ... <code>9</code>).
+Thus a BCD byte is in the range from <code>0x00</code> to <code>0x99</code>.
+The normal byte order is <em>big endian</em>, i.e. most significant byte
+first.
+With the <code>#</code> flag, the byte order is changed to <em>little
+endian</em>, i.e. least significant byte first.
+The <code>+</code> flag defines that the value is signed, using the
+upper half of the most significant byte for the sign.
+Otherwise the value is unsigned.
+</p>
+<p>
+In output, <em>precision</em> decimal digits are printed in at least
+<em>width</em> output bytes.
+Signed negative values have <code>0xF</code> in their most significant half
+byte followed by the absolute value.
+</p>
+<p>
+In input, <em>width</em> bytes are read.
+If the value is signed, a one in the most significant bit is interpreted as
+a negative sign.
+Input stops with the first byte (after the sign) that does not represent a
+BCD value, i.e. where either the upper or the lower half byte is larger
+than 9.
+</p>
+
+<a name="chksum"></a>
+<h2>11. Checksum Pseudo-Converter (<code>%&lt;<em>checksum</em>&gt;</code>)</h2>
+<p>
+This is not a normal "converter", because no user data is converted.
+Instead, a checksum is calculated from the input or output.
+The <em>width</em> field is the byte number from which to start
+calculating the checksum.
+Default is 0, i.e. the first byte of the input or output of the current
+command.
+The last byte is <em>prec</em> bytes before the checksum (default 0).
+For example in <code>"abcdefg%&lt;xor&gt;"</code> the checksum is calculated
+from <code>abcdefg</code>,
+but in <code>"abcdefg%2.1&lt;xor&gt;"</code> only from <code>cdef</code>.
+</p>
+<p>
+Normally, multi-byte checksums are in <em>big endian</em> byteorder,
+i.e. most significant byte first.
+With the <code>#</code> flag, the byte order is changed to <em>little
+endian</em>, i.e. least significant byte first.
+</p>
+<p>
+The <code>0</code> flag changes the checksum representation from
+binary to hexadecimal ASCII (2 bytes per checksum byte).
+<!--
+In output, the case of the ASCII checksum matches the case of first
+letter of the function name.
+E.g. <code>out&nbsp;"123456789%&lt;sum&gt;"</code> writes <code>dd</code>
+but <code>out&nbsp;"123456789%&lt;Sum&gt;"</code> writes <code>DD</code>.
+In input, case is ignored.
+-->
+</p>
+<p>
+In output, the checksum is appended.
+</p>
+<p>
+In input, the next byte or bytes must match the checksum.
+</p>
+
+<h3>Implemented checksum functions</h3>
+<dl>
+ <dt><code>%&lt;SUM&gt;</code> or <code>%&lt;SUM8&gt;</code></dt>
+  <dd>One byte. The sum of all characters modulo 2<sup>8</sup>.</dd>
+ <dt><code>%&lt;SUM16&gt;</code></dt>
+  <dd>Two bytes. The sum of all characters modulo 2<sup>16</sup>.</dd>
+ <dt><code>%&lt;SUM32&gt;</code></dt>
+  <dd>Four bytes. The sum of all characters modulo 2<sup>32</sup>.</dd>
+ <dt><code>%&lt;NEGSUM&gt;</code> or <code>%&lt;NSUM&gt;</code> or <code>%&lt;-SUM&gt;</code></dt>
+  <dd>One byte. The negative of the sum of all characters modulo 2<sup>8</sup>.</dd>
+ <dt><code>%&lt;NOTSUM&gt;</code> or <code>%&lt;~SUM&gt;</code></dt>
+  <dd>One byte. The bitwise inverse of the sum of all characters modulo 2<sup>8</sup>.</dd>
+ <dt><code>%&lt;XOR&gt;</code></dt>
+  <dd>One byte. All characters xor'ed.</dd>
+ <dt><code>%&lt;CRC8&gt;</code></dt>
+  <dd>One byte. An often used 8 bit CRC checksum
+  (poly=0x07, init=0x00, xorout=0x00).</dd>
+ <dt><code>%&lt;CCITT8&gt;</code></dt>
+  <dd>One byte. The CCITT standard 8 bit CRC checksum
+  (poly=0x31, init=0x00, xorout=0x00).</dd>
+ <dt><code>%&lt;CRC16&gt;</code></dt>
+  <dd>Two bytes. An often used 16 bit CRC checksum
+  (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
+ <dt><code>%&lt;CRC16R&gt;</code></dt>
+  <dd>Two bytes. An often used reflected 16 bit CRC checksum
+  (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
+ <dt><code>%&lt;CCITT16&gt;</code></dt>
+  <dd>Two bytes. The usual (but <a target="ex"
+   href="http://www.joegeluso.com/software/articles/ccitt.htm">wrong?</a>)
+   implementation of the CCITT standard 16 bit CRC checksum
+   (poly=0x1021, init=0xFFFF, xorout=0x0000).</dd>
+ <dt><code>%&lt;CCITT16A&gt;</code></dt>
+  <dd>Two bytes. The unusual (but <a target="ex"
+   href="http://www.joegeluso.com/software/articles/ccitt.htm">correct?</a>)
+   implementation of the CCITT standard 16 bit CRC checksum with augment.
+   (poly=0x1021, init=0x1D0F, xorout=0x0000).</dd>
+ <dt><code>%&lt;CRC32&gt;</code></dt>
+  <dd>Four bytes. The standard 32 bit CRC checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
+ <dt><code>%&lt;CRC32R&gt;</code></dt>
+  <dd>Four bytes. The standard reflected 32 bit CRC checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
+ <dt><code>%&lt;JAMCRC&gt;</code></dt>
+  <dd>Four bytes. Another reflected 32 bit CRC checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000).</dd>
+ <dt><code>%&lt;ADLER32&gt;</code></dt>
+  <dd>Four bytes. The Adler32 checksum according to <a target="ex"
+   href="http://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.</dd>
+ <dt><code>%&lt;HEXSUM8&gt;</code></dt>
+  <dd>One byte. The sum of all hex digits. (Other characters are ignored.)</dd>
+</dl>
+
+<hr>
+<p align="right"><a href="processing.html">Next: Record Processing</a></p>
+<p><small>Dirk Zimoch, 2007</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

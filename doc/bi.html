@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: bi Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: bi Records</h1>
+
+<h2>Normal Operation</h2>
+<p>
+Depending on the format type, different record fields are used
+for output and input. The variable <code><i>x</i></code> stands for the
+written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=RVAL</code><br>
+   <u>Input:</u> <code>RVAL=<i>x</i>&amp;MASK</code><br>
+   <code>MASK</code> can be set be set in the record definition. Stream
+   Device does not set it. If <code>MASK==0</code>, it is ignored
+   (i.e. <code>RVAL=<i>x</i></code>). The record sets
+   <code>VAL=(RVAL!=0)</code>, i.e. <code>1</code> if <code>RVAL!=0</code>
+   and <code>0</code> if <code>RVAL==0</code>.
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=VAL</code><br>
+   <u>Input:</u> <code>VAL=(<i>x</i>!=0)</code><br>
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   <u>Output:</u> Depending on <code>VAL</code>, <code>ZNAM</code> or
+   <code>ONAM</code> is written, i.e. <code><i>x</i>=VAL?ONAM:ZNAM</code>.<br>
+   <u>Input:</u> If input is equal to <code>ZNAM</code> or <code>ONAM</code>,
+   <code>VAL</code> is set accordingly. Other input strings are not accepted.
+  </dd>
+</dl>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. All format converters work like in normal operation.
+</p>
+
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+<a href="calcout.html">calcout</a>
+<a href="scalcout.html">scalcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

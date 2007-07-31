@@ -1,0 +1,58 @@
+################################################################
+# StreamDevice Support                                         #
+#                                                              #
+# (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          #
+# (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    #
+#                                                              #
+# This is the EPICS 3.13 Makefile of StreamDevice.             #
+# Normally it should not be necessary to modify this file.     #
+# All configuration can be done in CONFIG_STREAM               #
+#                                                              #
+# If you do any changes in this file, you are not allowed to   #
+# redistribute it any more. If there is a bug or a missing     #
+# feature, send me an email and/or your patch. If I accept     #
+# your changes, they will go to the next release.              #
+#                                                              #
+# DISCLAIMER: If this software breaks something or harms       #
+# someone, it's your problem.                                  #
+#                                                              #
+################################################################
+
+TOP = ../../..
+
+include $(TOP)/config/CONFIG_APP
+include ../CONFIG_STREAM
+
+LIBNAME = streamLib
+
+# In 3.13, calcout has no device support
+RECORDS_3_13 = $(filter-out calcout,$(RECORDS))
+
+ifdef ASYN
+BUSSES += AsynDriver
+endif
+
+SRCS.cc += $(patsubst %,../%,$(filter %.cc,$(STREAM_SRCS)))
+SRCS.cc += $(BUSSES:%=../%Interface.cc)
+SRCS.cc += $(FORMATS:%=../%Converter.cc)
+SRCS.c += $(patsubst %,../%,$(filter %.c,$(STREAM_SRCS)))
+SRCS.c += $(RECORDS_3_13:%=../dev%Stream.c)
+
+LIBOBJS = $(patsubst ../%,%.o,$(basename $(SRCS.cc) $(SRCS.c)))
+
+include $(TOP)/config/RULES.Vx
+include $(TOP)/config/RULES.munch
+
+build:: depends
+
+-include DEPENDS
+
+# Update version string (contains __DATE__ and __TIME__)
+# each time make runs.
+StreamVersion.o: FORCE
+FORCE:
+
+StreamCore.o: streamReferences
+
+streamReferences:
+	touch $@

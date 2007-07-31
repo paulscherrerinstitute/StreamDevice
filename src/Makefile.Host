@@ -1,0 +1,45 @@
+################################################################
+# StreamDevice Support                                         #
+#                                                              #
+# (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          #
+# (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    #
+#                                                              #
+# This is the EPICS 3.13 Makefile of StreamDevice.             #
+# Normally it should not be necessary to modify this file.     #
+# All configuration can be done in CONFIG_STREAM               #
+#                                                              #
+# If you do any changes in this file, you are not allowed to   #
+# redistribute it any more. If there is a bug or a missing     #
+# feature, send me an email and/or your patch. If I accept     #
+# your changes, they will go to the next release.              #
+#                                                              #
+# DISCLAIMER: If this software breaks something or harms       #
+# someone, it's your problem.                                  #
+#                                                              #
+################################################################
+
+TOP = ../../..
+
+include $(TOP)/config/CONFIG_APP
+include ../CONFIG_STREAM
+
+# In 3.13, calcout has no device support
+RECORDS_3_13 = $(filter-out calcout,$(RECORDS))
+
+DBDNAME = stream.dbd
+
+INC += devStream.h
+
+# This is the munch.pl taken from EPICS 3.14.8.2
+# Install script and rule.
+CONFIGS = RULES.munch
+SCRIPTS = munch.pl
+
+include $(TOP)/config/RULES.Host
+
+# create stream.dbd from all RECORDS
+stream.dbd: ../CONFIG_STREAM
+	@for r in $(RECORDS_3_13); \
+	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
+	done > $@
+	@echo "driver(stream)" >> $@

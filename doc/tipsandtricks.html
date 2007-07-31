@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Tips and Tricks</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Tips and Tricks</h1>
+
+<a name="argvar"></a>
+<h2>I have many almost identical protocols</h2>
+<p>
+You can give <a href="protocol.html#argvar">arguments</a> to a protocol.
+In the <code>INP</code> or <code>OUT</code> link, write:
+</p>
+<p>
+<code>
+field (OUT, "@protocolfile protocol(arg1,arg2,arg3) bus")
+</code>
+</p>
+<p>
+In the protocol, reference arguments as <code>$1 $2 $3</code> or inside strings
+as <code>"\$1 \$2 \$3"</code>.
+</p>
+<p>
+<code>
+moveaxis {out "move\$1 %.6f";}<br>
+field (OUT, "@motor.proto moveaxis(X) motor1")
+</code>
+</p>
+<p>
+<code>
+readpressure {out 0x02 0x00 $1; in 0x82 0x00 $1 "%2r";}<br>
+field (INP, "@vacuumgauge.proto readpressure(0x84) gauge3")
+</code>
+</p>
+
+<a name="iointr"></a>
+<h2>I have a device that sends unsolicited data</h2>
+<p>
+Use <a href="processing.html#iointr"><code>I/O Intr</code> processing</a>.
+The record receives any input and processes only when the input matches.
+</p>
+<p>
+<code>
+read {in "new value = %f";}
+</code>
+</p>
+<p>
+<code>
+record (ai, "$(RECORD)") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP, "@(DEVICETYPE).proto read $(BUS)")<br>
+&nbsp;&nbsp;field (SCAN, "I/O Intr")<br>
+}
+</code>
+</p>
+
+<a name="multiline"></a>
+<h2>I have a device that sends multi-line messages</h2>
+<pre>
+Here is the value:
+3.1415
+</pre>
+<p>
+Use as many <code>in</code> commands as you get input lines.
+</p>
+<p>
+<code>
+read_value {in "Here is the value:"; in "%f";}
+</code>
+</p>
+
+<a name="writemany"></a>
+<h2>I need to write more than one value in one message</h2>
+<p>
+There is more than one solution to this problem.
+Different approaches have different requirements.
+</p>
+<h3>A) All values have the same type and are separated by the same string</h3>
+<p>
+Use array records (e.g. <a href="waveform.html">waveform</a>,
+<a href="aao.html">aao</a>).
+</p>
+<p>
+<code>
+array_out {separator=", "; out "an array: (%.2f)";}
+</code>
+</p>
+<p>
+The format <code>%.2f</code> is repeated for each element of the array.
+All elements are separated by <code>", "</code>.<br>
+Output will look like this:
+<pre>
+an array: (3.14, 17.30, -12.34)
+</pre>
+</p>
+<h3>B) We have up to 12 numeric values</h3>
+<p>
+Use a <a href="calcout.html">calcout</a> record and
+<a href="formats.html#types">field references</a> in the format.
+</p>
+<p>
+<code>
+write_ABC {out "A=%(A).2f B=%(B).6f C=%(C).0f";}
+</code>
+</p>
+<p>
+You must specify a valid expression in the <code>CALC</code> field
+even if you don't use it.
+</p>
+<p>
+<code>
+record (calcout, "$(RECORD)") {<br>
+&nbsp;&nbsp;field (INPA, "$(A_RECORD)")<br>
+&nbsp;&nbsp;field (INPB, "$(B_RECORD)")<br>
+&nbsp;&nbsp;field (INPC, "$(C_RECORD)")<br>
+&nbsp;&nbsp;field (CALC, "0")<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (OUT, "@(DEVICETYPE).proto write_ABC $(BUS)")<br>
+}
+</code>
+</p>
+<h3>C) Values are in other records on the same IOC</h3>
+<p>
+Use <a href="formats.html#types">record references</a> in the format.
+</p>
+<p>
+<code>
+acquire {out 'ACQUIRE "%(\$1:directory.VAL)s/%s",%(\$1:time.VAL).3f;';}
+</code>
+</p>
+<p>
+You must specify the full <code>record.FIELD</code> name,
+even for <code>VAL</code> fields.
+To avoid record names in protocol files use
+<a href="protocol.html#argvar">protocol arguments</a>.
+In the link, specify the record name or just the basename of the
+other records (device name) in parentheses.
+</p>
+<p>
+<code>
+record (stringout, "$(DEVICE):getimage") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (OUT, "@(DEVICETYPE).proto acquire($(DEVICE)) $(BUS)")<br>
+}
+</code>
+</p>
+
+<a name="readmany"></a>
+<h2>I need to read more than one value from one message</h2>
+<p>
+Again, there is more than one solution to this problem.
+</p>
+<h3>A) All values have the same type and are separated by the same string</h3>
+<p>
+Use array records (e.g. <a href="waveform.html">waveform</a>,
+<a href="aai.html">aai</a>).<br>
+</p>
+<p>
+<code>
+array_in {separator=","; in "array = (%f)";}
+</code>
+</p>
+<p>
+The format <code>%f</code> is repeated for each element of the array.
+A <code>","</code> is expected beween element.<br>
+Input may look like this:
+</p>
+<pre>
+array = (3.14, 17.30, -12.34)
+</pre>
+
+<h3>B) The message and the values in it can be filtered easily</h3>
+<p>
+Use <a href="processing.html#iointr"><code>I/O Intr</code> processing</a>
+and <a href="formats.html#syntax">value skipping</a> (<code>%*</code>)<br>
+</p>
+<p>
+<code>
+read_A {out "GET A,B"; in "A=%f, B=%*f";}<br>
+read_B {in "A=%*f, B=%f";}
+</code>
+</p>
+<p>
+<code>
+record (ai, "$(DEVICE):A") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP, "@(DEVICETYPE).proto read_A $(BUS)")<br>
+&nbsp;&nbsp;field (SCAN, "1 second")<br>
+}<br>
+record (ai, "$(DEVICE):B") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP, "@(DEVICETYPE).proto read_B $(BUS)")<br>
+&nbsp;&nbsp;field (SCAN, "I/O Intr")<br>
+}
+</code>
+</p>
+<p>
+Record A actively requests values every second.
+The reply contains values A and B.
+Record A filters only value A from the input and ignores value B
+by using the <code>*</code> flag.
+Nevertheless, a complete syntax check is performed: B must be a
+valid floating point number.
+Record B is <code>I/O Intr</code> and gets (a copy of) any input, including
+input that was directed to record A.
+If it finds a matching string it ignores value A, reads value B and
+then processes.
+Any non-matching input is ignored by record B.
+</p>
+<h3>C) Values should be stored in other records on the same IOC</h3>
+<p>
+Use <a href="formats.html#types">record references</a> in the format.
+To avoid record names in protocol files, use
+<a href="protocol.html#argvar">protocol arguments</a>.
+</p>
+<p>
+<code>
+read_AB {out "GET A,B"; in "A=%f, B=%(\$1.VAL)f";}
+</code>
+</p>
+<p>
+<code>
+record (ai, "$(DEVICE):A") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP, "@(DEVICETYPE).proto read_AB($(DEVICE):B) $(BUS)")<br>
+&nbsp;&nbsp;field (SCAN, "1 second")<br>
+}<br>
+record (ai, "$(DEVICE):B") {<br>
+}
+</code>
+</p>
+<p>
+Whenever record A reads input, it stores the first value in its own VAL field
+as usual and the second in the VAL field of record B.
+Because the VAL field of record B has the PP attribute, this automatically
+processes record B.
+</p>
+
+<a name="mixed"></a>
+<h2>I have a device that sends mixed data types: numbers and strings</h2>
+<p>
+Use a <code>@mismatch</code>
+<a href="protocol.html#except">exception handler</a> and
+<a href="formats.html#types">record references</a> in the format.
+To avoid record names in protocol files, use
+<a href="protocol.html#argvar">protocol arguments</a>.
+</p>
+<h3>Example</h3>
+<p>
+When asked "<code>CURRENT?</code>", the device send something like
+"<code>CURRENT&nbsp;3.24&nbsp;A</code>" or a message like
+"<code>device&nbsp;switched&nbsp;off</code>".
+</p>
+<p>
+<code>
+read_current {out "CURRENT?"; in "CURRENT %f A"; @mismatch {in "%(\1.VAL)39c";}}
+</code>
+</p>
+<p>
+<code>
+record (ai, "$(DEVICE):readcurrent") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP, "@(DEVICETYPE).proto read_current($(DEVICE):message) $(BUS)")<br>
+}<br>
+record (stringin, "$(DEVICE):message") {<br>
+}
+</code>
+</p>
+<p>
+After <a href="processing.html#proc">processing</a> the readcurrent record, you can see from
+SEVR/STAT if the read was successful or not.
+With some more records, you can clean the message record if SEVR is not INVALID.
+</p>
+<code>
+record (calcout, "$(DEVICE):clean_1") {<br>
+&nbsp;&nbsp;field (INPA, "$(DEVICE):readcurrent.SEVR CP")<br>
+&nbsp;&nbsp;field (CALC, "A!=2")<br>
+&nbsp;&nbsp;field (OOPT, "When Non-zero")<br>
+&nbsp;&nbsp;field (OUT,  "$(DEVICE):clean_2.PROC")<br>
+}<br>
+record (stringout, "$(DEVICE):clean_2") {<br>
+&nbsp;&nbsp;field (VAL, "OK")<br>
+&nbsp;&nbsp;field (OUT,  "$(DEVICE):message PP")<br>
+}<br>
+
+</code>
+<hr>
+<p><small>Dirk Zimoch, 2007</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

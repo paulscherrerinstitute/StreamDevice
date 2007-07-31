@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: scalcout Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: scalcout Records</h1>
+
+<p>
+<b>Note:</b> The scalcout record is part of the <i>calc</i> module of
+the <a target="ex"
+href="http://www.aps.anl.gov/aod/bcda/synApps/index.php"
+><em>synApps</em></a> package.
+Device support for scalcout records is only available for <i>calc</i>
+module release 2-4 or higher.
+You also need the synApps modules <i>genSub</i> and <i>sscan</i> to
+build <i>calc</i>.
+</p>
+<p>
+Up to release 2-6 (synApps release 5.1), the scalcout record needs a fix.
+In sCalcout.c at the end of <code>init_record</code> add
+before the final <code>return(0)</code>:
+</p>
+<pre class="box">
+        if(pscalcoutDSET->init_record ) {
+	    return (*pscalcoutDSET->init_record)(pcalc);
+        }
+</pre>
+
+<h2>Normal Operation</h2>
+<p>
+Different record fields are used for output and input. The variable
+<code><i>x</i></code> stands for the written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=OVAL</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+   Note that the record calculates <code>OVAL</code> from <code>CALC</code>
+   or <code>OCAL</code> depending on <code>DOPT</code>.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=int(OVAL)</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=int(OVAL)</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=OSV</code><br>
+   <u>Input:</u> <code>SVAL=<i>x</i></code><br>
+  </dd>
+</dl>
+<p>
+ For scalcout records, it is probably more useful to access fields
+ <code>A</code> to <code>L</code> and <code>AA</code> to <code>LL</code>
+ directly (e.g. <code>"%(A)f"</code> or <code>"%(BB)s"</code>).
+ However, even if <code>OVAL</code> is not used, it is calculated by the
+ record. Thus, <code>CALC</code> must always contain a valid expression
+ (e.g. <code>"0"</code>).
+</p>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. All format converters work like in normal operation.
+</p>
+
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+<a href="calcout.html">calcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

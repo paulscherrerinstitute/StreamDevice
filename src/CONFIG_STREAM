@@ -1,0 +1,65 @@
+# Want debugging?
+# HOST_OPT = NO
+
+# You may add more record interfaces
+# This requires the naming conventions
+# dev$(RECORD)Stream.c
+
+RECORDS += ao ai
+RECORDS += bo bi
+RECORDS += mbbo mbbi
+RECORDS += mbboDirect mbbiDirect
+RECORDS += longout longin
+RECORDS += stringout stringin
+RECORDS += waveform
+RECORDS += calcout
+#RECORDS += aai aao
+
+# Do you have synApps and want support for scalcout?
+# Then define CALC or SYNAPPS in your RELEASE file
+# pointing to the 'calc' module of synApps.
+# Due to strange cross dependencies in synApps
+# you have to build the 'sscan' and 'genSub'
+# modules before building 'calc'.
+# See doc/scalcout.html for a required fix in scalcout.
+SYNAPPS_RECORDS += scalcout
+
+# You may add more bus interfaces
+# This requires the naming convention
+# $(BUS)Interface.cc
+# asynDriver interface is added automatically
+# if ASYN is defined in your RELEASE file.
+# BUSSES += Debug
+
+# You may add more format converters
+# This requires the naming convention
+# $(FORMAT)Converter.cc
+
+FORMATS += Enum
+FORMATS += BCD
+FORMATS += Raw
+FORMATS += Binary
+FORMATS += Checksum
+
+# Want a loadable module? 
+# For Tornado 2.0.2, a fix is needed in the
+# registerRecordDeviceDriver.pl script in base:
+# at the end replace the line "IoccrfReg iocshReg;"
+# by "static IoccrfReg iocshReg;"
+# LOADABLE_MODULE = YES
+
+# Want to add some memory tracing
+# to find memory leaks?
+# USE_MEMGUARD = YES
+
+# Sources of Stream Kernel
+# Do not modify
+
+STREAM_SRCS += StreamVersion.c
+STREAM_SRCS += StreamBuffer.cc
+STREAM_SRCS += StreamError.cc
+STREAM_SRCS += StreamProtocol.cc
+STREAM_SRCS += StreamFormatConverter.cc
+STREAM_SRCS += StreamCore.cc
+STREAM_SRCS += StreamBusInterface.cc
+STREAM_SRCS += StreamEpics.cc

@@ -1,0 +1,244 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Record Processing</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Record Processing</h1>
+
+<a name="proc"></a>
+<h2>1. Normal Processing</h2>
+<p>
+<em>StreamDevice</em> is an asynchronous device support
+(see <a href="http://www.aps.anl.gov/epics/base/R3-14/8-docs/AppDevGuide.pdf"
+target="ex">IOC Application Developer's Guide</a> chapter 12:
+Device Support).
+Whenever the record is processed, the <a href="protocol.html">protocol</a>
+is scheduled to start and the record is left active (<code>PACT=1</code>).
+The protocol itself runs in another thread.
+That means that any waiting in the protocol does not delay any other
+part of the IOC.
+</p>
+<p>
+After the protocol has finished, the record is processed again, leaving
+<code>PACT=0</code> this time, triggering monitors and processing
+the forward link <code>FLNK</code>.
+Note that input links with PP flag pointing to a <em>StreamDevice</em>
+record will read the <u>old</u> value first and start the protocol
+afterward.
+This is a problem all asynchronous EPICS device supports have.
+</p>
+<p>
+The first <code>out</code> command in the protocol locks the device
+for exclusive access.
+That means that no other record can communicate with that device.
+This ensures that replies given by the device reach the record
+which has sent the request.
+On a bus with many devices on different addresses, this
+normally locks only one device.
+The device is unlocked when the protocol terminates.
+Another record trying to lock the same device has to wait and
+might get a <code>LockTimeout</code>.
+<p>
+</p>
+<p>If any error happens, the protocol is aborted. The record will have
+its <code>SEVR</code> field set to <code>INVALID</code> and its
+<code>STAT</code> field to something describing the error:
+</p>
+<dl>
+ <dt><code>TIMEOUT</code></dt>
+ <dd>
+  The device could not be locked (<code>LockTimeout</code>) or the
+  device did not reply (<code>ReplyTimeout</code>).
+ </dd>
+ <dt><code>WRITE</code></dt>
+ <dd>
+  Output could not be written to the device (<code>WriteTimeout</code>).
+ </dd>
+ <dt><code>READ</code></dt>
+ <dd>
+  Input from the device started but stopped unexpectedly
+  (<code>ReadTimeout</code>).
+ </dd>
+ <dt><code>COMM</code></dt>
+ <dd>
+  The device driver reported some other communication error (e.g.
+  unplugged cable).
+ </dd>
+ <dt><code>CALC</code></dt>
+ <dd>
+  Input did not match the argument string of the <code>in</code> command
+  or it contained values the record did not accept.
+ </dd>
+ <dt><code>UDF</code></dt>
+ <dd>
+  Some fatal error happened or the record has not been initialized
+  correctly (e.g. because the protocol is erroneous).
+ </dd>
+</dl>
+
+<p>
+If the protocol is aborted, an
+<a href="protocol.html#except">exception handler</a> might be executed
+if defined.
+Even if the exception handler can complete with no further error, the
+protocol will not resume and <code>SEVR</code> and <code>STAT</code>
+will be set according to the original error.
+</p>
+
+<a name="init"></a>
+<h2>2. Initialization</h2>
+<p>
+Often, it is required to initialize records from the hardware after
+booting the IOC, especially output records.
+For this purpose, initialization is formally handled as an
+<a href="protocol.html#except">exception</a>.
+The <code>@init</code> handler is called as part of the
+<code>initRecord()</code> function during <code>iocInit</code>
+before any scan task starts.
+</p>
+<p>
+In contrast to <a href="#proc">normal processing</a>, the protocol
+is handled synchronously.
+That means that <code>initRecord()</code> does not return before the
+<code>@init</code> handler has finished.
+Thus, the records initialize one after the other.
+The scan tasks are not started and <code>iocInit</code> does not
+return before all <code>@init</code> handlers have finished.
+If the handler fails, the record remains uninitialized:
+<code>UDF=1</code>, <code>SEVR=INVALID</code>,
+<code>STAT=UDF</code>.
+</p>
+<p>
+The <code>@init</code> handler has nothing to do with the
+<code>PINI</code> field.
+The handler does <u>not</u> process the record nor does it trigger
+forward links or other PP links.
+It runs <u>before</u> <code>PINI</code> is handled.
+If the record has <code>PINI=YES</code>, the <code>PINI</code>
+processing is a <a href="#proc">normal processing</a> after the
+<code>@init</code> handlers of all records have completed.
+</p>
+<p>
+Depending on the record type, format converters might work
+slightly different from normal processing.
+Refer to the description of
+<a href="recordtypes.html">supported record types</a> for details.
+</p>
+<p>
+If the <code>@init</code>handler has read a value and has completed
+without error, the record starts in a defined state.
+That means <code>UDF=0</code>, <code>SEVR=NO_ALARM</code>,
+<code>STAT=NO_ALARM</code> and the <code>VAL</code> field contains
+the value read from the device.
+</p>
+<p>
+If no <code>@init</code> handler is installed, <code>VAL</code> and
+<code>RVAL</code> fields remain untouched.
+That means they contain the value defined in the record definition,
+read from a constant <code>INP</code> or <code>DOL</code> field,
+or restored from a bump-less reboot system
+(e.g. <em>autosave</em> from the <em>synApps</em> package).
+</p>
+
+<a name="iointr"></a>
+<h2>3. I/O Intr</h2>
+<p>
+<em>StreamDevice</em> supports I/O event scanning.
+This is a mode where record processing is triggered by the device
+whenever the device sends input.
+</p>
+<p>
+In terms of protocol execution this means:
+When the <code>SCAN</code> field is set to <code>I/O Intr</code>
+(during <code>iocInit</code> or later),
+the protocol starts without processing the record.
+With the first <code>in</code> command, the protocol is suspended.
+If the device has been locked (i.e there was an <code>out</code>
+command earlier in the protocol), it is unlocked now.
+That means that other records can communicate to the device while
+this record is waiting for input.
+This <code>in</code> command ignores <code>replyTimeout</code>,
+it waits forever.
+</p>
+<p>
+The protocol now receives any input from the device.
+
+It also gets a copy of all input directed to other records.
+Non-matching input does not generate a mismatch
+<a href="protocol.html#except">exception</a>.
+It just restarts the <code>in</code> command until matching input
+is received.
+</p>
+<p>
+After receiving matching input, the protocol continues normally.
+All other <code>in</code> commands are handled normally.
+When the protocol has completed, the record is processed.
+It then triggers monitors, forward links, etc.
+After the record has been processed, the protocol restarts.
+</p>
+<p>
+This mode is useful in two cases:
+First for devices that send data automatically without being asked.
+Second to distribute multiple values in one message to different
+records.
+In this case, one record would send a request to the device and pick
+only one value out of the reply.
+The other values are read by records in <code>I/O Intr</code> mode.
+</p>
+
+<h3>Example:</h3>
+
+<p>
+Device <em>dev1</em> has a "region of interest" (ROI) defined by
+a start value and an end value. When asked "<code>ROI?</code>",
+it replies something like "<code>ROI 17.3 58.7</code>",
+i.e. a string containing both values.
+</p>
+<p>
+We need two ai records to store the two values. Whenever record
+<code>ROI:start</code> is processed, it requests ROI from the device.
+Record <code>ROI:end</code> updates automatically.
+</p>
+<pre>
+record (ai "ROI:start") {
+    field (DTYP, "stream")
+    field (INP,  "@myDev.proto getROIstart dev1")
+}
+record (ai "ROI:end") {
+    field (DTYP, "stream")
+    field (INP,  "@myDev.proto getROIend dev1")
+    field (SCAN, "I/O Intr")
+}
+</pre>
+<p>
+Only one of the two protocols sends a request, but both read
+their part of the same reply message.
+</p>
+<pre>
+getROIstart {
+    out "ROI?";
+    in  "ROI %f %*f";
+}
+getROIend {
+    in  "ROI %*f %f";
+}
+</pre>
+<p>
+Note that the other value is also parsed by each protocol, but skipped
+because of the <code>%*</code> <a href="formats.html">format</a>.
+Even though the <code>getROIend</code> protocol may receive input
+from other requests, it silently ignores every message that does not start
+with "<code>ROI</code>", followed by two floating point numbers.
+</p> 
+<hr>
+<p align="right"><a href="recordtypes.html">Next: Supported Record Types</a></p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

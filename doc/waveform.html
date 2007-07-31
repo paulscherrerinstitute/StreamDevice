@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: waveform Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: waveform Records</h1>
+
+<h2>Normal Operation</h2>
+<p>
+With waveform records, the format converter is applied to
+each element. Between the elements, a separator is printed
+or expected as specified by the <code>Separator</code>
+<a href="protocol.html#sysvar">variable</a> in the
+protocol.
+When parsing input, a space as the first character of the
+<code>Separator</code> matches any number of any whitespace
+characters.
+</p>
+<p>
+During input, a maximum of <code>NELM</code> elements is
+read and <code>NORD</code> is updated accordingly.
+Parsing of elements stops when the separator does not match,
+conversion fails, or the end of the input is reached.
+A minimum of one element must be available.
+</p>
+<p>
+During output, the first <code>NORD</code> elements are
+written.
+</p>
+<p>
+The format data type must be convertible to or from the type
+specified in the <code>FTVL</code> field.
+The variable <code><i>x[i]</i></code> stands for one element of
+the written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   <u>Output:</u><code><i>x[i]</i>=double(VAL[i])</code><br>
+   <code>FTVL</code> can be <code>"DOUBLE"</code>, <code>"FLOAT"</code>,
+   <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
+   <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
+   or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
+   <u>Input:</u> <code>VAL[i]=FTVL(<i>x[i]</i>)</code><br>
+   <code>FTVL</code> must be <code>"FLOAT"</code> or <code>"DOUBLE"</code>
+  </dd>
+ <dt>LONG or ENUM format (e.g. <code>%i</code> or <code>%{</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x[i]</i>=long(VAL[i])</code><br>
+   <code>FTVL</code> can be 
+   <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
+   <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
+   or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
+   Signed values are sign-extended to long, unsigned values are
+   zero-extended to long before converting them.<br>
+   <u>Input:</u> <code>VAL[i]=FTVL(<i>x[i])</i></code><br>
+   <code>FTVL</code> can be <code>"DOUBLE"</code>, <code>"FLOAT"</code>,
+   <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
+   <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
+   or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
+   The value is truncated to the least significant bytes if
+   <code>FTVL</code> has a smaller data size than <code>long</code>.
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   <dl>
+    <dt>If <code>FTVL=="STRING"</code>:</dt>
+    <dd>
+     <u>Output:</u> <code><i>x[i]</i>=VAL[i]</code><br>
+     <u>Input:</u> <code>VAL[i]=<i>x[i]</i></code><br>
+     Note that this is an array of strings, not an array of characters.
+    </dd>
+    <dt>If <code>FTVL=="CHAR"</code> or <code>FTVL="UCHAR"</code>:</dt>
+    <dd>
+     In this case, the complete waveform is treated as a large
+     single string of size <code>NORD</code>.
+     No separators are printed or expected.<br>
+     <u>Output:</u> <code><i>x</i>=range(VAL,0,NORD)</code><br>
+     The first <code>NORD</code> characters are printed,
+     which might be less than <code>NELM</code>.<br>
+     <u>Input:</u> <code>VAL=<i>x</i>, NORD=length(<i>x</i>)</code><br>
+     A maximum of <code>NELM-1</code> characters can be read.
+     <code>NORD</code> is updated to the index of the first of the
+     trailing zeros.
+     Usually, this is the same as the string length.
+    </dd>
+   </dl>
+   Other values of <code>FTVL</code> are not allowed for this format.
+  </dd>
+</dl>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. All format converters work like in normal operation.
+</p>
+
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="calcout.html">calcout</a>
+<a href="scalcout.html">scalcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: mbbo Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: mbbo Records</h1>
+
+<h2>Normal Operation</h2>
+<p>
+Depending on the format type, different record fields are used
+for output and input. The variable <code><i>x</i></code> stands for the
+written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   <dl>
+    <dt>If any of <code>ZRVL</code> ... <code>FFVL</code> is set
+        (is not <code>0</code>):</dt>
+     <dd>
+      <u>Output:</u> <code><i>x</i>=RVAL&amp;MASK</code><br>
+      Note that the record calculates <code>RVAL</code> by choosing one of
+      <code>ZRVL</code> ... <code>FFVL</code> depending on <code>VAL</code>
+      and by shifting it left by <code>SHFT</code> bits.<br>
+      <u>Input:</u> <code>RBV=<i>x</i>&amp;MASK</code><br>
+      <code>MASK</code> is initialized to <code>NOBT</code> 1-bits shifted
+      left by <code>SHFT</code>. If <code>MASK==0</code> (because
+      <code>NOBT</code> was not set) it is ignored, i.e.
+      <code><i>x</i>=RVAL</code> and <code>RBV=<i>x</i></code>.
+     </dd>
+    <dt>If none of <code>ZRVL</code> ... <code>FFVL</code> is set
+        (all are <code>0</code>):</dt>
+     <dd>
+      <u>Output:</u> <code><i>x</i>=VAL</code><br>
+      <u>Input:</u> <code>VAL=<i>x</i></code><br>
+     </dd>
+    </dl>
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=VAL</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   <u>Output:</u> Depending on <code>VAL</code>, one of <code>ZRST</code>
+   ... <code>FFST</code> is written. <code>VAL</code> must be in the
+   range 0 ... 15.<br>
+   <u>Input:</u> If input is equal one of <code>ZRST</code> ...
+   <code>FFST</code>, <code>VAL</code> is set accordingly.
+   Other input strings are not accepted.
+  </dd>
+</dl>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. In contrast to normal operation, LONG input is put to
+ <code>RVAL</code> as well as to <code>RBV</code> and converted by the
+ record.
+</p>
+
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+<a href="calcout.html">calcout</a>
+<a href="scalcout.html">scalcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

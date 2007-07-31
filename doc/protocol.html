@@ -1,0 +1,552 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Protocol Files</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Protocol Files</h1>
+<a name="gen"></a>
+<h2>1. General Information</h2>
+<p>
+A protocol file describes the communication with one device type.
+It contains <a href="#proto"><em>protocols</em></a> for each function
+of the device type and <a href="#var"><em>variables</em></a> which affect
+how the <a href="#cmd"><em>commands</em></a> in a protocol work.
+It does not contain information about the individual device or the used
+communication bus.
+</p>
+<p>
+Each device type should have its own protocol file.
+I suggest to choose a file name that contains the name of the device type.
+Don't use spaces in the file name and keep it short.
+The file will be referenced by its name in the <code>INP</code>
+or <code>OUT</code> link of the records which use it.
+The protocol file must be stored in one of the directories listed
+in the environment variable <code>STREAM_PROTOCOL_PATH</code>
+(see chapter <a href="setup.html#sta">Setup</a>).
+</p>
+<p>
+The protocol file is a plain text file.
+Everything not enclosed in quotes
+(single <code>'</code> or double <code>"</code>) is not case sensitive.
+This includes the names of <a href="#cmd">commands</a>,
+<a href="#proto">protocols</a> and <a href="#var">variables</a>.
+There may be any amount of whitespaces (space, tab, newline, ...) or
+comments between names, <a href="#str">quoted strings</a> and special
+characters, such as <code>={};</code>.
+A comment is everything starting from an unquoted <code>#</code>
+until the end of the line.
+</p>
+
+<h3>Example Protocol File:</h3>
+<pre>
+# This is an example protocol file
+
+Terminator = CR LF;
+
+# Frequency is a float
+# use ai and ao records
+
+getFrequency {
+    out "FREQ?"; in "%f";
+}
+
+setFrequency {
+    out "FREQ %f";
+    @init { getFrequency; }
+}
+
+# Switch is an enum, either OFF or ON
+# use bi and bo records
+
+getSwitch {
+    out "SW?"; in "SW %{OFF|ON}";
+}
+
+setSwitch {
+    out "SW %{OFF|ON}";
+    @init { getSwitch; }
+}
+
+# Connect a stringout record to this to get
+# a generic command interface.
+# After processing finishes, the record contains the reply.
+
+debug {
+    ExtraInput = Ignore;
+    out "%s"; in "%39c"
+}
+</pre>
+
+<a name="proto"></a>
+<h2>2. Protocols</h2>
+<p>
+For each function of the device type, define one protocol.
+A protocol consists of a name followed by a body in braces <code>{}</code>.
+The name must be unique within the protocol file.
+It is used to reference the protocol in the
+<code>INP</code> or <code>OUT</code> link of the record,
+thus keep it short.
+It should describe the function of the protocol.
+It must not contain spaces or any of the characters
+<code>,;={}()$'"\#</code>.
+</p>
+<p>
+The protocol body contains a sequence of <a href="#cmd">commands</a> and
+optionally <a href="#var">variable assignments</a> separated by
+<code>;</code>.
+</p>
+<h3>Referencing other protocols</h3>
+<p>
+To save some typing, a previously defined protocol can be called inside
+another protocol like a <a href="#cmd">command</a> without parameters.
+The protocol name is replaced by the commands in the referenced protocol.
+However, this does not include any
+<a href="#var">variable assignments</a> or
+<a href="#except">exception handlers</a> from the referenced protocol.
+See the <code>@init</code> handlers in the above example.
+</p>
+<h3>Limitations</h3>
+<p>
+The <em>StreamDevice</em> protocol is not a programming language.
+It has neither loops nor conditionals
+(in this version of <em>StreamDevice</em>).
+However, if an error occurs, e.g. a timeout or a mismatch in input
+parsing, an <a href="#excep">exception handler</a> can be called to
+clean up.
+</p>
+
+
+<a name="cmd"></a>
+<h2>3. Commands</h2>
+<p>
+Seven different commands can be used in a protocol:
+<code>out</code>, <code>in</code>, <code>wait</code>, <code>event</code>,
+<code>exec</code>, <code>disconnect</code>, and <code>connect</code>.
+Most protocols will consist only of a single <code>out</code> command to
+write some value,
+or an <code>out</code> command followed by an <code>in</code> command to
+read a value.
+But there can be any number of commands in a protocol.
+</p>
+<dl>
+ <dt><code>out <i>string</i>;</code></dt>
+ <dd>
+  Write output to the device.
+  The argument <a href="#str">string</a> may contain
+  <a href="formats.html">format converters</a> which are replaced by the
+  formatted value of the record before sending.
+ </dd>
+ <dt><code>in <i>string</i>;</code></dt>
+ <dd>
+  Read and parse input from the device.
+  The argument <a href="#str">string</a> may contain
+  <a href="formats.html">format converters</a> which specify how to
+  interpret data to be put into the record.
+  Input must match the argument string.
+  Any input from the device should be consumed with an
+  <code>in</code> command.
+  If a device, for example, acknowledges a setting, use an
+  <code>in</code> command to check the acknowledge, even though
+  it contains no user data.
+ </dd>
+ <dt><code>wait <i>milliseconds</i>;</code></dt>
+ <dd>
+  Just wait for some milliseconds.
+  Depending on the resolution of the timer system, the actual delay
+  can be slightly longer than specified.
+ </dd>
+ <dt><code>event(<i>eventcode</i>) <i>milliseconds</i>;</code></dt>
+ <dd>
+  Wait for event <code><i>eventcode</i></code> with some timeout.
+  What an event actually means depends on the used
+  <a href="businterface.html#event">bus</a>.
+  Some buses do not support events at all, some provide many different
+  events.
+  If the bus supports only one event, <code>(<i>eventcode</i>)</code>
+  is dispensable.
+ </dd>
+ <dt><code>exec <i>string</i>;</code></dt>
+ <dd>
+  The argument <a href="#str">string</a> is passed to the IOC shell
+  as a command to execute.  
+ </dd>
+ <dt><code>disconnect;</code></dt>
+ <dd>
+  Disconnect from the hardware.
+  This is probably not supported by all busses.
+  Any <code>in</code> or <code>out</code> command will automatically
+  reconnect.
+  Only records reading in 
+  <a href="processing.html#iointr">"I/O Intr"</a> mode
+  will not cause a reconnect.
+ </dd>
+ <dt><code>connect <i>milliseconds</i>;</code></dt>
+ <dd>
+  Explicitely connect to the hardware with <code><i>milliseconds</i></code>
+  timeout.
+  Since connection is handled automatically, this command is normally not
+  needed.
+  It may be useful after a <code>disconnect</code>.
+ </dd>
+</dl>
+
+<a name="str"></a>
+<h2>4. Strings</h2>
+<p>
+In a <em>StreamDevice</em> protocol file, strings can be written
+as quoted literals (single quotes or double quotes), as
+a sequence of bytes values, or as a combination of both.
+</p>
+<p>
+Examples for quoted literals are:<br>
+<code>"That's a string."</code><br>
+<code>'Say "Hello"'</code>
+</p>
+<p>
+There is no difference between double quoted and single quoted
+literals, it just makes it easier to use quotes of the other type
+in a string.
+To break long strings into multiple lines of the protocol file,
+close the quotes before the line break and reopen them in the next line.
+Don't use a line break inside quotes.
+</p>
+<p>
+As arguments of <code>out</code> or <code>in</code>
+<a href="#cmd">commands</a>, string literals can contain
+<a href="formats.html">format converters</a>.
+A format converter starts with <code>%</code> and works similar
+to formats in the C functions <em>printf()</em> and <em>scanf()</em>.
+</p>
+<p>
+<em>StreamDevice</em> uses the backslash character <code>\</code> to
+define some escape sequences in quoted string literals:<br>
+<code>\"</code>, <code>\'</code>, <code>\%</code>, and <code>\\</code>
+mean literal <code>"</code>, <code>'</code>, <code>%</code>, and
+<code>\</code>.<br>
+<code>\a</code> means <em>alarm bell</em> (ASCII code 7).<br>
+<code>\b</code> means <em>backspace</em> (ASCII code 8).<br>
+<code>\t</code> means <em>tab</em> (ASCII code 9).<br>
+<code>\n</code> means <em>new line</em> (ASCII code 10).<br>
+<code>\r</code> means <em>carriage return</em> (ASCII code 13).<br>
+<code>\e</code> means <em>escape</em> (ASCII code 27).<br>
+<code>\x</code> followed by up to two hexadecimal digits means a byte with
+that hex value.<br>
+<code>\0</code> followed by up to three octal digits means a byte with
+that octal value.<br>
+<code>\1</code> to <code>\9</code> followed by up to two more decimal
+digits means a byte with that decimal value.<br>
+<code>\?</code> in the argument string of an <code>in</code>
+<a href="#cmd">command</a> matches any input byte<br>
+<code>\$</code> followed by the name of a
+<a href="#var">protocol varible</a> is replaced by the contents of that
+variable.
+</p>
+<p>
+For non-printable characters, it is often easier to write sequences of
+byte values instead of escaped quoted string literals.
+A byte is written as an unquoted decimal, hexadecimal, or octal
+number in the range of -128 to 255 (-0x80 to 0xff, -0200 to 0377).
+<em>StreamDevice</em> also defines some symbolic names for frequently
+used byte codes as aliases for the numeric byte value:<br>
+<code>EOT</code> means <em>end of transmission</em> (ASCII code 4).<br>
+<code>ACK</code> means <em>acknowledge</em> (ASCII code 6).<br>
+<code>BEL</code> means <em>bell</em> (ASCII code 7).<br>
+<code>BS</code> means <em>backspace</em> (ASCII code 8).<br>
+<code>HT</code> or <code>TAB</code> mean <em>horizontal tabulator</em>
+(ASCII code 9).<br>
+<code>LF</code> or <code>NL</code> mean <em>line feed</em> /
+<em>new line</em> (ASCII code 10).<br>
+<code>CR</code> means <em>carriage return</em> (ASCII code 13).<br>
+<code>ESC</code> means <em>escape</em> (ASCII code 27).<br>
+<code>DEL</code> means <em>delete</em> (ASCII code 127).<br>
+<code>SKIP</code> in the argument string of an <code>in</code>
+<a href="#cmd">command</a> matches any input byte.
+</p>
+<p>
+A single string can be built from several quoted literals and byte values
+by writing them separated by whitespaces or comma.
+</p>
+
+<h3>Example:</h3>
+<p>
+The following lines represent the same string:<br>
+<code>"Hello world\r\n"</code><br>
+<code>'Hello',0x20,"world",CR,LF</code><br>
+<code>72 101 108 108 111 32 119 111 114 108 100 13 10</code>
+</p>
+
+<a name="var"></a>
+<h2>5. Protocol Variables</h2>
+<p>
+<em>StreamDevice</em> uses three types of variables in a protocol file.
+<a href="#sysvar"><em>System variables</em></a> influence the behavior
+of <code>in</code> and <code>out</code> <a href="#cmd">commands</a>.
+<a href="#argvar"><em>Protocol arguments</em></a> work like function
+arguments and can be specified in the <code>INP</code> or
+<code>OUT</code> link of the record.
+<a href="#usrvar"><em>User variables</em></a> can be defined and used
+in the protocol as abbreviations for often used values.
+</p>
+<p>
+System and user variables can be set in the global context of the
+protocol file or locally inside protocols.
+When set globally, a variable keeps its value until overwritten.
+When set locally, a variable is valid inside the protocol only.
+To set a variable use the syntax:<br>
+<code><i>variable</i> = <i>value</i>;</code>
+</p>
+<p>
+Set variables can be referenced outside of
+<a href="#str">quoted strings</a> by
+<code>$<i>variable</i></code> or <code>${<i>variable</i>}</code>
+and inside quoted strings by
+<code>\$<i>variable</i></code> or <code>\${<i>variable</i>}</code>.
+The reference will be replaced by the value of the variable at
+this point.
+</p>
+
+<a name="sysvar"></a>
+<h3>System variables</h3>
+<p>
+This is a list of system variables, their default settings and
+what they influence.
+</p>
+<dl>
+ <dt><code>LockTimeout = 5000;</code></dt>
+ <dd>
+  Integer. Affects first <code>out</code> command in a protocol.<br>
+  If other records currently use the device, how many milliseconds
+  to wait for exclusive access to the device before giving up?
+ </dd>
+ <dt><code>WriteTimeout = 100;</code></dt>
+ <dd>
+  Integer. Affects <code>out</code> commands.<br>
+  If we have access to the device but output cannot be written
+  immediately, how many milliseconds to wait before giving up?
+ </dd>
+ <dt><code>ReplyTimeout = 1000;</code></dt>
+ <dd>
+  Integer. Affects <code>in</code> commands.<br>
+  Different devices need different times to calculate
+  a reply and start sending it. 
+  How many milliseconds to wait for the first byte of the input
+  from the device?
+  Since several other records may be waiting to access the device
+  during this time, <code>LockTimeout</code> should be larger than
+  <code>ReplyTimeout</code>.
+ </dd>
+ <dt><code>ReadTimeout = 100;</code></dt>
+ <dd>
+  Integer. Affects <code>in</code> commands.<br>
+  The device may send input in pieces (e.g. bytes).
+  When it stops sending, how many milliseconds to wait for more
+  input bytes before giving up?
+  If <code>InTerminator = ""</code>, a read timeout is not an error
+  but a valid input termination.
+ </dd>
+ <dt><code>PollPeriod = $ReplyTimeout;</code></dt>
+ <dd>
+  Integer. Affects first <code>in</code> command in
+  <code>I/O Intr</code> mode (see chapter
+  <a href="processing.html#iointr">Record Processing</a>).<br>
+  In that mode, some buses require periodic polling to get asynchronous
+  input if no other record executes an <code>in</code> command at
+  the moment.
+  How many milliseconds to wait after last poll or last received
+  input before polling again?
+  If not set the same value as for <code>ReplyTimeout</code> is
+  used.
+ </dd>
+ <dt><code>Terminator</code></dt>
+ <dd>
+  String. Affects <code>out</code> and <code>in</code> commands.<br>
+  Most devices send and expect terminators after each message,
+  e.g. <code>CR LF</code>.
+  The value of the <code>Terminator</code> variable is automatically
+  appended to any output.
+  It is also used to find the end of input.
+  It is removed before the input is passed to the <code>in</code>
+  command.
+  If no <code>Terminator</code> or <code>InTerminator</code> is defined,
+  the underlying driver may use its own terminator settings.
+  For example, <i>asynDriver</i> defines its own terminator settings.
+ </dd>
+ <dt><code>OutTerminator = $Terminator;</code></dt>
+ <dd>
+  String. Affects <code>out</code> commands.<br>
+  If a device has different terminators for input and output,
+  use this for the output terminator.
+ </dd>
+ <dt><code>InTerminator = $Terminator;</code></dt>
+ <dd>
+  String. Affects <code>in</code> commands.<br>
+  If a device has different terminators for input and output,
+  use this for the input terminator.
+  If no <code>Terminator</code> or <code>InTerminator</code> is defined,
+  the underlying driver may use its own terminator settings.
+  If <code>InTerminator = ""</code>, a read timeout is not an error
+  but a valid input termination.
+ </dd>
+ <dt><code>MaxInput = 0;</code></dt>
+ <dd>
+  Integer. Affects <code>in</code> commands.<br>
+  Some devices don't send terminators but always send a fixed message
+  size. How many bytes to read before terminating input even without
+  input terminator or read timeout?
+  The value <code>0</code> means "infinite".
+ </dd>
+ <dt><code>Separator = "";</code></dt>
+ <dd>
+  String. Affects <code>out</code> and <code>in</code> commands.<br>
+  When formatting or parsing array values in a format converter
+  (see <a href="formats.html">formats</a> and
+  <a href="waveform.html">waveform record</a>), what string
+  to write or to expect between values?
+  If the first character of the <code>Separator</code> is a
+  space, it matches any number of any whitespace characters in
+  an <code>in</code> command. 
+ </dd>
+ <dt><code>ExtraInput = Error;</code></dt>
+ <dd>
+  <code>Error</code> or <code>Ignore</code>.
+  Affects <code>in</code> commands.<br>
+  Normally, when input parsing has completed, any bytes left in the
+  input are treated as parse error.
+  If extra input bytes should be ignored, set
+  <code>ExtraInput = Ignore;</code>
+ </dd>
+</dl>
+
+<a name="argvar"></a>
+<h3>Protocol arguments</h3>
+<p>
+Sometimes, protocols differ only very little.
+In that case it can be convenient to write only one protocol
+and use <em>protocol arguments</em> for the difference.
+For example a motor controller for the 3 axes X, Y, Z requires
+three protocols to set a position.
+</p>
+<pre>
+moveX { out "X GOTO %d"; }
+moveY { out "Y GOTO %d"; }
+moveZ { out "Z GOTO %d"; }
+</pre>
+<p>
+It also needs three versions of any other protocol.
+That means basically writing everything three times.
+To make this easier, <em>protocol arguments</em> can be used:
+</p>
+<pre>
+move { out "\$1 GOTO %d"; }
+</pre>
+<p>
+Now, the protocol can be references in the <code>OUT</code> link
+of three different records as <code>move(X)</code>,
+<code>move(Y)</code> and <code>move(Z)</code>.
+Up to 9 parameters, referenced as <code>$1</code> ... <code>$9</code>
+can be specified in parentheses, separated by comma.
+The variable <code>$0</code> is replaced by the name of the protocol.
+</p>
+
+<a name="usrvar"></a>
+<h3>User variables</h3>
+<p>
+User defined variables are just a means to save some typing.
+Once set, a user variable can be referenced later in the protocol.
+</p>
+<pre>
+f = "FREQ";     # sets f to "FREQ" (including the quotes)
+f1 = $f " %f";  # sets f1 to "FREQ %f"
+
+getFrequency {
+    out $f "?"; # same as: out "FREQ?"; 
+    in $f1;     # same as: in "FREQ %f"; 
+}
+
+setFrequency {
+    out $f1;    # same as: out "FREQ %f"; 
+}
+</pre>
+<a name="except"></a>
+<h2>6. Exception Handlers</h2>
+<p>
+When an error happens, an exception handler may be called.
+Exception handlers are a kind of sub-protocols in a protocol.
+They consist of the same set of commands and are intended to
+reset the device or to finish the protocol cleanly in case of
+communication problems.
+Like variables, exception handlers can be defined globally or
+locally.
+Globally defined handlers are used for all following protocols
+unless overwritten by a local handler.
+There is a fixed set of exception handler names starting with
+<code>@</code>.
+</p>
+<dl>
+ <dt><code>@mismatch</code></dt>
+ <dd>
+  Called when input does not match in an <code>in</code> command.<br>
+  It means that the device has sent something else than what the
+  protocol expected.
+  If the handler starts with an <code>in</code> command, then this
+  command reparses the old input from the unsuccessful <code>in</code>.
+  Error messages from the unsuccessful <code>in</code> are suppressed.
+  Nevertheless, the record will end up in <code>INVALID/CALC</code>
+  state (see chapter <a href="processing.html#proc">Record Processing</a>).
+ </dd>
+ <dt><code>@writetimeout</code></dt>
+ <dd>
+  Called when a write timeout occurred in an <code>out</code> command.<br>
+  It means that output cannot be written to the device.
+  Note that <code>out</code> commands in the handler are
+  also likely to fail in this case.
+ </dd>
+ <dt><code>@replytimeout</code></dt>
+ <dd>
+  Called when a reply timeout occurred in an <code>in</code> command.<br>
+  It means that the device does not send any data.
+  Note that <code>in</code> commands in the handler are
+  also likely to fail in this case.
+ </dd>
+ <dt><code>@readtimeout</code></dt>
+ <dd>
+  Called when a read timeout occurred in an <code>in</code> command.<br>
+  It means that the device stopped sending data unexpectedly after
+  sending at least one byte.
+ </dd>
+ <dt><code>@init</code></dt>
+ <dd>
+  Not really an exception but formally specified in the same syntax.
+  This handler is called from <code>iocInit</code> during record
+  initialization.
+  It can be used to initialize an output record with a value read from
+  the device.
+  Also see chapter <a href="processing.html#init">Record Processing</a>.
+ </dd>
+</dl>
+<h3>Example:</h3>
+<pre>
+setPosition {
+    out "POS %f";
+    @init { out "POS?"; in "POS %f"; }
+}    
+</pre>
+<p>
+After executing the exception handler, the protocol terminates.
+If any exception occurs within an exception handler, no other handler
+is called but the protocol terminates immediately.
+An exception handler uses all <a href="#sysvar">system variable</a>
+settings from the protocol in which the exception occurred.
+</p>
+<hr>
+<p align="right"><a href="formats.html">Next: Format Converters</a></p>
+<p><small>Dirk Zimoch, 2006</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

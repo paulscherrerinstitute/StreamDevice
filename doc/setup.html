@@ -1,0 +1,290 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Setup</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Setup</h1>
+
+<a name="pre"></a>
+<h2>1. Prerequisites</h2>
+<p>
+<em>StreamDevice</em> requires either 
+<a href="http://www.aps.anl.gov/epics/base/R3-14/index.php"
+target="ex">EPICS base R3.14.6 or higher</a> or
+<a href="http://www.aps.anl.gov/epics/base/R3-13.php"
+target="ex">EPICS base R3.13.7 or higher</a>.
+How to use <em>StreamDevice</em> on EPICS R3.13 is described on a
+<a href="epics3_13.html">separate page</a>.
+Because <em>StreamDevice</em> comes with an interface to
+<a href="http://www.aps.anl.gov/epics/modules/soft/asyn/"
+target="ex"><em>asynDriver</em> version R4-3 or higher</a> as the
+underlying driver layer,
+you should have <em>asynDriver</em> installed first.
+</p>
+<p>
+<em>StreamDevice</em> has support for the
+<a href="scalcout.html"><em>scalcout</em></a> record from the
+<em>calc</em> module of <a target="ex"
+href="http://www.aps.anl.gov/aod/bcda/synApps/index.php"
+><em>synApps</em></a>.
+Up to <em>calc</em> release R2-6 (<em>synApps</em> release R5_1),
+the <em>scalcout</em> record needs a fix.
+(See separate <a href="scalcout.html"><em>scalcout</em> page</a>.)
+</p>
+<p>
+Up to release R3.14.8.2, a fix in EPICS base is required to build
+<em>StreamDevice</em> on Windows (not cygwin).
+In <kbd>src/iocsh/iocsh.h</kbd>, add the following line
+and rebuild base.
+</p>
+<pre>
+epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
+</pre>
+
+<p>
+Make sure that the <em>asyn</em> library and the <em>calc</em> module of
+<em>synApps</em> can be found, e.g. by
+adding <code>ASYN</code>
+and (if installed) <code>CALC</code> or <code>SYNAPPS</code>
+to your <kbd>&lt;top&gt;/configure/RELEASE</kbd> file:
+<pre>
+ASYN=/home/epics/asyn/4-5
+CALC=/home/epics/synApps/calc/2-7
+</pre>
+<p>
+For details on <kbd>&lt;top&gt;</kbd> directories and RELEASE files,
+please refer to the
+<a href="http://www.aps.anl.gov/epics/base/R3-14/8-docs/AppDevGuide.pdf"
+target="ex"><em>IOC Application Developer's Guide</em></a> chapter 4:
+EPICS Build Facility.
+</p>
+
+<a name="lib"></a>
+<h2>2. Build the <em>StreamDevice</em> Library</h2>
+<p>
+Unpack the
+<a href="http://epics.web.psi.ch/software/streamdevice/StreamDevice-2.tgz"
+><em>StreamDevice</em> package</a> in a <kbd>&lt;top&gt;</kbd> directory
+of your application build area.
+(You might probably have done this already.)
+Go to the newly created <em>StreamDevice</em> directory
+and run <kbd>make</kbd> (or <kbd>gmake</kbd>).
+This will create and install the <em>stream</em> library and the 
+<kbd>stream.dbd</kbd> file.
+</p>
+<a name="app"></a>
+<h2>3. Build an Application</h2>
+<p>
+To use <em>StreamDevice</em>, your application must be built with the
+<em>asyn</em> and <em>stream</em> libraries and must load
+<kbd>asyn.dbd</kbd> and <kbd>stream.dbd</kbd>.
+</p>
+<p>
+Include the following lines in your application Makefile:
+</p>
+<pre>
+PROD_LIBS += stream
+PROD_LIBS += asyn
+</pre>
+<p>
+Include the following lines in your xxxAppInclude.dbd file to use
+<em>stream</em> and <em>asyn</em> with serial lines and IP sockets:
+</p>
+<pre>
+include "base.dbd"
+include "stream.dbd"
+include "asyn.dbd"
+registrar(drvAsynIPPortRegisterCommands)
+registrar(drvAsynSerialPortRegisterCommands)
+</pre>
+<p>
+You can find an example application in the <kbd>streamApp</kbd>
+subdirectory.
+</p>
+
+<a name="sta"></a>
+<h2>4. The Startup Script</h2>
+<p>
+<em>StreamDevice</em> is based on <a
+href="protocol.html"><em>protocol files</em></a>.
+To tell <em>StreamDevice</em> where to search for protocol files,
+set the environment variable <code>STREAM_PROTOCOL_PATH</code> to a
+list of directories to search.
+On Unix and vxWorks systems, directories are separated by <code>:</code>,
+on Windows systems by <code>;</code>.
+The default value is <code>STREAM_PROTOCOL_PATH=.</code>,
+i.e. the current directory.
+</p>
+<p>
+Also configure the buses (in <em>asynDriver</em> terms: ports) you want
+to use with <em>StreamDevice</em>.
+You can give the buses any name you want, like <kbd>COM1</kbd> or 
+<kbd>socket</kbd>, but I recommend to use names related to the
+connected device.
+</p>
+<h3>Example:</h3>
+<p>
+A power supply with serial communication (9600 baud, 8N1) is connected to
+<kbd>/dev/ttyS1</kbd>.
+The name of the power supply is <tt>PS1</tt>.
+Protocol files are either in the current working directory or in the
+<kbd>../protocols</kbd> directory.
+</p>
+<p>
+Then the startup script must contain lines like this:
+</p>
+<pre>
+epicsEnvSet ("STREAM_PROTOCOL_PATH", ".:../protocols")
+
+drvAsynSerialPortConfigure ("PS1","/dev/ttyS1")
+asynSetOption ("PS1", 0, "baud", "9600")
+asynSetOption ("PS1", 0, "bits", "8")
+asynSetOption ("PS1", 0, "parity", "none")
+asynSetOption ("PS1", 0, "stop", "1")
+asynSetOption ("PS1", 0, "clocal", "Y")
+asynSetOption ("PS1", 0, "crtscts", "N")
+</pre>
+
+<p>If the power supply was connected via telnet-style TCP/IP
+at address 192.168.164.10 on port 23,
+the startupscript would contain:
+</p>
+<pre>
+epicsEnvSet ("STREAM_PROTOCOL_PATH", ".:../protocols")
+
+drvAsynIPPortConfigure ("PS1", "192.168.164.10:23")
+</pre>
+
+<p>
+With a VXI11 (GPIB via TCP/IP) connection, e.g. a 
+HP E2050A on IP address 192.168.164.10, it would look like this:
+</p>
+<pre>
+epicsEnvSet ("STREAM_PROTOCOL_PATH", ".:../protocols")
+
+vxi11Configure ("PS1","192.168.164.10",1,1000,"hpib")
+</pre>
+
+
+<a name="pro"></a>
+<h2>5. The Protocol File</h2>
+<p>
+For each different type of hardware, create a protocol file
+which defines protocols for all needed functions of the device.
+The file name is arbitrary, but I recommend that it contains
+the device type.
+It must not contain spaces and should be short.
+During <code>iocInit</code>, <em>streamDevice</em> loads and parses
+the required protocol files.
+If the files contain errors, they are printed on the IOC shell.
+Put the protocol file in one of the directories listed in
+<code>STREAM_PROTOCOL_PATH</code>. 
+</p>
+<h3>Example:</h3>
+<p>
+<tt>PS1</tt> is an <em>ExamplePS</em> power supply.
+It communicates via ASCII strings which are terminated by
+&lt;carriage&nbsp;return&gt; &lt;line&nbsp;feed&gt; (ASCII codes 13, 10).
+The output current can be set by sending a string like
+<code>"CURRENT 5.13"</code>.
+When asked with the string <code>"CURRENT?"</code>, the device returns
+the last set value in a string like <code>"CURRENT 5.13 A"</code>.
+</p>
+<p>
+Normally, an analog output record should write its value to the device.
+But during startup, the record should be initialized from the the device.
+The protocol file <kbd>ExamplePS.proto</kbd> defines the protocol
+<code>setCurrent</code>.
+</p>
+<pre>
+Terminator = CR LF;
+
+setCurrent {
+    out "CURRENT %.2f";
+    @init { 
+        out "CURRENT?";
+        in "CURRENT %f A";
+    }
+}
+</pre>
+
+<a name="reload"></a>
+<h3>Reloading the Protocol File</h3>
+<p>
+During development, the protocol files might change frequently.
+To prevent restarting the IOC all the time, it is possible to reload
+the protocol file of one or all records with the shell function
+<code>streamReload("<var>record</var>")</code>.
+If <code>"<var>record</var>"</code> is not given, all records using
+<em>StreamDevice</em> reload their protocols.
+Furthermore, the <code>streamReloadSub</code> function can be used
+with a subroutine record to reload all protocols.
+</p>
+<p>
+Reloading the protocol file aborts currently running protocols.
+This might set <code>SEVR=INVALID</code> and <code>STAT=UDF</code>.
+If a record can't reload its protocol file (e.g. because of a syntax
+error), it stays <code>INVALID</code>/<code>UDF</code> until a valid
+protocol is loaded.
+</p>
+
+<p>
+See the <a href="protocol.html">next chapter</a> for protocol files in depth.
+</p>
+
+<a name="rec"></a>
+<h2>6. Configure the Records</h2>
+<p>
+To make a record use <em>StreamDevice</em>, set its <code>DTYP</code> field to
+<code>"stream"</code>.
+The <code>INP</code> or <code>OUT</code> link has the form
+<code>"@<var>file&nbsp;protocol&nbsp;bus</var>&nbsp;[<var>address</var>&nbsp;[<var>parameters</var>]]"</code>.
+</p>
+<p>
+Here, <code><var>file</var></code> is the name of the protocol file and
+<code><var>protocol</var></code> is the name of a protocol defined in this file.
+If the protocol requires <a href="protocol.html#argvar">arguments</a>,
+specify them enclosed in parentheses:
+<code><var>protocol</var>(<var>arg1,arg2,...</var>)</code>.
+</p>
+<p>
+The communication channel is specified with <code><var>bus</var></code> and
+<code><var>addr</var></code>.
+If the bus does not have addresses, <code><var>addr</var></code> is dispensable.
+Optional <code><var>parameters</var></code> are passed to the bus driver.
+</p>
+
+<h3>Example:</h3>
+<p>
+Create an output record to set the current of <tt>PS1</tt>.
+Use protocol <em>setCurrent</em> from file <em>ExamplePS.proto</em>.
+The bus is called <em>PS1</em> like the device.
+</p>
+
+<pre>
+record (ao, "PS1:I-set")
+{
+    field (DESC, "Set current of PS1")
+    field (DTYP, "stream")
+    field (OUT,  "@ExamplePS.proto setCurrent PS1")
+    field (EGU,  "A")
+    field (PREC, "2")
+    field (DRVL, "0")
+    field (DRVH, "60")
+    field (LOPR, "0")
+    field (HOPR, "60")
+}
+</pre>
+
+<hr>
+<p align="right"><a href="protocol.html">Next: Protocol Files</a></p>
+<p><small>Dirk Zimoch, 2007</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

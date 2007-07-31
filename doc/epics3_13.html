@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: Using EPICS 3.13</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: Using EPICS 3.13</h1>
+
+<a name="pre"></a>
+<h2>1. Prerequisites</h2>
+<p>
+<em>StreamDevice</em> version 2.2 and higher can run on EPICS 3.13.
+However, this requires some preparation, because EPICS 3.13 is missing
+some libraries and header files.
+Also <em>asynDriver</em></a> needs to be modified to compile with EPICS 3.13.
+Due to the limitations of EPICS 3.13, you can build streamDevice only for
+vxWorks systems.
+</p>
+<p>
+Of course, you need an installation of <a target="ex"
+href="http://www.aps.anl.gov/epics/base/R3-13.php">EPICS 3.13</a>.
+I guess you already have that, otherwhise you would want to
+<a href="setup">install <em>StreamDevice</em> on EPICS 3.14</a>.
+I have tested <em>StreamDevice</em> with EPICS versions 3.13.7 up to 3.13.10
+with vxWorks 5.3.1 and 5.5 on a ppc604 processor.
+</p>
+<p>
+Download my <a
+href="http://epics.web.psi.ch/software/streamdevice/compat-1-0.tgz">
+compatibility package</a>,
+<a target="ex"
+href="http://www.aps.anl.gov/epics/modules/soft/asyn/"><em>asynDriver</em></a>
+version 4-3 or higher,
+and my <a
+href="http://epics.web.psi.ch/software/streamdevice/configure.tgz">
+configure patches</a>.
+</p>
+
+<a name="compat"></a>
+<h2>2. Build the Compatibility Package</h2>
+<p>
+Unpack <kbd>compat-1-0.tgz</kbd> in the <kbd>&lt;top&gt;</kbd> directory of
+your application build area.
+(Please refer to the <a target="ex"
+href="http://www.aps.anl.gov/epics/EpicsDocumentation/AppDevManuals/iocScm-3.13.2/managingATop.html#3">
+<em>EPICS IOC Software Configuration Management</em></a> document.)
+</p>
+<p>
+Change to the <kbd>compat</kbd> directory and run <kbd>make</kbd>.
+This installs many EPICS 3.14-style header files and a small library
+(<kbd>compatLib</kbd>).
+</p>
+
+<a name="asyn"></a>
+<h2>3. Build the <em>asynDriver</em> Library</h2>
+<p>
+Unpack the <em>asynDriver</em> package and change to its top directory.
+</p>
+<p>
+Unpack <kbd>configure.tgz</kbd> here.
+This will modify files in the <kbd>configure</kbd> directory.
+Change to the <kbd>configure</kbd> directory and edit <kbd>CONFIG_APP</kbd>.
+Set <code>COMPAT=...</code> to the <kbd>&lt;top&gt;</kbd>
+directory where you have installed the compatibility package before.
+(This patch might also allow you to compile other 3.14-style drivers for 3.13.
+It has absolutely no effect if you use EPICS 3.14.)
+</p>
+<p>
+Edit <kbd>RELEASE</kbd> and comment out <code>IPAC=...</code>
+(unless you have the <em>ipac</em> package and somehow made it
+compatible to EPICS 3.13).
+Set <code>EPICS_BASE</code> to your EPICS 3.13 installation.
+</p>
+<p>
+Run <kbd>make</kbd> in the <kbd>configure</kbd> directory.
+</p>
+<p>
+Change to <kbd>../asyn/devGpib</kbd> and edit
+<kbd>devGpib.h</kbd> and <kbd>devSupportGpib.c</kbd>.
+Change all occurrences of <code>static&nbsp;gDset</code> to
+<code>gDset</code>.
+</p>
+<p>
+Go one directory up (to <kbd>asyn</kbd>) and run <kbd>make</kbd> twice!
+(The first run will just create <kbd>Makefile.Vx</kbd>.)
+Ignore all compiler warnings.
+</p>
+<p>
+Do not try to build the test applications. It will not work.
+</p>
+
+<a name="lib"></a>
+<h2>4. Build the <em>StreamDevice</em> Library</h2>
+<p>
+Go to the <kbd>&lt;top&gt;</kbd> directory of your application build area.
+</p>
+<p>
+Edit <kbd>config/RELEASE</kbd> and add the variable <code>ASYN</code>.
+Set it to the location of the <em>asynDriver</em> installation.
+Also set the <code>COMPAT</code> variable to the location of the
+compatibility package.
+Run <kbd>make</kbd> in the <kbd>config</kbd> directory.
+<p>
+Unpack the <em>StreamDevice</em> package in your <kbd>&lt;top&gt;</kbd>
+directory.
+Change to the newly created <em>StreamDevice</em> directory
+and run <kbd>make</kbd>.
+</p>
+
+<a name="app"></a>
+<h2>5. Build an Application</h2>
+<p>
+To use <em>StreamDevice</em>, your application must be built with the
+<em>asyn</em>, <em>stream</em>, and <em>compat</em> libraries and must load
+<kbd>asyn.dbd</kbd> and <kbd>stream.dbd</kbd>.
+Also, as the <em>stream</em> library contains C++ code, the application
+must be munched.
+Therefore, include <kbd>$(TOP)/config/RULES.munch</kbd>.
+(Put your application in the same <kbd>&lt;top&gt;</kbd> as the
+<em>StreamDevice</em> installation.)
+</p>
+<p>
+Include the following lines in your <kbd>Makefile.Vx</kbd>:
+</p>
+<pre>
+LDLIBS += $(COMPAT_BIN)/compatLib
+LDLIBS += $(ASYN_BIN)/asynLib
+LDLIBS += $(INSTALL_BIN)/streamLib
+
+include $(TOP)/config/RULES.munch
+</pre>
+<p>
+Include the following lines in your <kbd>xxxAppInclude.dbd</kbd> file to use
+<em>stream</em> and <em>asyn</em> (you also need a <kbd>base.dbd</kbd>):
+</p>
+<pre>
+include "base.dbd"
+include "stream.dbd"
+include "asyn.dbd"
+</pre>
+<p>
+You can find an example application in the <kbd>streamApp</kbd>
+subdirectory.
+</p>
+
+<a name="sta"></a>
+<h2>6. The Startup Script</h2>
+<p>
+<em>StreamDevice</em> is based on <a
+href="protocol.html"><em>protocol files</em></a>.
+To tell <em>StreamDevice</em> where to search for protocol files,
+set the environment variable <code>STREAM_PROTOCOL_PATH</code> to a
+list of directories to search.
+Directories are separated by <code>:</code>.
+The default value is <code>STREAM_PROTOCOL_PATH=.</code>,
+i.e. the current directory.
+</p>
+<p>
+Also configure the buses (in <em>asynDriver</em> terms: ports) you want
+to use with <em>StreamDevice</em>.
+You can give the buses any name you want, like <kbd>COM1</kbd> or 
+<kbd>socket</kbd>, but I recommend to use names related to the
+connected device.
+</p>
+<h3>Example:</h3>
+<p>
+A power supply with serial communication (9600 baud, 8N1) is connected to
+<kbd>/dev/ttyS1</kbd>.
+The name of the power supply is <tt>PS1</tt>.
+Protocol files are either in the current working directory or in the
+<kbd>../protocols</kbd> directory.
+</p>
+<p>
+Then the startup script must contain lines like this:
+</p>
+<pre>
+ld < iocCore
+ld < streamApp.munch
+dbLoadDatabase ("streamApp.dbd")
+
+putenv ("STREAM_PROTOCOL_PATH=.:../protocols")
+
+drvAsynSerialPortConfigure ("PS1","/dev/ttyS1")
+asynSetOption ("PS1", 0, "baud", "9600")
+asynSetOption ("PS1", 0, "bits", "8")
+asynSetOption ("PS1", 0, "parity", "none")
+asynSetOption ("PS1", 0, "stop", "1")
+</pre>
+
+<p>
+An alternative approach is to skip step 5 (do not build an application)
+and load all components explicitely in the startup script.
+The <code>STREAM_PROTOCOL_PATH</code> variable can also be a vxWorks shell
+variable.
+</p>
+<pre>
+ld < iocCore
+ld < compatLib
+ld < asynLib
+ld < streamLib.munch
+dbLoadDatabase ("asyn.dbd")
+dbLoadDatabase ("stream.dbd")
+
+STREAM_PROTOCOL_PATH=".:../protocols"
+
+drvAsynSerialPortConfigure ("PS1","/dev/ttyS1")
+asynSetOption ("PS1", 0, "baud", "9600")
+asynSetOption ("PS1", 0, "bits", "8")
+asynSetOption ("PS1", 0, "parity", "none")
+asynSetOption ("PS1", 0, "stop", "1")
+</pre>
+
+<h2>7. <a href="setup.html#pro">Continue as with EPICS 3.14.</a></h2>
+
+<hr>
+<p><small>Dirk Zimoch, 2006</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

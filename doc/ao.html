@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: ao Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: ao Records</h1>
+
+<h2>Normal Operation</h2>
+<p>
+Depending on the format type, different record fields are used
+for output and input. The variable <code><i>x</i></code> stands for the
+written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=(OVAL-AOFF)/ASLO</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i>*ASLO+AOFF</code><br>
+   In both cases, if <code>ASLO==0.0</code>, it is treated as <code>1.0</code>.
+   Default values are <code>ASLO=1.0</code>, <code>AOFF=0.0</code>.<br>
+   Note that <code>OVAL</code> is not necessarily equal to <code>VAL</code>
+   if <code>OROC!=0.0</code>.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=RVAL</code><br>
+   <u>Input:</u> <code>RBV=<i>x</i></code><br>
+   Note that the record calculates
+   <code>RVAL=(((OVAL-EOFF)/ESLO)-AOFF)/ASLO</code> if
+   <code>LINR=="LINEAR"</code>. <code>ESLO</code> and <code>EOFF</code>
+   might be set in the record definition. <em>StreamDevice</em> does not set it.
+   For example, <code>EOFF=-10</code> and <code>ESLO=0.000305180437934</code>
+   (=20.0/0xFFFF) maps -10.0 to 0x0000, 0.0 to 0x7FFF and 10.0 to 0xFFFF.
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+</dl>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. In contrast to normal operation, output in DOUBLE format uses
+ <code>VAL</code> instead of <code>OVAL</code>. Note that the record
+ initializes <code>VAL</code> from <code>DOL</code> if that is a constant.
+ LONG input is put to <code>RVAL</code> as well as to <code>RBV</code> and
+ converted by the record.
+</p>
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+<a href="calcout.html">calcout</a>
+<a href="scalcout.html">scalcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>

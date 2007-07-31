@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>StreamDevice: calcout Records</title>
+<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta name="author" content="Dirk Zimoch">
+</head>
+<body>
+<h1>StreamDevice: calcout Records</h1>
+
+<p>
+<b>Note:</b> Device support for calcout records is only available for
+EPICS base R3.14.5 or higher.
+</p>
+
+<h2>Normal Operation</h2>
+<p>
+Different record fields are used for output and input. The variable
+<code><i>x</i></code> stands for the written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=OVAL</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+   Note that the record calculates <code>OVAL</code> from <code>CALC</code>
+   or <code>OCAL</code> depending on <code>DOPT</code>.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=int(OVAL)</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=int(OVAL)</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+</dl>
+<p>
+ For calcout records, it is probably more useful to access fields
+ <code>A</code> to <code>L</code> directly (e.g. <code>"%(A)f"</code>).
+ However, even if <code>OVAL</code> is not used, it is calculated by the
+ record. Thus, <code>CALC</code> must always contain a valid expression
+ (e.g. <code>"0"</code>).
+</p>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. All format converters work like in normal operation.
+</p>
+
+<hr>
+<p>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+<a href="scalcout.html">scalcout</a>
+</p>
+<p><small>Dirk Zimoch, 2005</small></p>
+<script src="stream.js" type="text/javascript"></script>
+</body>
+</html>
