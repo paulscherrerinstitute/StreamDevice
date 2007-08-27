@@ -57,6 +57,10 @@ SRCS += $(FORMATS:%=%Converter.cc)
 SRCS += $(RECORDS:%=dev%Stream.c)
 SRCS += $(STREAM_SRCS)
 
+ifneq ($(filter Regexp,$(FORMATS)),)
+LIB_LIBS += pcre
+endif
+
 LIB_LIBS += Com dbIoc dbStaticIoc registryIoc iocsh
 
 ifeq ($(USE_MEMGUARD),YES)

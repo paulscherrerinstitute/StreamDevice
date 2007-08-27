@@ -934,6 +934,7 @@ void intrCallbackOctet(void* /*pvt*/, asynUser *pasynUser,
 // 3. eomReason=ASYN_EOM_CNT when message was too long for
 //    internal buffer of asynDriver.
 
+    if (!interruptAccept) return; // too early to process records
     if (interface->ioAction == AsyncRead ||
         interface->ioAction == AsyncReadMore)
     {
@@ -1181,6 +1182,9 @@ connectRequest(unsigned long connecttimeout_ms)
     double queueTimeout = connecttimeout_ms*0.001;
     asynStatus status;
     ioAction = Connect;
+    
+    debug("AsynDriverInterface::connectRequest %s\n",
+        clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, queueTimeout);
     if (status != asynSuccess)
@@ -1198,14 +1202,22 @@ connectRequest(unsigned long connecttimeout_ms)
 void AsynDriverInterface::
 connectHandler()
 {
+    int connected;
     asynStatus status;
-    status = pasynCommon->connect(pvtCommon, pasynUser);
-    if (status != asynSuccess)
+
+    pasynManager->isConnected(pasynUser, &connected);
+    debug("AsynDriverInterface::connectHandler %s is %s connected\n",
+        clientName(), connected ? "already" : "not yet");
+    if (!connected)
     {
-        error("%s connectRequest: pasynCommon->connect() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        connectCallback(StreamIoFault);
-        return;
+        status = pasynCommon->connect(pvtCommon, pasynUser);
+        if (status != asynSuccess)
+        {
+            error("%s connectRequest: pasynCommon->connect() failed: %s\n",
+                clientName(), pasynUser->errorMessage);
+            connectCallback(StreamIoFault);
+            return;
+        }
     }
     connectCallback(StreamIoSuccess);
 }
@@ -1215,6 +1227,9 @@ disconnect()
 {
     asynStatus status;
     ioAction = Disconnect;
+    
+    debug("AsynDriverInterface::disconnect %s\n",
+        clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, 0.0);
     if (status != asynSuccess)
@@ -1233,13 +1248,21 @@ disconnect()
 void AsynDriverInterface::
 disconnectHandler()
 {
+    int connected;
     asynStatus status;
-    status = pasynCommon->disconnect(pvtCommon, pasynUser);
-    if (status != asynSuccess)
+
+    pasynManager->isConnected(pasynUser, &connected);
+    debug("AsynDriverInterface::disconnectHandler %s is %s disconnected\n",
+        clientName(), !connected ? "already" : "not yet");
+    if (connected)
     {
-        error("%s connectRequest: pasynCommon->disconnect() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return;
+        status = pasynCommon->disconnect(pvtCommon, pasynUser);
+        if (status != asynSuccess)
+        {
+            error("%s connectRequest: pasynCommon->disconnect() failed: %s\n",
+                clientName(), pasynUser->errorMessage);
+            return;
+        }
     }
 }
 
@@ -1312,6 +1335,8 @@ void handleTimeout(asynUser* pasynUser)
             interface->connectCallback(StreamIoTimeout);
             break;
         case Disconnect:
+            debug ("AsynDriverInterface %s: disconnect timeout\n",
+                interface->clientName());
             // not interested in callback
             break;
         // No AsyncRead here because we don't use timeout when polling

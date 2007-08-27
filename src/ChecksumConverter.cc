@@ -50,6 +50,11 @@ static ulong xor8(const uchar* data, ulong len, ulong sum)
     return sum;
 }
 
+static ulong xor7(const uchar* data, ulong len, ulong sum)
+{
+    return xor8(data, len, sum) & 0x7F;
+}
+
 static ulong crc_0x07(const uchar* data, ulong len, ulong crc)
 {
     // x^8 + x^2 + x^1 + x^0 (0x07)
@@ -460,12 +465,23 @@ static checksum checksumMap[] =
     {"sum8",    sum,              0x00,       0x00,       1}, // 0xDD
     {"sum16",   sum,              0x0000,     0x0000,     2}, // 0x01DD
     {"sum32",   sum,              0x00000000, 0x00000000, 4}, // 0x000001DD
-    {"nsum",    sum,              0xff,       0xff,       1}, // 0x23
-    {"negsum",  sum,              0xff,       0xff,       1}, // 0x23
-    {"-sum",    sum,              0xff,       0xff,       1}, // 0x23
-    {"notsum",  sum,              0x00,       0xff,       1}, // 0x22
-    {"~sum",    sum,              0x00,       0xff,       1}, // 0x22
+    {"nsum",    sum,              0xFF,       0xFF,       1}, // 0x23
+    {"negsum",  sum,              0xFF,       0xFF,       1}, // 0x23
+    {"-sum",    sum,              0xFF,       0xFF,       1}, // 0x23
+    {"nsum8",   sum,              0xFF,       0xFF,       1}, // 0x23
+    {"negsum8", sum,              0xFF,       0xFF,       1}, // 0x23
+    {"-sum8",   sum,              0xFF,       0xFF,       1}, // 0x23
+    {"nsum16",  sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
+    {"negsum16",sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
+    {"-sum16",  sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
+    {"nsum32",  sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
+    {"negsum32",sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
+    {"-sum32",  sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
+    {"notsum",  sum,              0x00,       0xFF,       1}, // 0x22
+    {"~sum",    sum,              0x00,       0xFF,       1}, // 0x22
     {"xor",     xor8,             0x00,       0x00,       1}, // 0x31
+    {"xor8",    xor8,             0x00,       0x00,       1}, // 0x31
+    {"xor7",    xor7,             0x00,       0x00,       1}, // 0x31
     {"crc8",    crc_0x07,         0x00,       0x00,       1}, // 0xF4
     {"ccitt8",  crc_0x31,         0x00,       0x00,       1}, // 0xA1
     {"crc16",   crc_0x8005,       0x0000,     0x0000,     2}, // 0xFEE8
@@ -494,7 +510,7 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
     const char* p = strchr(source, '>');
     if (!p)
     {
-        error ("Missing terminating '>' in checksum format.\n");
+        error ("Missing closing '>' in checksum format.\n");
         return false;
     }
 

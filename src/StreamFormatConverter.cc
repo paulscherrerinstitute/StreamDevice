@@ -384,7 +384,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
             fmt.prec, fmt.conv);
         return false;
     }
-    info.printf("%%%d[", fmt.width);
+    info.printf("%%%s%d[", fmt.flags & skip_flag ? "*" : "", fmt.width);
     while (*source && *source != ']')
     {
         if (*source == esc) source++;

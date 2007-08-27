@@ -41,6 +41,10 @@ FORMATS += Raw
 FORMATS += Binary
 FORMATS += Checksum
 
+ifdef PCRE
+FORMATS += Regexp
+endif
+
 # Want a loadable module? 
 # For Tornado 2.0.2, a fix is needed in the
 # registerRecordDeviceDriver.pl script in base:

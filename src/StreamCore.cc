@@ -30,7 +30,7 @@ const char* commandStr[] = { "end", "in", "out", "wait", "event", "exec",
 
 inline const char* commandName(unsigned char i)
 {
-    return i > exec_cmd ? "invalid" : commandStr[i];
+    return i >= sizeof(commandStr)/sizeof(char*) ? "invalid" : commandStr[i];
 }
 
 /// debug functions /////////////////////////////////////////////
@@ -1323,7 +1323,7 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
         consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",
-        name(), StreamBuffer(value, consumed).expand()());
+        name(), StreamBuffer(value, maxlen).expand()());
 #endif
     flags |= GotValue;
     return consumed;
