@@ -19,7 +19,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <devStream.h>
+#include "devStream.h"
 #include <mbbiDirectRecord.h>
 #include <epicsExport.h>
 

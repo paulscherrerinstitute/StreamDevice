@@ -18,7 +18,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <devStream.h>
+#include "devStream.h"
 #include <stringoutRecord.h>
 #include <epicsExport.h>
 

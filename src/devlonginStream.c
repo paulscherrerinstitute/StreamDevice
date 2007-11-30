@@ -18,7 +18,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <devStream.h>
+#include "devStream.h"
 #include <longinRecord.h>
 #include <epicsExport.h>
 

@@ -20,7 +20,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <devStream.h>
+#include "devStream.h"
 #include <aaoRecord.h>
 #include <epicsExport.h>
 

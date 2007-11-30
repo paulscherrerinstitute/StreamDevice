@@ -1180,11 +1180,11 @@ void streamExecuteCommand(CALLBACK *pcallback)
     
     if (execute(pstream->outputLine()) != OK)
     {
-        pstream->execCallback(StreamBusInterface::ioFault);
+        pstream->execCallback(StreamIoFault);
     }
     else
     {
-        pstream->execCallback(StreamBusInterface::ioSuccess);
+        pstream->execCallback(StreamIoSuccess);
     }
 }
 #endif
