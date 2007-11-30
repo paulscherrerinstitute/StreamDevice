@@ -172,6 +172,9 @@ void <a href="#event">eventCallback</a>(StreamIoStatus&nbsp;status);
 <div class="indent"><code>
 void <a href="#connect">connectCallback</a>(StreamIoStatus&nbsp;status);
 </code></div>
+<div class="indent"><code>
+void <a href="#connect">disconnectCallback</a>(StreamIoStatus&nbsp;status);
+</code></div>
 
 <h3>Other provided methods, attibutes, and types</h3>
 
@@ -280,6 +283,9 @@ bool disconnect();
 <div class="indent"><code>
 void connectCallback(IoStatus&nbsp;status);
 </code></div>
+<div class="indent"><code>
+void disconnectCallback(IoStatus&nbsp;status);
+</code></div>
 <p>
 Connection should be handled automatically.
 If the device is disconnected, each attempt to access the
@@ -292,7 +298,8 @@ However, sometimes the client wants to connect or
 disconnect explicitely.
 To connect, the client calls <code>connectRequest()</code>.
 This function should return <code>true</code> immediately
-or <code>false</code> if the request cannot be accepted.
+or <code>false</code> if the request cannot be accepted or connection
+handling is not supported.
 The interface should call <code>connectCallback(StreamIoSuccess)</code>
 once the bus could be connected.
 If the bus cannot be connected within <code>connecttimeout_ms</code>
@@ -305,10 +312,14 @@ something wrong with the I/O hardware,
 <code>connectCallback(StreamIoFault)</code> may be called.
 </p>
 <p>
-To disconnect, the client calls <code>disconnect()</code>;
+To disconnect, the client calls <code>disconnectRequest()</code>;
 This function should return <code>true</code> immediately or
-<code>false</code> if disconnecting is impossible.
-There is no callback for <code>disconnect()</code>.
+<code>false</code> if the request cannot be accepted or connection
+handling is not supported.
+The interface should call <code>connectCallback(StreamIoSuccess)</code>
+once the bus is disconnected. There is no timeout for this operation.
+If disconnecting is impossible, the interface should call
+<code>connectCallback(StreamIoFault)</code>.
 </p>
 
 <a name="lock"></a>
