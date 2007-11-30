@@ -413,9 +413,29 @@ In input, the next byte or bytes must match the checksum.
 <p>
 This input-only format matches <a target="ex"
 href="http://www.pcre.org/" >Perl compatible regular expressions (PCRE)</a>.
-It is only available if a PCRE library is installed and the RELEASE
-file contains the variable <code>PCRE</code> which should point to the
-install location.
+It is only available if a PCRE library is installed.
+</p>
+<p>
+If PCRE is not available for your host or cross architecture, download
+the sourcecode from <a target="ex" href="http://www.pcre.org/">www.pcre.org</a>
+and try my EPICS compatible <a target="ex"
+href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>
+to compile it like a normal EPICS application.
+The Makefile is known to work with EPICS 3.14.8 and PCRE 7.2.
+In your RELEASE file define the variable <code>PCRE</code> so that
+it points to the install location of PCRE.
+</p>
+<p>
+If PCRE is already installed on your system, use the variables
+<code>PCRE_INCLUDE</code> and <code>PCRE_LIB</code> instead to provide
+the install directories of <code>pcre.h</code> and the library.
+</p>
+<p>
+If you have PCRE installed in different locations for different (cross)
+architectures, define the variables in RELEASE.Common.&lt;architecture&gt;
+instead of the global RELEASE file.
+</p>
+<p>
 If the regular expression is not anchored, i.e. does not start with
 <code>^</code>, leading non-matching input is skipped. 
 A maximum of <em>width</em> bytes is matched, if specified.

@@ -36,6 +36,8 @@ href="http://www.aps.anl.gov/aod/bcda/synApps/index.php"
 Up to <em>calc</em> release R2-6 (<em>synApps</em> release R5_1),
 the <em>scalcout</em> record needs a fix.
 (See separate <a href="scalcout.html"><em>scalcout</em> page</a>.)
+Support for the scalcout is optional. <em>StreamDevice</em> works
+as well without scalcout or SynApps.
 </p>
 <p>
 Up to release R3.14.8.2, a fix in EPICS base is required to build
@@ -48,15 +50,40 @@ epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 </pre>
 
 <p>
-Make sure that the <em>asyn</em> library and the <em>calc</em> module of
-<em>synApps</em> can be found, e.g. by
+Make sure that the <em>asyn</em> library (and the <em>calc</em> module of
+<em>synApps</em>, if desired) can be found, e.g. by
 adding <code>ASYN</code>
 and (if installed) <code>CALC</code> or <code>SYNAPPS</code>
 to your <kbd>&lt;top&gt;/configure/RELEASE</kbd> file:
+</p>
 <pre>
 ASYN=/home/epics/asyn/4-5
 CALC=/home/epics/synApps/calc/2-7
 </pre>
+<p>
+If you want to enable regular expression matching, you need the <em>PCRE</em> package.
+For most Linux systems, it is already installed. In that case add the locations
+of the <em>PCRE</em> header and library to your <kbd>RELEASE</kbd> file:
+</p>
+<pre>
+PCRE_INCLUDE=/usr/include/pcre
+PCRE_LIB=/usr/lib
+</pre>
+<p>
+If you want to build <em>StreamDevice</em> for platforms without <em>PCRE</em> support,
+it is the easiest to build <em>PCRE</em> as an EPICS application.
+Download the <em>PCRE</em> package from <a target=ex href="http://www.pcre.org">www.pcre.org</a>
+and compile it with my EPICS compatible
+<a target=ex href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>.
+Then define the location of the application in your RELEASE file.
+</p>
+<pre>
+PCRE=/home/epics/pcre
+</pre>
+<p>
+Regular expressions are optional. If you don't want them, you don't need this.
+</p>
+
 <p>
 For details on <kbd>&lt;top&gt;</kbd> directories and RELEASE files,
 please refer to the
