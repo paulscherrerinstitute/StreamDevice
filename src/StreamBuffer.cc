@@ -60,7 +60,8 @@ grow(long minsize)
     // make space for minsize + 1 (for termination) bytes
     char* newbuffer;
     long newcap;
-    if (minsize > 10000)
+#ifdef EXPLODE
+    if (minsize > 1000000)
     {
         // crude trap against infinite grow
         error ("StreamBuffer exploded growing from %ld to %ld chars. Exiting\n",
@@ -83,6 +84,7 @@ grow(long minsize)
         fprintf(stderr, "\n");
         abort();
     }
+#endif
     if (minsize < cap)
     {
         // just move contents to start of buffer and clear end
