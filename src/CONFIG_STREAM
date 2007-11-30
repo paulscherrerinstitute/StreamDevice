@@ -40,8 +40,21 @@ FORMATS += BCD
 FORMATS += Raw
 FORMATS += Binary
 FORMATS += Checksum
+FORMATS += Exponential
 
-ifdef PCRE
+# Want Perl regular expression matching?
+# If PCRE is installed at the same location for all
+# architectures, define the following variable in your
+# RELEASE file. If the PCRE installation is different
+# (or even missing) for some architectures, use
+# separate RELEASE.Common.<arch> files.
+# If PCRE is an EPICS-like project define
+# PCRE=<location of the PCRE project>
+# Else define
+# PCRE_INCLUDE=<location of the pcre.h file>
+# PCRE_LIB=<location of the PCRE library>
+
+ifneq ($(words $(PCRE) $(PCRE_LIB) $(PCRE_INCLUDE)),0)
 FORMATS += Regexp
 endif
 
