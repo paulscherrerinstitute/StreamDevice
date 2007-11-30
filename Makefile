@@ -1,11 +1,9 @@
 include /ioc/tools/driver.makefile
-#EXCLUDE_VERSIONS = 3.13.2
-EXCLUDE_VERSIONS = 3.13
-PROJECT=stream
+EXCLUDE_VERSIONS = 3.13.2
+PROJECT=stream2
+BUILDCLASSES += Linux
 
 DOCUDIR = doc
-SOURCES += $(wildcard src/*.c)
-SOURCES += $(wildcard src/*.cc)
 
 DBDS = stream.dbd
 
@@ -15,6 +13,8 @@ FORMATS += BCD
 FORMATS += Raw
 FORMATS += Binary
 FORMATS += Checksum
+FORMATS += Regexp
+FORMATS += Exponential
 RECORDTYPES += aai aao
 RECORDTYPES += ao ai
 RECORDTYPES += bo bi
@@ -24,6 +24,16 @@ RECORDTYPES += longout longin
 RECORDTYPES += stringout stringin
 RECORDTYPES += waveform
 RECORDTYPES += calcout
+
+SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
+SOURCES += $(FORMATS:%=src/%Converter.cc)
+SOURCES += $(BUSSES:%=src/%Interface.cc)
+SOURCES += $(wildcard src/Stream*.cc)
+SOURCES += src/StreamVersion.c
+
+ifeq (${EPICS_BASETYPE},3.13)
+USR_INCLUDES += -include $(INSTALL_INCLUDE)/compat3_13.h
+endif
 
 StreamCore.o: streamReferences
 
