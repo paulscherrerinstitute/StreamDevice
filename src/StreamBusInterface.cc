@@ -89,7 +89,7 @@ connectRequest (unsigned long)
 }
 
 bool StreamBusInterface::
-disconnect ()
+disconnectRequest ()
 {
     return false;
 }
@@ -134,6 +134,11 @@ eventCallback(StreamIoStatus)
 
 void StreamBusInterface::Client::
 connectCallback(StreamIoStatus)
+{
+}
+
+void StreamBusInterface::Client::
+disconnectCallback(StreamIoStatus)
 {
 }
 

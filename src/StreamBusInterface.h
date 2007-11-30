@@ -42,6 +42,7 @@ public:
             const void* input, long size);
         virtual void eventCallback(StreamIoStatus status);
         virtual void connectCallback(StreamIoStatus status);
+        virtual void disconnectCallback(StreamIoStatus status);
         virtual long priority();
         virtual const char* name() = 0;
         virtual const char* getInTerminator(size_t& length) = 0;
@@ -86,7 +87,7 @@ public:
             return businterface->connectRequest(timeout_ms);
         }
         bool busDisconnect() {
-            return businterface->disconnect();
+            return businterface->disconnectRequest();
         }
     };
 
@@ -113,6 +114,8 @@ protected:
         { client->eventCallback(status); }
     void connectCallback(StreamIoStatus status)
         { client->connectCallback(status); }
+    void disconnectCallback(StreamIoStatus status)
+        { client->disconnectCallback(status); }
     const char* getInTerminator(size_t& length)
         { return client->getInTerminator(length); }
     const char* getOutTerminator(size_t& length)
@@ -132,7 +135,7 @@ protected:
         unsigned long replytimeout_ms);     // supportsEvents() returns true
     virtual void release();
     virtual bool connectRequest(unsigned long connecttimeout_ms);
-    virtual bool disconnect();
+    virtual bool disconnectRequest();
     virtual void finish();
 
 // pure virtual

@@ -23,6 +23,12 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#include <epicsExport.h>
+int showAsyncErrors = 0;
+extern "C" {
+epicsExportAddress(int, showAsyncErrors);
+}
+
 enum Commands { end_cmd, in_cmd, out_cmd, wait_cmd, event_cmd, exec_cmd,
     connect_cmd, disconnect_cmd };
 const char* commandStr[] = { "end", "in", "out", "wait", "event", "exec",
@@ -801,6 +807,8 @@ writeCallback(StreamIoStatus status)
     flags &= ~WritePending;
     if (status != StreamIoSuccess)
     {
+        error("%s: write failed: %s\n",
+            name(), StreamIoStatusStr[status]);
         finishProtocol(WriteTimeout);
         return;
     }
@@ -921,7 +929,11 @@ readCallback(StreamIoStatus status,
             finishProtocol(ReplyTimeout);
             return 0;
         case StreamIoFault:
-            error("%s: I/O error when reading from device\n", name());
+            error("%s: I/O error after reading %ld byte%s: \"%s%s\"\n",
+                name(),
+                inputBuffer.length(), inputBuffer.length()==1 ? "" : "s",
+                inputBuffer.length() > 20 ? "..." : "",
+                inputBuffer.expand(-20,20)());
             finishProtocol(Fault);
             return 0;
     }
@@ -985,7 +997,7 @@ readCallback(StreamIoStatus status,
         }
         // try to parse what we got
         end = inputBuffer.length();
-        if (!(flags & AsyncMode))
+        if (!(flags & AsyncMode)||showAsyncErrors)
         {
             error("%s: Timeout after reading %ld byte%s \"%s%s\"\n",
                 name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
@@ -1115,7 +1127,7 @@ matchInput()
                     }
                     if (consumed < 0)
                     {
-                        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                        if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
                         {
                             error("%s: Input \"%s%s\" does not match format %%%s\n",
                                 name(), inputLine.expand(consumedInput, 20)(),
@@ -1130,7 +1142,7 @@ matchInput()
                 flags &= ~Separator;
                 if (!matchValue(fmt, fieldAddress ? fieldAddress() : NULL))
                 {
-                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
                     {
                         if (flags & ScanTried)
                             error("%s: Input \"%s%s\" does not match format %%%s\n",
@@ -1160,7 +1172,7 @@ matchInput()
                 {
                     int i = 0;
                     while (commandIndex[i] >= ' ') i++;
-                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
                     {
                         error("%s: Input \"%s%s\" too short."
                               " No match for \"%s\"\n",
@@ -1173,7 +1185,7 @@ matchInput()
                 }
                 if (command != inputLine[consumedInput])
                 {
-                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
@@ -1198,7 +1210,7 @@ matchInput()
     long surplus = inputLine.length()-consumedInput;
     if (surplus > 0 && !(flags & IgnoreExtraInput))
     {
-        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+        if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
         {
             error("%s: %ld byte%s surplus input \"%s%s\"\n",
                 name(), surplus, surplus==1 ? "" : "s",
@@ -1510,8 +1522,23 @@ bool StreamCore::evalDisconnect()
         finishProtocol(Fault);
         return false;
     }
-    evalCommand();
     return true;
+}
+
+void StreamCore::
+disconnectCallback(StreamIoStatus status)
+{
+    switch (status)
+    {
+        case StreamIoSuccess:
+            evalCommand();
+            return;
+        default:
+            error("%s: Disconnect failed\n",
+                name());
+            finishProtocol(Fault);
+            return;
+    }
 }
 
 #include "streamReferences"

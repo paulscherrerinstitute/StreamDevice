@@ -200,6 +200,7 @@ protected:
     void eventCallback(StreamIoStatus status);
     void execCallback(StreamIoStatus status);
     void connectCallback(StreamIoStatus status);
+    void disconnectCallback(StreamIoStatus status);
     const char* getInTerminator(size_t& length);
     const char* getOutTerminator(size_t& length);
 
