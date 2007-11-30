@@ -42,7 +42,7 @@ parse(const StreamFormat& format, StreamBuffer& info,
         {
             if (*source == esc) source++;
             info.append(*source++);
-            if (!*source)
+            if (*source)
             {
                 if (*source == esc) source++;
                 info.append(*source++);
