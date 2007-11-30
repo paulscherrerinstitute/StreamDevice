@@ -22,7 +22,7 @@
 #define devStream_h
 
 #define STREAM_MAJOR 2
-#define STREAM_MINOR 2
+#define STREAM_MINOR 3
 
 #if defined(__vxworks) || defined(vxWorks)
 #include <vxWorks.h>
