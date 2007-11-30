@@ -54,7 +54,16 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
             value >>= 8;
             width--;
         }
-        byte = (byte & 0x80) ? 0xFF : 0x00; // fill with sign
+        if (format.flags & zero_flag)
+        {
+            // fill with zero
+            byte = 0;
+        }
+        else
+        {
+            // fill with sign
+            byte = (byte & 0x80) ? 0xFF : 0x00;
+        }
         while (width--)
         {
             output.append(byte);
@@ -62,8 +71,17 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     }
     else // msb first (big endian)
     {
-        byte = ((value >> (8 * (prec-1))) & 0x80) ? 0xFF : 0x00;
-        while (width > prec) // fill with sign
+        if (format.flags & zero_flag)
+        {
+            // fill with zero
+            byte = 0;
+        }
+        else
+        {
+            // fill with sign
+            byte = ((value >> (8 * (prec-1))) & 0x80) ? 0xFF : 0x00;
+        }
+        while (width > prec)
         {
             output.append(byte);
             width--;
@@ -98,14 +116,32 @@ scanLong(const StreamFormat& format, const char* input, long& value)
         }
         if (width == 0)
         {
-            val |= ((signed char) input[length++]) << shift;
+            if (format.flags & zero_flag)
+            {
+                // fill with zero
+                val |= ((unsigned char) input[length++]) << shift;
+            }
+            else
+            {
+                // fill with sign
+                val |= ((signed char) input[length++]) << shift;
+            }
         }
         length += width; // ignore upper bytes not fitting in long
     }
     else
     {
-        // big endian (sign extended)*/
-        val = (signed char) input[length++];
+        // big endian */
+        if (format.flags & zero_flag)
+        {
+            // fill with zero
+            val = (unsigned char) input[length++];
+        }
+        else
+        {
+            // fill with sign
+            val = (signed char) input[length++];
+        }
         while (--width)
         {
             val <<= 8;
