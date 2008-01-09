@@ -194,6 +194,7 @@ replace(long remstart, long remlen, const void* ins, long inslen)
     {
         // optimize remove of bufferstart
         offs += remlen;
+        len -= remlen;
         return *this;
     }
     if (inslen < 0) inslen = 0;
