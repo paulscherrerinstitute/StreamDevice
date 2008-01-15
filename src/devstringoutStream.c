@@ -48,7 +48,8 @@ static long initRecord (dbCommon *record)
 {
     stringoutRecord *so = (stringoutRecord *) record;
 
-    return streamInitRecord (record, &so->out, readData, writeData);
+    return streamInitRecord (record, &so->out, readData, writeData) == ERROR ?
+        ERROR : OK;
 }
 
 struct {

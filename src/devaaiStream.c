@@ -280,7 +280,8 @@ static long initRecord (dbCommon *record)
             record->name);
         return ERROR;
     }
-    return streamInitRecord (record, &aai->inp, readData, writeData);
+    return streamInitRecord (record, &aai->inp, readData, writeData) == ERROR ?
+        ERROR : OK;
 }
 
 struct {

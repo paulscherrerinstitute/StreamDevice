@@ -271,7 +271,8 @@ static long initRecord (dbCommon *record)
 {
     waveformRecord *wf = (waveformRecord *) record;
 
-    return streamInitRecord (record, &wf->inp, readData, writeData);
+    return streamInitRecord (record, &wf->inp, readData, writeData) == ERROR ?
+        ERROR : OK;
 }
 
 struct {
