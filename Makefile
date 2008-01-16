@@ -47,8 +47,18 @@ streamReferences:
            echo "void* p$$i = ref_$${i}Converter;"; \
 	done >> $@
 
+ifeq (${EPICS_BASETYPE},3.13)
 stream.dbd:
 	@for r in $(RECORDTYPES); \
 	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
 	done > $@
 	@echo "driver(stream)" >> $@
+else
+stream.dbd:
+	@for r in $(RECORDTYPES); \
+	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
+	done > $@
+	@echo "driver(stream)" >> $@
+	@echo "variable(streamDebug, int)" >> $@
+	@echo "registrar(streamRegistrar)" >> $@
+endif
