@@ -45,7 +45,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     int width = prec;         // number of bytes in output
     if (format.width > width) width = format.width;
     char byte = 0;
-    if (format.flags & alt_flag) // lsb first (little endian)
+    if (format.flags & alt_flag) // little endian (lsb first)
     {
         while (prec--)
         {
@@ -69,7 +69,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
             output.append(byte);
         }
     }
-    else // msb first (big endian)
+    else // big endian (msb first)
     {
         if (format.flags & zero_flag)
         {
@@ -107,7 +107,7 @@ scanLong(const StreamFormat& format, const char* input, long& value)
     }
     if (format.flags & alt_flag)
     {
-        // little endian (sign extended)*/
+        // little endian (lsb first)
         unsigned int shift = 0;
         while (--width && shift < sizeof(long)*8)
         {
@@ -131,7 +131,7 @@ scanLong(const StreamFormat& format, const char* input, long& value)
     }
     else
     {
-        // big endian */
+        // big endian  (msb first)
         if (format.flags & zero_flag)
         {
             // fill with zero
