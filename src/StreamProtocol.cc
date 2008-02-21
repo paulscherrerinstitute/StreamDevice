@@ -1255,7 +1255,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                         // so that extra information is ready for format converter
                         if (numFormats+1 == sizeof(formatPos))
                         {
-                            errorMsg(line, "Too many formats in line");
+                            errorMsg(line, "Max 20 formats allowed in one protocol line");
                             return false;
                         }
                         formatPos[numFormats++]=buffer.length();
