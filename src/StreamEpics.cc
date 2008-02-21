@@ -1157,7 +1157,7 @@ noMoreElements:
 }
 
 #ifdef EPICS_3_14
-
+// Pass command to iocsh
 void streamExecuteCommand(CALLBACK *pcallback)
 {
     Stream* pstream = static_cast<Stream*>(pcallback->user);
@@ -1172,7 +1172,8 @@ void streamExecuteCommand(CALLBACK *pcallback)
     }
 }
 #else
-extern "C" int execute (const char *cmd);
+// Pass command to vxWorks shell
+extern "C" int execute(const char *cmd);
 
 void streamExecuteCommand(CALLBACK *pcallback)
 {
