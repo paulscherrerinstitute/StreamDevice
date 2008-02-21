@@ -29,11 +29,11 @@
 
 class StreamBuffer
 {
+    char local[64];
     long len;
     long cap;
     long offs;
     char* buffer;
-    char local[64];
 
     void grow(long);
     void init(const void*, long);
@@ -103,7 +103,7 @@ public:
     // reserve: reserve size bytes of memory and return
     // pointer to that memory (for copying something to it)
     char* reserve(long size)
-        {check(size); char* p=buffer+offs+len; len+=size; return p; }
+        {grow(size); char* p=buffer+len; len+=size; return p;}
 
     // append: append data at the end of the buffer
     StreamBuffer& append(char c)
