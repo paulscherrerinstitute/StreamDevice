@@ -240,6 +240,8 @@ The <code>%b</code> format uses the characters <code>0</code> and
 <code>1</code>.
 With the <code>%B</code> format, you can choose two other characters
 to represent zero and one.
+With the <code>#</code> flag, the bit order is changed to <em>little
+endian</em>, i.e. least significant bit first.
 </p>
 <p>
 Examples: <code>%B.!</code> or <code>%B\x00\xff</code>.
@@ -264,23 +266,28 @@ one character.
 <h2>9. Raw LONG Converter (<code>%r</code>)</h2>
 <p>
 The raw converter does not really "convert".
-A signed integer value is written or read in the internal
+A signed or unsigned integer value is written or read in the internal
 (usually two's complement) representation of the computer.
 The normal byte order is <em>big endian</em>, i.e. most significant byte
 first.
 With the <code>#</code> flag, the byte order is changed to <em>little
 endian</em>, i.e. least significant byte first.
+With the <code>0</code> flag, the value is unsigned, otherwise signed.
 </p>
 <p>
 In output, the <em>width</em> least significant bytes of the value
 are written.
 If <em>width</em> is larger than the size of a <code>long</code>,
-the value is sign extended.
+the value is sign extended or zero extended, depending on the
+<code>0</code> flag.
 </p>
 <p>
 In input, <em>width</em> bytes are read and put into the value.
-If <em>width</em> is longer than the size of a <code>long</code>, only
+If <em>width</em> is larger than the size of a <code>long</code>, only
 the least significant bytes are used.
+If <em>width</em> is smaller than the size of a <code>long</code>,
+the value is sign extended or zero extended, depending on the
+<code>0</code> flag.
 </p>
 
 <a name="bcd"></a>
@@ -450,6 +457,20 @@ Example: <code>%.1/&lt;title&gt;(.*)&lt;\/title&gt;/</code> returns
 the title of an HTML page, skipps anything before the
 <code>&lt;title&gt</code> tag and leaves anything after the
 <code>&lt;/title&gt;</code> tag in the input buffer.
+</p>
+<a name="exp"></a>
+<h2>13. Exponential DOUBLE converter (<code>%m</code>)</h2>
+<p>
+This experimental input-only format matches numbers in the format
+<i>[sign] mantissa sign exponent<i>, e.g <code>+123-4</code> meaning
+123e-4 or 0.0123. Mantissa and exponent are integers. The sign of the
+mantissa is optional. Compared to the standard <code>%e</code> format,
+this format does not contain the characters <code>.</code> and <code>e</code>.
+</p>
+<p>
+Output formatting is ambigous (e.g. <code>123-4</code> versus
+<code>1230-5</code>). Until it has been specified how to handle this,
+output is not supported.
 </p>
 <hr>
 <p align="right"><a href="processing.html">Next: Record Processing</a></p>
