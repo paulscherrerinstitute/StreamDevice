@@ -23,12 +23,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include <epicsExport.h>
-int showAsyncErrors = 0;
-extern "C" {
-epicsExportAddress(int, showAsyncErrors);
-}
-
 enum Commands { end_cmd, in_cmd, out_cmd, wait_cmd, event_cmd, exec_cmd,
     connect_cmd, disconnect_cmd };
 const char* commandStr[] = { "end", "in", "out", "wait", "event", "exec",
@@ -622,6 +616,7 @@ formatOutput()
     char command;
     const char* fieldName = NULL;
     const char* formatstring;
+    int formatstringlen;
     while ((command = *commandIndex++) != StreamProtocolParser::eos)
     {
         switch (command)
@@ -631,7 +626,7 @@ formatOutput()
                 debug("StreamCore::formatOutput(%s): StreamProtocolParser::format_field\n",
                     name());
                 // code layout:
-                // field <StreamProtocolParser::eos> addrlen AddressStructure formatstring <StreamProtocolParser::eos> StreamFormat [info]
+                // field <eos> addrlen AddressStructure formatstring <eos> StreamFormat [info]
                 fieldName = commandIndex;
                 commandIndex += strlen(commandIndex)+1;
                 unsigned short addrlen = extract<unsigned short>(commandIndex);
@@ -641,14 +636,23 @@ formatOutput()
             case StreamProtocolParser::format:
             {
                 // code layout:
-                // formatstring <StreamProtocolParser::eos> StreamFormat [info]
+                // formatstring <eos> StreamFormat [info]
                 formatstring = commandIndex;
-                while (*commandIndex++); // jump after <StreamProtocolParser::eos>
+                // jump after <eos>
+                while (*commandIndex)
+                {
+                    if (*commandIndex == esc) commandIndex++;
+                    commandIndex++;
+                }
+                formatstringlen = commandIndex-formatstring;
+                commandIndex++;
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
+#ifndef NO_TEMPORARY
                 debug("StreamCore::formatOutput(%s): format = %%%s\n",
-                    name(), formatstring);
+                    name(), StreamBuffer(formatstring, formatstringlen).expand()());
+#endif
                 if (fmt.type == pseudo_format)
                 {
                     if (!StreamFormatConverter::find(fmt.conv)->
@@ -663,12 +667,13 @@ formatOutput()
                 flags &= ~Separator;
                 if (!formatValue(fmt, fieldAddress ? fieldAddress() : NULL))
                 {
+                    StreamBuffer formatstr(formatstring, formatstringlen);
                     if (fieldName)
                         error("%s: Cannot format field '%s' with '%%%s'\n",
-                            name(), fieldName, formatstring);
+                            name(), fieldName, formatstr.expand()());
                     else
                         error("%s: Cannot format value with '%%%s'\n",
-                            name(), formatstring);
+                            name(), formatstr.expand()());
                     return false;
                 }
                 fieldAddress.clear();
@@ -807,8 +812,6 @@ writeCallback(StreamIoStatus status)
     flags &= ~WritePending;
     if (status != StreamIoSuccess)
     {
-        error("%s: write failed: %s\n",
-            name(), StreamIoStatusStr[status]);
         finishProtocol(WriteTimeout);
         return;
     }
@@ -997,7 +1000,7 @@ readCallback(StreamIoStatus status,
         }
         // try to parse what we got
         end = inputBuffer.length();
-        if (!(flags & AsyncMode)||showAsyncErrors)
+        if (!(flags & AsyncMode))
         {
             error("%s: Timeout after reading %ld byte%s \"%s%s\"\n",
                 name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
@@ -1127,7 +1130,7 @@ matchInput()
                     }
                     if (consumed < 0)
                     {
-                        if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
+                        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                         {
                             error("%s: Input \"%s%s\" does not match format %%%s\n",
                                 name(), inputLine.expand(consumedInput, 20)(),
@@ -1142,7 +1145,7 @@ matchInput()
                 flags &= ~Separator;
                 if (!matchValue(fmt, fieldAddress ? fieldAddress() : NULL))
                 {
-                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
+                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
                         if (flags & ScanTried)
                             error("%s: Input \"%s%s\" does not match format %%%s\n",
@@ -1172,7 +1175,7 @@ matchInput()
                 {
                     int i = 0;
                     while (commandIndex[i] >= ' ') i++;
-                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
+                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
                         error("%s: Input \"%s%s\" too short."
                               " No match for \"%s\"\n",
@@ -1185,7 +1188,7 @@ matchInput()
                 }
                 if (command != inputLine[consumedInput])
                 {
-                    if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
+                    if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
@@ -1210,7 +1213,7 @@ matchInput()
     long surplus = inputLine.length()-consumedInput;
     if (surplus > 0 && !(flags & IgnoreExtraInput))
     {
-        if ((!(flags & AsyncMode)||showAsyncErrors) && onMismatch[0] != in_cmd)
+        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
         {
             error("%s: %ld byte%s surplus input \"%s%s\"\n",
                 name(), surplus, surplus==1 ? "" : "s",
