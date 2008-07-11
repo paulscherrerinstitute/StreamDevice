@@ -106,8 +106,8 @@ public:
         {grow(size); char* p=buffer+len; len+=size; return p;}
 
     // append: append data at the end of the buffer
-    StreamBuffer& append(char c)
-        {check(1); buffer[offs+len++]=c; return *this;}
+    StreamBuffer& append(char c, long count=1)
+        {check(count); while(count-->0) buffer[offs+len++]=c; return *this;}
 
     StreamBuffer& append(const void* s, long size);
 
