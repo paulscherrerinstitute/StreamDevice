@@ -3,7 +3,7 @@ EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream2
 BUILDCLASSES += Linux
 
-DOCUDIR = doc
+#DOCUDIR = doc
 
 DBDS = stream.dbd
 
@@ -11,6 +11,7 @@ BUSSES  += AsynDriver
 FORMATS += Enum
 FORMATS += BCD
 FORMATS += Raw
+FORMATS += RawFloat
 FORMATS += Binary
 FORMATS += Checksum
 FORMATS += Regexp
