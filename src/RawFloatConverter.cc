@@ -37,7 +37,7 @@
 
 #if (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN)
 
-// RawFloat Bytes Converter %r
+// Raw Float Converter %R
 
 class RawFloatConverter : public StreamFormatConverter
 {
