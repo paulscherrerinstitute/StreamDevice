@@ -897,8 +897,14 @@ readCallback(StreamIoStatus status,
 
     if (!(flags & AcceptInput))
     {
-        error("StreamCore::readCallback(%s) called unexpectedly\n",
-            name());
+#ifdef NO_TEMPORARY
+        error("StreamCore::readCallback(%s, %s) called unexpectedly\n",
+            name(), StreamIoStatusStr[status]);
+#else
+        error("StreamCore::readCallback(%s, %s, \"%s\") called unexpectedly\n",
+            name(), StreamIoStatusStr[status],
+            StreamBuffer(input, size).expand()());
+#endif
         return 0;
     }
     flags &= ~AcceptInput;
