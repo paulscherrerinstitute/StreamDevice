@@ -108,7 +108,6 @@ $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
 	done > $@
 	@echo "driver(stream)" >> $@
 	@echo "variable(streamDebug, int)" >> $@
-	@echo "variable(showAsyncErrors, int)" >> $@
 	@echo "registrar(streamRegistrar)" >> $@
 
 endif
