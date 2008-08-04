@@ -20,7 +20,11 @@
 #include "StreamBusInterface.h"
 
 const char* StreamIoStatusStr[] = {
-    "StreamIoSuccess", "ioTimeout", "ioNoReply", "ioEnd", "ioFault"
+    "StreamIoSuccess",
+    "StreamIoTimeout",
+    "StreamIoNoReply",
+    "StreamIoEnd",
+    "StreamIoFault"
 };
 
 StreamBusInterfaceRegistrarBase* StreamBusInterfaceRegistrarBase::first;
