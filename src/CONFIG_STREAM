@@ -41,6 +41,7 @@ FORMATS += Raw
 FORMATS += Binary
 FORMATS += Checksum
 FORMATS += Exponential
+FORMATS += RawFloat
 
 # Want Perl regular expression matching?
 # If PCRE is installed at the same location for all
