@@ -24,13 +24,13 @@ RECORDTYPES += mbboDirect mbbiDirect
 RECORDTYPES += longout longin
 RECORDTYPES += stringout stringin
 RECORDTYPES += waveform
-RECORDTYPES += calcout
 
 SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
 SOURCES += $(FORMATS:%=src/%Converter.cc)
 SOURCES += $(BUSSES:%=src/%Interface.cc)
 SOURCES += $(wildcard src/Stream*.cc)
 SOURCES += src/StreamVersion.c
+SOURCES_3.14 += src/devcalcoutStream.c
 
 ifeq (${EPICS_BASETYPE},3.13)
 USR_INCLUDES += -include $(INSTALL_INCLUDE)/compat3_13.h
@@ -56,7 +56,7 @@ stream.dbd:
 	@echo "driver(stream)" >> $@
 else
 stream.dbd:
-	@for r in $(RECORDTYPES); \
+	@for r in $(RECORDTYPES) calcout; \
 	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
 	done > $@
 	@echo "driver(stream)" >> $@
