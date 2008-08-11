@@ -160,7 +160,8 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        if (sscanf(input, fmt.info, &length) < 0) return -1;
+        /* on vxWorks, return value of sscanf with %*... is buggy */
+        sscanf(input, fmt.info, &length);
     }
     else
     {
@@ -216,7 +217,8 @@ scanDouble(const StreamFormat& fmt, const char* input, double& value)
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        if (sscanf(input, fmt.info, &length) < 0) return -1;
+        /* on vxWorks, return value of sscanf with %*... is buggy */
+        sscanf(input, fmt.info, &length);
     }
     else
     {
@@ -279,7 +281,8 @@ scanString(const StreamFormat& fmt, const char* input,
     }
     if (fmt.flags & skip_flag)
     {
-        if (sscanf(input, fmt.info, &length) < 0) return -1;
+        /* on vxWorks, return value of sscanf with %*... is buggy */
+        sscanf(input, fmt.info, &length);
     }
     else
     {
@@ -406,7 +409,8 @@ scanString(const StreamFormat& fmt, const char* input,
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        if (sscanf (input, fmt.info, &length) < 0) return -1;
+        /* on vxWorks, return value of sscanf with %*... is buggy */
+        sscanf(input, fmt.info, &length);
     }
     else
     {
