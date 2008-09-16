@@ -135,7 +135,7 @@ find(const void* m, long size, long start) const
         start += len;
         if (start < 0) start = 0;
     }
-    if (start >= len-size+1) return -1; // find nothing after end
+    if (start+size > len) return -1; // find nothing after end
     if (!m || size <= 0) return start; // find empty string at start
     const char* s = static_cast<const char*>(m);
     char* b = buffer+offs;
@@ -143,12 +143,12 @@ find(const void* m, long size, long start) const
     long i;
     while ((p = static_cast<char*>(memchr(p, s[0], b-p+len-size+1))))
     {
-        i = 1;
-        while (p[i] == s[i])
+        for (i = 1; i < size; i++)
         {
-            if (++i >= size) return p-b;
+            if (p[i] != s[i]) goto next;
         }
-        p++;
+        return p-b;
+next:   p++;
     }
     return -1;
 }
