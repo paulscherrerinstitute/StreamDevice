@@ -29,7 +29,10 @@ static long readData (dbCommon *record, format_t *format)
 
     if (format->type == DBF_LONG || format->type == DBF_ENUM)
     {
-        return streamScanf (record, format, &lo->val);
+        long val;
+        if (streamScanf (record, format, &val)) return ERROR;
+        lo->val = val;
+        return OK;
     }
     return ERROR;
 }
@@ -40,7 +43,7 @@ static long writeData (dbCommon *record, format_t *format)
 
     if (format->type == DBF_LONG || format->type == DBF_ENUM)
     {
-        return streamPrintf (record, format, lo->val);
+        return streamPrintf (record, format, (long) lo->val);
     }
     return ERROR;
 }

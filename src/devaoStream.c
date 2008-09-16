@@ -51,12 +51,12 @@ static long readData (dbCommon *record, format_t *format)
 static long writeData (dbCommon *record, format_t *format)
 {
     aoRecord *ao = (aoRecord *) record;
-    double val;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
+            double val;
             if (INIT_RUN) val = ao->val;
             else val = ao->oval;
             val -= ao->aoff;
@@ -65,7 +65,7 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_LONG:
         {
-            return streamPrintf (record, format, ao->rval);
+            return streamPrintf (record, format, (long) ao->rval);
         }
     }
     return ERROR;

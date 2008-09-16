@@ -25,12 +25,12 @@
 static long readData (dbCommon *record, format_t *format)
 {
     aiRecord *ai = (aiRecord *) record;
-    double val;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
+            double val;
             if (streamScanf (record, format, &val)) return ERROR;
             if (ai->aslo != 0.0) val *= ai->aslo;
             val += ai->aoff;
@@ -43,7 +43,10 @@ static long readData (dbCommon *record, format_t *format)
         }
         case DBF_LONG:
         {
-            return streamScanf (record, format, &ai->rval);
+            long rval;
+            if (streamScanf (record, format, &rval)) return ERROR;
+            ai->rval = rval;
+            return OK;
         }
     }
     return ERROR;
@@ -64,7 +67,7 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_LONG:
         {
-            return streamPrintf (record, format, ai->rval);
+            return streamPrintf (record, format, (long) ai->rval);
         }
     }
     return ERROR;
