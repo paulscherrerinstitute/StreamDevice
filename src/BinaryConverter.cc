@@ -65,7 +65,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     {
         // find number of significant bits
         prec = sizeof (value) * 8;
-        while (prec && (value & (1 << (prec - 1))) == 0) prec--;
+        while (prec && (value & (1L << (prec - 1))) == 0) prec--;
     }
     if (prec == 0) prec++; // print at least one bit
     int width = prec;
@@ -75,7 +75,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     char fill = (format.flags & zero_flag) ? zero : ' ';
     if (format.flags & alt_flag)
     {
-        // little endian (least significan bit first)
+        // little endian (least significant bit first)
         if (!(format.flags & left_flag))
         {
             // pad left
@@ -99,7 +99,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     }
     else
     {
-        // big endian (most significan bit first)
+        // big endian (most significant bit first)
         if (!(format.flags & left_flag))
         {
             // pad left
@@ -111,7 +111,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
         }
         while (prec--)
         {
-            output.append((value & (1 << prec)) ? one : zero);
+            output.append((value & (1L << prec)) ? one : zero);
             width--;
         }
         while (width--)
