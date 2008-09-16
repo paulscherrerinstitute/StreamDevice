@@ -160,7 +160,8 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        /* on vxWorks, return value of sscanf with %*... is buggy */
+        /* can't use return value on vxWorks: sscanf with %* format
+           returns -1 at end of string whether value is found or not */
         sscanf(input, fmt.info, &length);
     }
     else
@@ -217,7 +218,8 @@ scanDouble(const StreamFormat& fmt, const char* input, double& value)
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        /* on vxWorks, return value of sscanf with %*... is buggy */
+        /* can't use return value on vxWorks: sscanf with %* format
+           returns -1 at end of string whether value is found or not */
         sscanf(input, fmt.info, &length);
     }
     else
@@ -281,7 +283,8 @@ scanString(const StreamFormat& fmt, const char* input,
     }
     if (fmt.flags & skip_flag)
     {
-        /* on vxWorks, return value of sscanf with %*... is buggy */
+        /* can't use return value on vxWorks: sscanf with %* format
+           returns -1 at end of string whether value is found or not */
         sscanf(input, fmt.info, &length);
     }
     else
@@ -291,7 +294,7 @@ scanString(const StreamFormat& fmt, const char* input,
         if (maxlen <= fmt.width || fmt.width == 0)
         {
             // assure not to read too much
-            sprintf(tmpformat, "%%%d%c%%n", maxlen-1, fmt.conv);
+            sprintf(tmpformat, "%%%ld%c%%n", (long)maxlen-1, fmt.conv);
             f = tmpformat;
         }
         else
@@ -409,7 +412,8 @@ scanString(const StreamFormat& fmt, const char* input,
     int length = -1;
     if (fmt.flags & skip_flag)
     {
-        /* on vxWorks, return value of sscanf with %*... is buggy */
+        /* can't use return value on vxWorks: sscanf with %* format
+           returns -1 at end of string whether value is found or not */
         sscanf(input, fmt.info, &length);
     }
     else
@@ -420,7 +424,7 @@ scanString(const StreamFormat& fmt, const char* input,
         {
             const char *p = strchr (fmt.info, '[');
             // assure not to read too much
-            sprintf(tmpformat, "%%%d%s", maxlen-1, p);
+            sprintf(tmpformat, "%%%ld%s", (long)maxlen-1, p);
             f = tmpformat;
         }
         else

@@ -501,8 +501,8 @@ long streamScanSep(dbCommon* record)
 long streamScanfN(dbCommon* record, format_t *format,
     void* value, size_t maxStringSize)
 {
-    debug("streamScanfN(%s,format=%%%c,maxStringSize=%d)\n",
-        record->name, format->priv->conv, maxStringSize);
+    debug("streamScanfN(%s,format=%%%c,maxStringSize=%ld)\n",
+        record->name, format->priv->conv, (long)maxStringSize);
     Stream* pstream = (Stream*)record->dpvt;
     if (!pstream) return ERROR;
     if (!pstream->scan(format, value, maxStringSize))

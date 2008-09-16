@@ -112,7 +112,7 @@ scanString(const StreamFormat& fmt, const char* input,
         if (!(fmt.flags & sign_flag)) {
             debug("Matching string \"%s\" too long (%d>%d bytes)\n",
                 StreamBuffer(input+ovector[subexpr*2], len).expand()(),
-                len, maxlen-1);
+                (int)len, (int)maxlen-1);
             return -1;
         }
         len = maxlen-1;
