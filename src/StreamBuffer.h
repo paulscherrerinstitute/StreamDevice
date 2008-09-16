@@ -144,7 +144,7 @@ public:
     StreamBuffer& replace(long pos, long length, const StreamBuffer& s)
         {return replace(pos, length, s.buffer+s.offs, s.len);}
 
-    // replace: delete part of buffer
+    // remove: delete from start/pos
     StreamBuffer& remove(long pos, long length)
         {return replace(pos, length, NULL, 0);}
 
@@ -152,7 +152,7 @@ public:
         {if (length>len) length=len;
          offs+=length; len-=length; return *this;}
 
-    // replace: delete end of buffer
+    // truncate: delete end of buffer
     StreamBuffer& truncate(long pos)
         {return replace(pos, len, NULL, 0);}
 
