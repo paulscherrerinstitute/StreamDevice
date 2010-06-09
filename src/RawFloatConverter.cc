@@ -21,21 +21,7 @@
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 
-#ifdef vxWorks
-#include "vxWorks.h"
-#define __BYTE_ORDER _BYTE_ORDER 
-#define __LITTLE_ENDIAN _LITTLE_ENDIAN
-#define __BIG_ENDIAN _BIG_ENDIAN 
-#else
-// Let's hope all other architectures have endian.h
-#include "endian.h"
-#endif
-
-#ifndef __BYTE_ORDER
-#error define __BYTE_ORDER as __LITTLE_ENDIAN or __BIG_ENDIAN
-#endif
-
-#if (__BYTE_ORDER == __LITTLE_ENDIAN || __BYTE_ORDER == __BIG_ENDIAN)
+static int endian = 0;
 
 // Raw Float Converter %R
 
@@ -50,6 +36,17 @@ int RawFloatConverter::
 parse(const StreamFormat& format, StreamBuffer&,
     const char*&, bool)
 {
+    // Find out byte order
+    if (!endian) {
+        union {long l; char c [sizeof(long)];} u;
+        u.l=1;
+        if (u.c[0]) { endian = 1234;} // little endian 
+        else if (u.c[sizeof(long)-1]) { endian = 4321;} // big endian 
+        else {
+            error ("Cannot find out byte order for %%R format.\n"); 
+            return false;
+        }
+    }
     // Assume IEEE formats with 4 or 8 bytes (default: 4)
     if (format.width==0 || format.width==4 || format.width==8)
         return double_format;
@@ -76,15 +73,10 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
         buffer.fval = value;
     else 
         buffer.dval = value;
-
-#if (__BYTE_ORDER == __BIG_ENDIAN)
-    bool swap = format.flags & alt_flag;
-#else
-    bool swap = !(format.flags & alt_flag);
-#endif
     
-    if (swap)
+    if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
+        // swap if byte orders differ
     	for (n = nbOfBytes-1; n >= 0; n--)
     	{
             output.append(buffer.bytes[n]);
@@ -119,14 +111,9 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
         return(nbOfBytes); // just skip input
     }
     
-#if (__BYTE_ORDER == __BIG_ENDIAN)
-    bool swap = format.flags & alt_flag;
-#else
-    bool swap = !(format.flags & alt_flag);
-#endif
-
-    if (swap)
+    if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
+        // swap if byte orders differ
     	for (n = nbOfBytes-1, i = 0; n >= 0; n--, i++)
     	{
             buffer.bytes[n] = input[i];
@@ -147,5 +134,3 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
 }
 
 RegisterConverter (RawFloatConverter, "R");
-
-#endif /* known byte order */
