@@ -70,7 +70,7 @@ SHRLIB_DEPLIB_DIRS += $(PCRE_LIB)
 endif
 endif
 
-LIB_LIBS += Com dbIoc dbStaticIoc registryIoc iocsh
+LIB_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 ifeq ($(USE_MEMGUARD),YES)
 # memguard looks for memory leaks (gcc only)
