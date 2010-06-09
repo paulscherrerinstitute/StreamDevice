@@ -360,7 +360,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
     {
         buffer.append(exec_cmd);
         if (!protocol->compileString(buffer, args,
-            NoFormat, this))
+            PrintFormat, this))
         {
             return false;
         }
