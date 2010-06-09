@@ -1504,6 +1504,16 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
                 }
                 streamFormat.flags |= skip_flag;
                 break;
+            case '?':
+                if (formatType != ScanFormat)
+                {
+                    errorMsg(line,
+                        "Use of default modifier '?' "
+                        "only allowed in input formats\n");
+                    return false;
+                }
+                streamFormat.flags |= default_flag;
+                break;
             default:
                 loop = false;
         }

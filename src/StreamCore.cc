@@ -1166,14 +1166,21 @@ matchInput()
                     }
                     if (consumed < 0)
                     {
-                        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                        if (fmt.flags & default_flag)
                         {
-                            error("%s: Input \"%s%s\" does not match format %%%s\n",
-                                name(), inputLine.expand(consumedInput, 20)(),
-                                inputLine.length()-consumedInput > 20 ? "..." : "",
-                                formatstring);
+                            consumed = 0;
                         }
-                        return false;
+                        else
+                        {
+                            if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                            {
+                                error("%s: Input \"%s%s\" does not match format %%%s\n",
+                                    name(), inputLine.expand(consumedInput, 20)(),
+                                    inputLine.length()-consumedInput > 20 ? "..." : "",
+                                    formatstring);
+                            }
+                            return false;
+                        }
                     }
                     consumedInput += consumed;
                     break;
@@ -1323,8 +1330,16 @@ scanValue(const StreamFormat& fmt, long& value)
         scanLong(fmt, inputLine(consumedInput), value);
     debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput)());
-    if (consumed < 0 ||
-        consumed > inputLine.length()-consumedInput) return -1;
+    if (consumed < 0)
+    {
+        if (fmt.flags & default_flag)
+        {
+            value = 0;
+            consumed = 0;
+        }
+        else return -1;
+    }
+    if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %li\n",
         name(), value);
     flags |= GotValue;
@@ -1346,8 +1361,16 @@ scanValue(const StreamFormat& fmt, double& value)
         scanDouble(fmt, inputLine(consumedInput), value);
     debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput)());
-    if (consumed < 0 ||
-        consumed > inputLine.length()-consumedInput) return -1;
+    if (consumed < 0)
+    {
+        if (fmt.flags & default_flag)
+        {
+            value = 0.0;
+            consumed = 0;
+        }
+        else return -1;
+    }
+    if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %#g\n",
         name(), value);
     flags |= GotValue;
@@ -1370,8 +1393,16 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
         scanString(fmt, inputLine(consumedInput), value, maxlen);
     debug("StreamCore::scanValue(%s, format=%%%c, char*, maxlen=%ld) input=\"%s\"\n",
         name(), fmt.conv, maxlen, inputLine.expand(consumedInput)());
-    if (consumed < 0 ||
-        consumed > inputLine.length()-consumedInput) return -1;
+    if (consumed < 0)
+    {
+        if (fmt.flags & default_flag)
+        {
+            value[0] = 0;
+            consumed = 0;
+        }
+        else return -1;
+    }
+    if (consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",
         name(), StreamBuffer(value, maxlen).expand()());
