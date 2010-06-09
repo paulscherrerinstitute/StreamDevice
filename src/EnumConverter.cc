@@ -21,6 +21,7 @@
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 #include "StreamProtocol.h"
+#include <stdlib.h>
 
 // Enum %{string0|string1|...}
 
@@ -31,44 +32,62 @@ class EnumConverter : public StreamFormatConverter
     int scanLong(const StreamFormat&, const char*, long&);
 };
 
+// info format: <numEnums><index><string>0<index><string>0...
+
 int EnumConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool)
 {
-    if (fmt.flags & (left_flag|sign_flag|space_flag|zero_flag|alt_flag))
+    if (fmt.flags & (left_flag|sign_flag|space_flag|zero_flag))
     {
-        error("Use of modifiers '-', '+', ' ', '0', '#'"
+        error("Use of modifiers '-', '+', ' ', '0' "
             "not allowed with %%{ conversion\n");
         return false;
     }
-    int i = info.length(); // put maxValue here later
-    info.append('\0');
-    int maxValue = 0;
+    long numEnums = 0;
+    int n = info.length(); // put numEnums here later
+    info.append(&numEnums, sizeof(numEnums));
+    long index = 0;
+    int i = 0;
+    i = info.length(); // put index here later
+    info.append(&index, sizeof(index));
     while (*source)
     {
-        switch (*source)
+        if (*source == '=' && (fmt.flags & alt_flag))
         {
-            case '|':
-                info.append('\0');
-                if (++maxValue > 255)
-                {
-                    error("Too many enums (max 256)\n");
-                    return false;
-                }
-                break;
-            case '}':
-                source++;
-                info.append('\0');
-                info[i] = maxValue;
-                debug("EnumConverter::parse %d choices: %s\n",
-                    maxValue+1, info.expand(i+1)());
-                return enum_format;
-            case esc:
-                info.append(*source++);
-            default:
-                info.append(*source);
+            char* p;
+            index = strtol(++source, &p, 0);
+            if (p == source || (*p != '|' && *p != '}'))
+            {
+                error("Integer expected after '=' "
+                    "in %%{ format conversion\n");
+                return false;
+            }
+            memcpy(info(i), &index, sizeof(index));
+            source = p;
         }
-        source++;
+        if (*source == '|' || *source == '}')
+        {
+            numEnums++;
+            info.append('\0');
+            
+            if (*source++ == '}')
+            {
+                memcpy(info(n), &numEnums, sizeof(numEnums));
+                debug("EnumConverter::parse %ld choices: %s\n",
+                    numEnums, info.expand()());
+                return enum_format;
+            }
+            index ++;
+            i = info.length();
+            info.append(&index, sizeof(index));
+        }
+        else
+        {
+            if (*source == esc)
+                info.append(*source++);
+            info.append(*source++);
+        }
     }
     error("Missing '}' after %%{ format conversion\n");
     return false;
@@ -77,14 +96,10 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool EnumConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    long maxValue = fmt.info[0]; // number of enums
-    const char* s = fmt.info+1;  // first enum string
-    if (value < 0 || value > maxValue)
-    {
-        error("Value %li out of range [0...%li]\n", value, maxValue);        
-        return false;
-    }
-    while (value--)
+    const char* s = fmt.info;
+    long numEnums = extract<long>(s);
+    long index = extract<long>(s);
+    while (numEnums-- && (value != index))
     {
         while(*s)
         {
@@ -92,6 +107,12 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
             s++;
         }
         s++;
+        index = extract<long>(s);
+    }
+    if (numEnums == -1)
+    {
+        error("Value %li not found in enum set\n", value);
+        return false;
     }
     while(*s)
     {
@@ -106,14 +127,16 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     debug("EnumConverter::scanLong(%%%c, \"%s\")\n",
         fmt.conv, input);
-    long maxValue = fmt.info[0]; // number of enums
-    const char* s = fmt.info+1; // first enum string
+    const char* s = fmt.info;
+    long numEnums = extract<long>(s);
+    long index;
     int length;
-    long val;
+
     bool match;
-    for (val = 0; val <= maxValue; val++)
+    while (numEnums--)
     {
-        debug("EnumConverter::scanLong: check #%ld \"%s\"\n", val, s);
+        index = extract<long>(s);
+        debug("EnumConverter::scanLong: check #%ld \"%s\"\n", index, s);
         length = 0;
         match = true;
         while(*s)
@@ -129,8 +152,8 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         }
         if (match)
         {
-            debug("EnumConverter::scanLong: value %ld matches\n", val);
-            value = val;
+            debug("EnumConverter::scanLong: value %ld matches\n", index);
+            value = index;
             return length;
         }
         s++;
