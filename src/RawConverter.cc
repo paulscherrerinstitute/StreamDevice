@@ -40,10 +40,12 @@ parse(const StreamFormat&, StreamBuffer&,
 bool RawConverter::
 printLong(const StreamFormat& format, StreamBuffer& output, long value)
 {
-    int prec = format.prec;   // number of bytes from value
-    if (prec == -1) prec = 1; // default: 1 byte
-    int width = prec;         // number of bytes in output
+    int prec = format.prec;      // number of bytes from value
+    if (prec == -1) prec = 1;    // default: 1 byte
+    int width = prec;            // number of bytes in output
+    if (prec > (int)sizeof(long)) prec=sizeof(long);
     if (format.width > width) width = format.width;
+    
     char byte = 0;
     if (format.flags & alt_flag) // little endian (lsb first)
     {
