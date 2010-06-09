@@ -1,8 +1,7 @@
 /***************************************************************
 * StreamDevice Support                                         *
 *                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2007 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
+* (C) 2008 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *
 * This is a custom exponential format converter for            * 
 * StreamDevice.                                                *
@@ -32,26 +31,26 @@
 // But why not +11000-04 ?
 // For writing, I chose the following convention:
 // Format precision defines number of digits in mantissa
-// Number of digits in exponent is at least 2
 // No leading '0' in mantissa (except for 0.0 of course)
+// Number of digits in exponent is at least 2
 // Format flags +, -, and space are supported in the usual way
 // Flags #, 0 are not supported
 
-class ExponentialConverter : public StreamFormatConverter
+class MantissaExponentConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual int scanDouble(const StreamFormat&, const char*, double&);
     virtual bool printDouble(const StreamFormat&, StreamBuffer&, double);
 };
 
-int ExponentialConverter::
+int MantissaExponentConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool scanFormat)
 {
     return double_format;
 }
 
-int ExponentialConverter::
+int MantissaExponentConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
     int mantissa;
@@ -61,11 +60,11 @@ scanDouble(const StreamFormat& fmt, const char* input, double& value)
     sscanf(input, "%d%d%n", &mantissa, &exponent, &length);
     if (fmt.flags & skip_flag) return length;
     if (length == -1) return -1;
-    value = (double)(mantissa) * pow(10, exponent);
+    value = (double)(mantissa) * pow(10.0, exponent);
     return length;
 }
 
-bool ExponentialConverter::
+bool MantissaExponentConverter::
 printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
 {
     // Have to divide value into mantissa and exponent
@@ -73,21 +72,23 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     // number of characters in exponent is at least 2
     int spaces;
     StreamBuffer buf;
+    int prec = fmt.prec;
     
-    buf.printf("%.*e", fmt.prec-1, fabs(value));
+    if (prec < 1) prec = 6;
+    buf.printf("%.*e", prec-1, fabs(value)/pow(10.0, prec-1));
     buf.remove(1,1);
     buf.remove(buf.find('e'),1);
     
     spaces = fmt.width-buf.length();
-    if (fmt.flags & (space_flag|sign_flag) || value < 0) spaces--;
+    if (fmt.flags & (space_flag|sign_flag) || value < 0.0) spaces--;
     if (spaces < 0) spaces = 0;
     if (!(fmt.flags & left_flag))
         output.append(' ', spaces);
-    if (fmt.flags & (space_flag|sign_flag) == space_flag && value >= 0)
+    if ((fmt.flags & (space_flag|sign_flag)) == space_flag && value >= 0.0)
         output.append(' ');
-    if (fmt.flags & sign_flag && value >= 0)
+    if (fmt.flags & sign_flag && value >= 0.0)
         output.append('+');
-    if (value <= 0)
+    if (value < 0.0)
         output.append('-');
     output.append(buf);
     if (fmt.flags & left_flag)
@@ -95,5 +96,5 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     return true;
 }
 
-RegisterConverter (ExponentialConverter, "m");
+RegisterConverter (MantissaExponentConverter, "m");
 

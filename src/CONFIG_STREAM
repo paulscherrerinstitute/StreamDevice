@@ -38,10 +38,10 @@ SYNAPPS_RECORDS += scalcout
 FORMATS += Enum
 FORMATS += BCD
 FORMATS += Raw
+FORMATS += RawFloat
 FORMATS += Binary
 FORMATS += Checksum
-FORMATS += Exponential
-FORMATS += RawFloat
+FORMATS += MantissaExponent
 
 # Want Perl regular expression matching?
 # If PCRE is installed at the same location for all
