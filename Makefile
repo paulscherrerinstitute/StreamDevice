@@ -32,6 +32,11 @@ SOURCES += $(wildcard src/Stream*.cc)
 SOURCES += src/StreamVersion.c
 SOURCES_3.14 += src/devcalcoutStream.c
 
+HEADERS += StreamFormat.h
+HEADERS += StreamFormatConverter.h
+HEADERS += StreamBuffer.h
+HEADERS += StreamError.h
+
 ifeq (${EPICS_BASETYPE},3.13)
 USR_INCLUDES += -include $(INSTALL_INCLUDE)/compat3_13.h
 endif
