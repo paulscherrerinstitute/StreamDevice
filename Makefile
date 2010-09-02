@@ -16,6 +16,8 @@ FORMATS += Binary
 FORMATS += Checksum
 FORMATS += Regexp
 FORMATS += MantissaExponent
+FORMATS += Timestamp
+
 RECORDTYPES += aai aao
 RECORDTYPES += ao ai
 RECORDTYPES += bo bi
