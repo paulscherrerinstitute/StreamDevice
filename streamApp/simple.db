@@ -1,0 +1,15 @@
+record (stringout, "$(P):cmd")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@simple.proto cmd $(BUS)")
+}
+record (stringout, "$(P):info")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@simple.proto info $(BUS)")
+}
+record (stringin, "$(P):read")
+{
+    field (DTYP, "stream")
+    field (INP,  "@simple.proto read $(BUS)")
+}

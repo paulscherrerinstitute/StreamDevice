@@ -1,0 +1,102 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (ao, "DZ:ao")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto ao device")
+        field (EOFF, "-10")
+        field (ESLO, "0.000305180437934")
+        field (LINR, "LINEAR")
+    }
+    record (longout, "DZ:lo")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto lo device")
+    }
+    record (longout, "DZ:bcd")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto bcd device")
+    }
+    record (stringout, "DZ:chksum")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto chksum device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    ao {out "%.2f %.2e %.2E %.2g %.2G %i %d %u %o %04x %#.2f %#.2e %#.2E %#.2g %#.2G %#i %#d %#u %#o %#06x";}
+    lo {out "%d %(VAL)d %06d %x %06X %b %06b %.6b %B.! %06B.!";}
+    bcd {out "%D %6D %.2D %.4D %.6D %.8D %#D %#6D %#.2D %#.4D %#.6D";}
+    chksum {out "%s%<xor>";
+            out "%s%0<sum>";
+            out "%s%0<crc8>";
+            out "%s%0<crc16>";
+            out "%s%0<crc32>";
+            out "%s%0<adler32>";
+     }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+# Some formats give different results on 32 bit and 64 bit machines.
+# This occurs when printing negative numbers with unsigned formats.
+# This is normal. E.g. -1 HAS a different number of 1 bits.
+# Specify the width field in the format if this is a problem.
+
+ioccmd {dbpf DZ:ao 0}
+assure "0.00 0.00e+00 0.00E+00 0 0 32767 32767 32767 77777 7fff 0.00 0.00e+00 0.00E+00 0.0 0.0 32767 32767 32767 077777 0x7fff\n"
+ioccmd {dbpf DZ:ao 10}
+assure "10.00 1.00e+01 1.00E+01 10 10 65535 65535 65535 177777 ffff 10.00 1.00e+01 1.00E+01 10. 10. 65535 65535 65535 0177777 0xffff\n"
+ioccmd {dbpf DZ:ao -10}
+assure "-10.00 -1.00e+01 -1.00E+01 -10 -10 0 0 0 0 0000 -10.00 -1.00e+01 -1.00E+01 -10. -10. 0 0 0 0 000000\n"
+ioccmd {dbpf DZ:ao 1e-6}
+assure "0.00 1.00e-06 1.00E-06 1e-06 1E-06 32768 32768 32768 100000 8000 0.00 1.00e-06 1.00E-06 1.0e-06 1.0E-06 32768 32768 32768 0100000 0x8000\n"
+ioccmd {dbpf DZ:lo 0}
+assure "0 0 000000 0 000000 0 000000 000000 . ......\n"
+ioccmd {dbpf DZ:lo 12345}
+assure "12345 12345 012345 3039 003039 11000000111001 11000000111001 111001 !!......!!!..! !!......!!!..!\n"
+ioccmd {dbpf DZ:lo -1}
+if {$tcl_platform(machine) == "x86_64"} {
+assure "-1 -1 -00001 ffffffffffffffff FFFFFFFFFFFFFFFF 1111111111111111111111111111111111111111111111111111111111111111 1111111111111111111111111111111111111111111111111111111111111111 111111 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+} else {
+assure "-1 -1 -00001 ffffffff FFFFFFFF 11111111111111111111111111111111 11111111111111111111111111111111 111111 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+}
+ioccmd {dbpf DZ:lo -1234}
+if {$tcl_platform(machine) == "x86_64"} {
+assure "-1234 -1234 -01234 fffffffffffffb2e FFFFFFFFFFFFFB2E 1111111111111111111111111111111111111111111111111111101100101110 1111111111111111111111111111111111111111111111111111101100101110 101110 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.!!..!.!!!. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.!!..!.!!!.\n"
+} else {
+assure "-1234 -1234 -01234 fffffb2e FFFFFB2E 11111111111111111111101100101110 11111111111111111111101100101110 101110 !!!!!!!!!!!!!!!!!!!!!.!!..!.!!!. !!!!!!!!!!!!!!!!!!!!!.!!..!.!!!.\n"
+}
+ioccmd {dbpf DZ:lo 255}
+assure "255 255 000255 ff 0000FF 11111111 11111111 111111 !!!!!!!! !!!!!!!!\n"
+ioccmd {dbpf DZ:lo 65535}
+assure "65535 65535 065535 ffff 00FFFF 1111111111111111 1111111111111111 111111 !!!!!!!!!!!!!!!! !!!!!!!!!!!!!!!!\n"
+ioccmd {dbpf DZ:bcd 1020304}
+if {$tcl_platform(machine) == "x86_64"} {
+assure "\0\0\0\0\1\2\3\4 \0\0\0\0\1\2\3\4 \4 \3\4 \2\3\4 \1\2\3\4 \4\3\2\1\0\0\0\0 \4\3\2\1\0\0\0\0 \4 \4\3 \4\3\2\n"
+} else {
+assure "\1\2\3\4 \0\0\1\2\3\4 \4 \3\4 \2\3\4 \1\2\3\4 \4\3\2\1 \4\3\2\1\0\0 \4 \4\3 \4\3\2\n"
+}
+ioccmd {dbpf DZ:chksum "123456789"}
+assure "1234567891\n"
+assure "123456789DD\n"
+assure "123456789F4\n"
+assure "123456789FEE8\n"
+assure "123456789FC891918\n"
+assure "123456789091E01DE\n"
+finish

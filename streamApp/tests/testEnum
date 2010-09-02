@@ -1,0 +1,107 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (longout, "DZ:testout")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto out device")
+    }
+    record (longin, "DZ:testin")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto in device")
+    }
+    record (longout, "DZ:testout1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto out1 device")
+    }
+    record (longin, "DZ:testin1")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto in1 device")
+    }
+    record (longout, "DZ:testout2")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto out2 device")
+    }
+    record (longin, "DZ:testin2")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto in2 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    out {out "%{zero|one|two}bla";}
+    in  {in  "%{zero|one|two}bla"; out "%d";}
+    out1 {out "%#{zero|one|two}bla";}
+    in1  {in  "%#{zero|one|two}bla"; out "%d";}
+    out2 {out "%#{zero=-1|one|two=5}bla";}
+    in2  {in  "%#{zero=-1|one|two=5}bla"; out "%d";}
+}
+
+set startup {
+var streamDebug 1
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:testout 0}
+assure "zerobla\n"
+ioccmd {dbpf DZ:testout 1}
+assure "onebla\n"
+ioccmd {dbpf DZ:testout 2}
+assure "twobla\n"
+ioccmd {dbpf DZ:testout1 0}
+assure "zerobla\n"
+ioccmd {dbpf DZ:testout1 1}
+assure "onebla\n"
+ioccmd {dbpf DZ:testout1 2}
+assure "twobla\n"
+ioccmd {dbpf DZ:testout2 -1}
+assure "zerobla\n"
+ioccmd {dbpf DZ:testout2 0}
+assure "onebla\n"
+ioccmd {dbpf DZ:testout2 5}
+assure "twobla\n"
+
+ioccmd {dbpf DZ:testin.PROC 1}
+send "zerobla\n"
+assure "0\n"
+ioccmd {dbpf DZ:testin.PROC 1}
+send "onebla\n"
+assure "1\n"
+ioccmd {dbpf DZ:testin.PROC 1}
+send "twobla\n"
+assure "2\n"
+ioccmd {dbpf DZ:testin1.PROC 1}
+send "zerobla\n"
+assure "0\n"
+ioccmd {dbpf DZ:testin1.PROC 1}
+send "onebla\n"
+assure "1\n"
+ioccmd {dbpf DZ:testin1.PROC 1}
+send "twobla\n"
+assure "2\n"
+ioccmd {dbpf DZ:testin2.PROC 1}
+send "zerobla\n"
+assure "-1\n"
+ioccmd {dbpf DZ:testin2.PROC 1}
+send "onebla\n"
+assure "0\n"
+ioccmd {dbpf DZ:testin2.PROC 1}
+send "twobla\n"
+assure "5\n"
+
+finish

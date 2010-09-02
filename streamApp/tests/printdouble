@@ -1,0 +1,40 @@
+#!/bin/bash
+
+filename=$$
+trap "rm -f $filename.c $filename " EXIT TERM KILL
+
+cat > $filename.c << EOF
+#line 8
+#include <stdio.h>
+#include <stdlib.h>
+
+int main (int argc, char** args)
+{
+    union {
+        float f;
+        double d;
+        unsigned char c [8];
+    } u;
+    
+    int i,j;
+
+    for (i = 1; i < argc; i++)
+    {
+        u.f = atof (args[i]);
+        for (j = 0; j < 4; j++)
+        {
+            printf ("\\\\x%02x", u.c[j]);
+        }
+        printf ("\n");
+        u.d = atof (args[i]);
+        for (j = 0; j < 8; j++)
+        {
+            printf ("\\\\x%02x", u.c[j]);
+        }
+        printf ("\n");
+    }
+    return 0;
+}
+EOF
+
+cc -Wall -pedantic $filename.c -o $filename && $filename "$@"

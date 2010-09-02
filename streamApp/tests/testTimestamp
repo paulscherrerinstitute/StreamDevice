@@ -1,0 +1,58 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (ao, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1 device")
+    }
+    record (ai, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test2 device")
+    }
+    record (ai, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test3 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    test1 {out "%T(%d.%m.%Y %H:%M:%.2S %z)"; }
+    test2 {out "?"; in "%T"; out "%.0f %T"; }
+    test3 {out "?"; in "%(TIME)T(%Ed. %B %Y %H:%M:%.S%+0100) %f"; out "%(TIME)T %f"; }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1 1044068706.789}
+assure "01.02.2003 04:05:06.79 +0100\n"
+
+ioccmd {dbpf DZ:test2.PROC 1}
+assure "?\n"
+send "2003-02-01 04:05:06 +0100\n"
+assure "1044068706 2003-02-01 04:05:06 +0100\n";
+
+ioccmd {dbpf DZ:test3.PROC 1}
+assure "?\n"
+send "1. Feb 2003 04:05:06.789 3.1415\n"
+assure "2003-02-01 04:05:06 +0100 3.141500\n";
+
+package require Epics
+array set PV [pvinfo DZ:test3.TSE]
+if {$PV(VAL) != -2 || $PV(TIME) != "02/01/03 04:05:06.789000000"} {incr faults}
+
+finish

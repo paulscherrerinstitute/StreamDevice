@@ -1,0 +1,197 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (longout, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    test1 {
+           out "%r"; out "%.1r"; out "%.2r"; out "%.3r"; out "%.4r"; out "%.5r";
+           out "%#r"; out "%#.1r"; out "%#.2r"; out "%#.3r"; out "%#.4r"; out "%#.5r";
+           out "%r"; out "%1r"; out "%2r"; out "%3r"; out "%4r"; out "%5r";
+           out "%0r"; out "%01r"; out "%02r"; out "%03r"; out "%04r"; out "%05r";
+           out "%#0r"; out "%#01r"; out "%#02r"; out "%#03r"; out "%#04r"; out "%#05r";
+           };
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1 0}
+assure "\x00\n"
+assure "\x00\n"
+assure "\x00\x00\n"
+assure "\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\n"
+assure "\x00\n"
+assure "\x00\n"
+assure "\x00\x00\n"
+assure "\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\n"
+assure "\x00\n"
+assure "\x00\n"
+assure "\x00\x00\n"
+assure "\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\n"
+assure "\x00\n"
+assure "\x00\n"
+assure "\x00\x00\n"
+assure "\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\n"
+assure "\x00\n"
+assure "\x00\n"
+assure "\x00\x00\n"
+assure "\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\n"
+
+ioccmd {dbpf DZ:test1 1}
+assure "\x01\n"
+assure "\x01\n"
+assure "\x00\x01\n"
+assure "\x00\x00\x01\n"
+assure "\x00\x00\x00\x01\n"
+assure "\x00\x00\x00\x00\x01\n"
+assure "\x01\n"
+assure "\x01\n"
+assure "\x01\x00\n"
+assure "\x01\x00\x00\n"
+assure "\x01\x00\x00\x00\n"
+assure "\x01\x00\x00\x00\x00\n"
+assure "\x01\n"
+assure "\x01\n"
+assure "\x00\x01\n"
+assure "\x00\x00\x01\n"
+assure "\x00\x00\x00\x01\n"
+assure "\x00\x00\x00\x00\x01\n"
+assure "\x01\n"
+assure "\x01\n"
+assure "\x00\x01\n"
+assure "\x00\x00\x01\n"
+assure "\x00\x00\x00\x01\n"
+assure "\x00\x00\x00\x00\x01\n"
+assure "\x01\n"
+assure "\x01\n"
+assure "\x01\x00\n"
+assure "\x01\x00\x00\n"
+assure "\x01\x00\x00\x00\n"
+assure "\x01\x00\x00\x00\x00\n"
+
+ioccmd {dbpf DZ:test1 -1}
+assure "\xff\n"
+assure "\xff\n"
+assure "\xff\xff\n"
+assure "\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\xff\n"
+assure "\xff\n"
+assure "\xff\n"
+assure "\xff\xff\n"
+assure "\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\xff\n"
+assure "\xff\n"
+assure "\xff\n"
+assure "\xff\xff\n"
+assure "\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\n"
+assure "\xff\xff\xff\xff\xff\n"
+assure "\xff\n"
+assure "\xff\n"
+assure "\x00\xff\n"
+assure "\x00\x00\xff\n"
+assure "\x00\x00\x00\xff\n"
+assure "\x00\x00\x00\x00\xff\n"
+assure "\xff\n"
+assure "\xff\n"
+assure "\xff\x00\n"
+assure "\xff\x00\x00\n"
+assure "\xff\x00\x00\x00\n"
+assure "\xff\x00\x00\x00\x00\n"
+
+ioccmd {dbpf DZ:test1 269554195}
+assure "\x13\n"
+assure "\x13\n"
+assure "\x12\x13\n"
+assure "\x11\x12\x13\n"
+assure "\x10\x11\x12\x13\n"
+assure "\x00\x10\x11\x12\x13\n"
+assure "\x13\n"
+assure "\x13\n"
+assure "\x13\x12\n"
+assure "\x13\x12\x11\n"
+assure "\x13\x12\x11\x10\n"
+assure "\x13\x12\x11\x10\x00\n"
+assure "\x13\n"
+assure "\x13\n"
+assure "\x00\x13\n"
+assure "\x00\x00\x13\n"
+assure "\x00\x00\x00\x13\n"
+assure "\x00\x00\x00\x00\x13\n"
+assure "\x13\n"
+assure "\x13\n"
+assure "\x00\x13\n"
+assure "\x00\x00\x13\n"
+assure "\x00\x00\x00\x13\n"
+assure "\x00\x00\x00\x00\x13\n"
+assure "\x13\n"
+assure "\x13\n"
+assure "\x13\x00\n"
+assure "\x13\x00\x00\n"
+assure "\x13\x00\x00\x00\n"
+assure "\x13\x00\x00\x00\x00\n"
+
+ioccmd {dbpf DZ:test1 -559038737}
+assure "\xef\n"
+assure "\xef\n"
+assure "\xbe\xef\n"
+assure "\xad\xbe\xef\n"
+assure "\xde\xad\xbe\xef\n"
+assure "\xff\xde\xad\xbe\xef\n"
+assure "\xef\n"
+assure "\xef\n"
+assure "\xef\xbe\n"
+assure "\xef\xbe\xad\n"
+assure "\xef\xbe\xad\xde\n"
+assure "\xef\xbe\xad\xde\xff\n"
+assure "\xef\n"
+assure "\xef\n"
+assure "\xff\xef\n"
+assure "\xff\xff\xef\n"
+assure "\xff\xff\xff\xef\n"
+assure "\xff\xff\xff\xff\xef\n"
+assure "\xef\n"
+assure "\xef\n"
+assure "\x00\xef\n"
+assure "\x00\x00\xef\n"
+assure "\x00\x00\x00\xef\n"
+assure "\x00\x00\x00\x00\xef\n"
+assure "\xef\n"
+assure "\xef\n"
+assure "\xef\x00\n"
+assure "\xef\x00\x00\n"
+assure "\xef\x00\x00\x00\n"
+assure "\xef\x00\x00\x00\x00\n"
+
+
+
+finish

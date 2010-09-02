@@ -1,0 +1,76 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (stringin, "DZ:readTimeout")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto read device")
+    }
+    record (bo, "DZ:echo")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto print(DZ:readTimeout) device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    read {out "Give me input"; in "%s";}
+    print {out "Text:'%(\$1.VAL)s' SEVR=%(\$1.SEVR)d STAT=%(\$1.STAT)d";}
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+# reply timeout
+ioccmd {dbpf DZ:readTimeout.PROC 1}
+assure "Give me input\n"
+after 1100
+ioccmd {dbpf DZ:echo.PROC 1}
+ioccmd {dbpr DZ:echo 1}
+assure "Text:'' SEVR=3 STAT=10\n"
+
+# read timeout
+ioccmd {dbpf DZ:readTimeout.PROC 1}
+assure "Give me input\n"
+send "Trulala"
+after 200
+ioccmd {dbpf DZ:echo.PROC 1}
+assure "Text:'Trulala' SEVR=3 STAT=1\n"
+
+# reply timeout again, old input stays
+ioccmd {dbpf DZ:readTimeout.PROC 1}
+assure "Give me input\n"
+after 1100
+ioccmd {dbpf DZ:echo.PROC 1}
+assure "Text:'Trulala' SEVR=3 STAT=10\n"
+
+# mismatch, partially parsed
+ioccmd {dbpf DZ:readTimeout.PROC 1}
+assure "Give me input\n"
+send "bla extra\n"
+after 200
+ioccmd {dbpf DZ:echo.PROC 1}
+assure "Text:'bla' SEVR=3 STAT=12\n"
+
+# success
+ioccmd {dbpf DZ:readTimeout.PROC 1}
+assure "Give me input\n"
+send "Input\n"
+after 200
+ioccmd {dbpf DZ:echo.PROC 1}
+assure "Text:'Input' SEVR=0 STAT=0\n"
+
+
+
+finish

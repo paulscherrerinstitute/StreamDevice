@@ -1,0 +1,59 @@
+rm -f test.*
+
+cat > test.cc << EOF
+#include <StreamBuffer.h>
+#include <assert.h>
+#include <stdio.h>
+int main () {
+    StreamBuffer haystack = "12345abc123xyz123";
+    StreamBuffer needle = "1n4m6p7q";
+    needle.remove(2,4);
+    assert (needle.equals("1n7q"));
+    needle.append("2x3y");
+    assert (needle.equals("1n7q2x3y"));
+    needle.remove(4);
+    assert (needle.equals("2x3y"));
+    needle.remove(1,1);
+    assert (needle.equals("23y"));
+    needle.truncate(-1);
+    assert (needle.equals("23"));
+    assert (haystack.find(needle) == 1);
+    assert (haystack.find(needle, 2) == 9);
+    assert (haystack.find(needle, -5) == 15);
+    assert (haystack.find("23", -5) == 15);
+    assert (haystack.find((char*)NULL, 10) == 10);
+    assert (haystack.find(needle, -1) == -1);
+    assert (haystack.find(needle, 100) == -1);
+    assert (haystack.find(needle, 0) == 1);
+    assert (haystack.find(needle, -100) == 1);
+    haystack.set("12345xy67890xy");
+    needle.set("xy");
+    assert (haystack.find(needle) == 5);
+    needle.set("x");
+    assert (haystack.find(needle) == 5);
+    haystack.set("12345\n67890\n");
+    needle.set("\n");
+    assert (haystack.find(needle) == 5);
+    haystack.set("12341234567890\n");
+    needle.set("2345");
+    assert (haystack.find(needle) == 5);
+    needle="7890";
+    assert (haystack.find(needle) == 10);
+    needle.append('\0');
+    assert (haystack.find(needle) == -1);
+    haystack.clear();
+    assert (haystack.find(needle) == -1);
+    haystack.set("deadbeef");
+    needle.clear();
+    assert (haystack.find(needle) == 0);
+    haystack.clear();
+    assert (haystack.find(needle) == 0);
+    return 0;
+}
+EOF
+
+g++ -I ../../src ../../src/O.$EPICS_HOST_ARCH/StreamBuffer.o test.cc -o test.exe
+
+test.exe || exit 1
+rm test.*
+echo "Test passed."

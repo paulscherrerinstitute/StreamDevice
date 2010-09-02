@@ -1,0 +1,34 @@
+How to use regular expressions in StreamDevice.
+
+First, you need the PCRE library.
+If it is already installed for your (Linux) system (try: rpm -ql pcre),
+set the following variables in your RELEASE file:
+PCRE_INCLUDE=<direcrory of pcre.h>
+PCRE_LIB=<direcrory of libpcre.so>
+
+For vxWorks, Windows and others you're probably out of luck here.
+In that case, download the PCRE package from www.pcre.org and
+epics.web.psi.ch/software/streamdevice/pcre/Makefile and compile
+PCRE as an EPICS application. Use the variable PCRE in your RELEASE file
+to define the location of this application.
+
+If either PCRE or PCRE_INCLUDE or PCRE_LIB are set in the RELEASE file,
+StreamDevice is automatically build with regular expression support.
+
+The syntax is %/regexp/. It can only be used in input. It returns the
+next string that matches the regexp. Anything before this string is skipped.
+
+To use sub-expressions use %.n/rexexp/ where n is a number from 1 to 9
+to match the n-th sub-expression. 
+
+It is possible to limit the input length to the match algorithm like
+%m/regexp/ where m is the maximal length.
+
+Example:
+in "%100.1/<title>(.*)<\/title>/";
+This searches the next 100 bytes and returns the string bewteen
+<title> and </title>. Any input before <title> is skipped. Any input
+after </title> is left in the buffer (and can by matched by other formats).
+Note that the / in </title> must be escaped.
+
+See regexp.cmd, regexp.proto, regexp.db for a working example.

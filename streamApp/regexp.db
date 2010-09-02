@@ -1,0 +1,5 @@
+record (stringin, "DZ:regexp")
+{
+    field (DTYP, "stream")
+    field (INP,  "@regexp.proto readTitle web")
+}

@@ -1,0 +1,170 @@
+# process this record to reload all stream protocols
+record (sub, "$(PREFIX):reload")
+{
+    field (SNAM, "streamReload")
+}
+
+# some scaling -10...10V <-> 0x0000...0xffff and back
+record (ao, "$(PREFIX):ao")
+{
+    field (DESC, "An analog value")
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto set-ao terminal")
+    field (PREC, "3")
+    field (LINR, "LINEAR")
+    field (ESLO, "0.000305180437934") # 20.0 / 0xffff 
+    field (EOFF, "-10")
+    field (DRVL, "-10")
+    field (DRVH, "10")
+    field (EGU,  "V")
+}
+
+record (ai, "$(PREFIX):ai")
+{
+    field (DESC, "An analog value")
+    field (DTYP, "stream")
+    field (INP,  "@example.proto ai terminal")
+    field (PREC, "3")
+    field (LINR, "LINEAR")
+    field (ESLO, "0.000305180437934") # 20.0 / 0xffff 
+    field (EOFF, "-10")
+    field (EGU,  "V")
+}
+
+# simple integer and binary i/o
+record (longout, "$(PREFIX):lo")
+{
+    field (DESC, "An integer value")
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto lo terminal")
+}
+
+record (longin, "$(PREFIX):li")
+{
+    field (DESC, "An integer value")
+    field (DTYP, "stream")
+    field (INP,  "@example.proto li terminal")
+}
+
+record (bo, "$(PREFIX):bo")
+{
+    field (DESC, "A bit value")
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto bo terminal")
+    field (MASK, "42")
+    field (ZNAM, "OFF")
+    field (ONAM, "ON")
+}
+
+record (bi, "$(PREFIX):bi")
+{
+    field (DESC, "A bit value")
+    field (DTYP, "stream")
+    field (INP,  "@example.proto bi terminal")
+    field (ZNAM, "OFF")
+    field (ONAM, "ON")
+}
+
+# playing with enums
+record (mbbo, "$(PREFIX):mbbo")
+{
+    field (DESC, "Print Enums")
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto enums terminal")
+    field (ZRST, "A")
+    field (ZRVL, "2")
+    field (ONST, "B")
+    field (ONVL, "3")
+    field (TWST, "C")
+    field (TWVL, "1")
+    field (THST, "D")
+    field (THVL, "0")
+}
+
+record (stringout, "$(PREFIX):command")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto COMMAND terminal")
+}
+
+record (stringin, "$(PREFIX):info")
+{
+    field (DTYP, "stream")
+    field (INP,  "@example.proto info terminal")
+}
+
+# prints all available checksums
+record (stringout, "$(PREFIX):checksum")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto checksum terminal")
+}
+
+# this record gets any (terminated) input line
+record (stringin, "$(PREFIX):spy")
+{
+    field (DTYP, "stream")
+    field (INP,  "@example.proto spy terminal")
+    field (SCAN, "I/O Intr")
+    field (FLNK, "$(PREFIX):log5")
+}
+
+# these records log the last few input lines
+record (stringin, "$(PREFIX):log5")
+{
+    field (INP,  "$(PREFIX):log4")
+    field (FLNK, "$(PREFIX):log4")
+}
+
+record (stringin, "$(PREFIX):log4")
+{
+    field (INP,  "$(PREFIX):log3")
+    field (FLNK, "$(PREFIX):log3")
+}
+
+record (stringin, "$(PREFIX):log3")
+{
+    field (INP,  "$(PREFIX):log2")
+    field (FLNK, "$(PREFIX):log2")
+}
+
+record (stringin, "$(PREFIX):log2")
+{
+    field (INP,  "$(PREFIX):log1")
+    field (FLNK, "$(PREFIX):log1")
+}
+
+record (stringin, "$(PREFIX):log1")
+{
+    field (INP,  "$(PREFIX):spy")
+}
+
+# caput to A,B,C or PROC to process this
+record (calcout, "$(PREFIX):calcout")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@example.proto calcout terminal")
+    field (A,    "3.1415")
+    field (B,    "15")
+    field (C,    "8")
+    field (CALC, "0") # should be a valid expression
+    field (DESC, "filename")
+}
+
+# read a long string as a waveform of characteres
+record (waveform, "$(PREFIX):hugestring")
+{
+    field (DTYP, "stream")
+    field (INP,  "@example.proto char_wave_in terminal")
+    field (FTVL, "CHAR")
+    field (NELM, "1000")
+}
+
+# write an array of strings
+record (waveform, "$(PREFIX):strings")
+{
+    field (DTYP, "stream")
+    field (INP,  "@example.proto string_wave_out terminal")
+    field (FTVL, "STRING")
+    field (NELM, "10")
+}

@@ -1,0 +1,18 @@
+# regular expression example
+# extract the title of from a web page
+
+outterminator = NL;
+interminator = "</html>" NL;  # terminators can have arbitrary length
+
+# Web servers close the connection after sending a page.
+# Thus, we can't use autoconnect (see drvAsynIPPortConfigure)
+# Handle connection manually in protocol.
+
+readTitle {
+    extraInput=ignore;
+    
+    connect 1000;                        # connect to server, 1 second timeout
+    out "GET http://epics.web.psi.ch/";  # HTTP request
+    in "%.1/<title>(.*)<\/title>/";      # get string in <title></title>
+    disconnect;                          # servers closes, so do we.
+}

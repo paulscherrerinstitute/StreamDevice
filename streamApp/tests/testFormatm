@@ -1,0 +1,67 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (ao, "DZ:ao")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto ao device")
+    }
+    record (ai, "DZ:ai")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto ai device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    ao {out "'%m' '%.4m' '%+.4m' '% .4m' '% +.4m' '%10.4m' '%-10.4m'";}
+    ai {out "?"; in "%m"; out "%.4e";}
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:ao 0}
+assure "'000000+00' '0000+00' '+0000+00' ' 0000+00' '+0000+00' '   0000+00' '0000+00   '\n"
+ioccmd {dbpf DZ:ao 1}
+assure "'100000-05' '1000-03' '+1000-03' ' 1000-03' '+1000-03' '   1000-03' '1000-03   '\n"
+ioccmd {dbpf DZ:ao 1000}
+assure "'100000-02' '1000+00' '+1000+00' ' 1000+00' '+1000+00' '   1000+00' '1000+00   '\n"
+ioccmd {dbpf DZ:ao 1000000}
+assure "'100000+01' '1000+03' '+1000+03' ' 1000+03' '+1000+03' '   1000+03' '1000+03   '\n"
+ioccmd {dbpf DZ:ao -1}
+assure "'-100000-05' '-1000-03' '-1000-03' '-1000-03' '-1000-03' '  -1000-03' '-1000-03  '\n"
+ioccmd {dbpf DZ:ao 12345}
+assure "'123450-01' '1235+01' '+1235+01' ' 1235+01' '+1235+01' '   1235+01' '1235+01   '\n"
+ioccmd {dbpf DZ:ao -1.2345e-15}
+assure "'-123450-20' '-1235-18' '-1235-18' '-1235-18' '-1235-18' '  -1235-18' '-1235-18  '\n"
+ioccmd {dbpf DZ:ao 1e-100}
+assure "'100000-105' '1000-103' '+1000-103' ' 1000-103' '+1000-103' '  1000-103' '1000-103  '\n"
+ioccmd {dbpf DZ:ai.PROC 1}
+assure "?\n"
+send "+1234+56\n"
+assure "1.2340e+59\n"
+ioccmd {dbpf DZ:ai.PROC 1}
+assure "?\n"
+send "-1234-56\n"
+assure "-1.2340e-53\n"
+ioccmd {dbpf DZ:ai.PROC 1}
+assure "?\n"
+send "-12340000-60\n"
+assure "-1.2340e-53\n"
+ioccmd {dbpf DZ:ai.PROC 1}
+assure "?\n"
+send "+00000000+0\n"
+assure "0.0000e+00\n"
+finish

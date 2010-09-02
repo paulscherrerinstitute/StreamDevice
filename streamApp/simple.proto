@@ -1,0 +1,13 @@
+terminator = CR LF;
+
+cmd {
+    out "%s";
+}
+info {
+    extrainput=ignore;
+    out "%s";
+    in "%39c";
+}
+read {
+    in "%39c";
+}

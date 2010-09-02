@@ -1,0 +1,133 @@
+record (stringout, "$(P):cmd")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@test.proto command terminal")
+    field (VAL, "")
+}
+record (stringout, "$(P):info")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@test.proto info terminal")
+}
+record (stringout, "$(P):request")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@test.proto request($(P):reply.VAL) terminal")
+}
+record (stringin, "$(P):reply")
+{
+}
+record (stringin, "$(P):spy")
+{
+    field (DTYP, "stream")
+    field (INP,  "@test.proto spy terminal")
+    field (SCAN, "I/O Intr")
+    field (FLNK, "$(P):log19")
+}
+record (stringin, "$(P):log0")
+{
+    field (INP,  "$(P):spy")
+}
+record (stringin, "$(P):log1")
+{
+    field (INP,  "$(P):log0")
+    field (FLNK, "$(P):log0")
+}
+record (stringin, "$(P):log2")
+{
+    field (INP,  "$(P):log1")
+    field (FLNK, "$(P):log1")
+}
+record (stringin, "$(P):log3")
+{
+    field (INP,  "$(P):log2")
+    field (FLNK, "$(P):log2")
+}
+record (stringin, "$(P):log4")
+{
+    field (INP,  "$(P):log3")
+    field (FLNK, "$(P):log3")
+}
+record (stringin, "$(P):log5")
+{
+    field (INP,  "$(P):log4")
+    field (FLNK, "$(P):log4")
+}
+record (stringin, "$(P):log6")
+{
+    field (INP,  "$(P):log5")
+    field (FLNK, "$(P):log5")
+}
+record (stringin, "$(P):log7")
+{
+    field (INP,  "$(P):log6")
+    field (FLNK, "$(P):log6")
+}
+record (stringin, "$(P):log8")
+{
+    field (INP,  "$(P):log7")
+    field (FLNK, "$(P):log7")
+}
+record (stringin, "$(P):log9")
+{
+    field (INP,  "$(P):log8")
+    field (FLNK, "$(P):log8")
+}
+record (stringin, "$(P):log10")
+{
+    field (INP,  "$(P):log9")
+    field (FLNK, "$(P):log9")
+}
+record (stringin, "$(P):log11")
+{
+    field (INP,  "$(P):log10")
+    field (FLNK, "$(P):log10")
+}
+record (stringin, "$(P):log12")
+{
+    field (INP,  "$(P):log11")
+    field (FLNK, "$(P):log11")
+}
+record (stringin, "$(P):log13")
+{
+    field (INP,  "$(P):log12")
+    field (FLNK, "$(P):log12")
+}
+record (stringin, "$(P):log14")
+{
+    field (INP,  "$(P):log13")
+    field (FLNK, "$(P):log13")
+}
+record (stringin, "$(P):log15")
+{
+    field (INP,  "$(P):log14")
+    field (FLNK, "$(P):log14")
+}
+record (stringin, "$(P):log16")
+{
+    field (INP,  "$(P):log15")
+    field (FLNK, "$(P):log15")
+}
+record (stringin, "$(P):log17")
+{
+    field (INP,  "$(P):log16")
+    field (FLNK, "$(P):log16")
+}
+record (stringin, "$(P):log18")
+{
+    field (INP,  "$(P):log17")
+    field (FLNK, "$(P):log17")
+}
+record (stringin, "$(P):log19")
+{
+    field (INP,  "$(P):log18")
+    field (FLNK, "$(P):log18")
+}
+record (waveform, "$(P):spybin")
+{
+    field (DTYP, "stream")
+    field (INP,  "@test.proto spybin terminal")
+    field (FTVL, "CHAR")
+    field (NELM, "2000")
+    field (SCAN, "I/O Intr")
+}

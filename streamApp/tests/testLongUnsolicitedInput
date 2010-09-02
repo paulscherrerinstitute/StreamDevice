@@ -1,0 +1,73 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (bo, "DZ:ready")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto ready device")
+        field (PINI, "YES")
+    }
+    record (stringin, "DZ:read")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto readintr device")
+        field (SCAN, "I/O Intr")
+        field (FLNK, "DZ:count")
+    }
+    record (calc, "DZ:count")
+    {
+        field (INPA, "DZ:count")
+        field (CALC, "A+1")
+    }
+    record (longout, "DZ:countout")
+    {
+        field (DTYP, "stream")
+        field (DOL,  "DZ:count")
+        field (OMSL, "closed_loop")
+        field (OUT,  "@test.proto printnum device")
+    }
+    record (stringout, "DZ:stringout")
+    {
+        field (DTYP, "stream")
+        field (DOL,  "DZ:read")
+        field (OMSL, "closed_loop")
+        field (OUT,  "@test.proto printstr device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    ready {out "ready"; }
+    readintr {extraInput=ignore; in "%39c"; }
+    printnum {out "%d";}
+    printstr {out "%s";}
+}
+
+set startup {
+    var streamDebug 1
+}
+
+set debug 0
+set rep 500
+
+startioc
+
+assure "ready\n"
+after 1000
+for {set i 1} {$i <= $rep} {incr i} {
+    append output "This is line $i.\n"
+}
+send $output
+after 2000
+ioccmd {dbpf "DZ:stringout.PROC" 1}
+assure "This is line $rep.\n"
+ioccmd {dbpf "DZ:countout.PROC" 1}
+assure "$rep\n"
+
+finish

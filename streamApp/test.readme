@@ -1,0 +1,21 @@
+Simple test environment:
+
+1) Start device simulation:
+   terminal.tcl &
+   Or set up a real device.
+   
+2) Start ioc:
+   xterm -e test.cmd &
+   Or edit test.cmd first.
+   
+3) Start medm:
+   medm -x -macro P=TEST test.adl &
+      
+Records:
+TEST:cmd    - writes string to device
+TEST:info   - writes string and reads reply (result in same record)
+TEST:spy    - gets any input line from device
+TEST:spybin - gets any input (binary waveform)
+TEST:log*   - history of TEST:spy
+
+Try to write 'help' to TEST:cmd.

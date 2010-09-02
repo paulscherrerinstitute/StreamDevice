@@ -1,0 +1,57 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+foreach rtype {ao bo mbbo mbboDirect longout stringout calcout} {
+    append records "
+        record ($rtype, \"DZ:$rtype\")
+        {
+            field (DTYP, \"stream\")
+            field (OUT,  \"@test.proto init($rtype) device\")
+            field (PINI, \"YES\")
+            field (VAL,  \"0\")
+        }
+   "
+}
+foreach rtype {ai bi mbbi mbbiDirect longin stringin waveform} {
+    append records "
+        record ($rtype, \"DZ:$rtype\")
+        {
+            field (DTYP, \"stream\")
+            field (INP,  \"@test.proto init($rtype) device\")
+            field (PINI, \"YES\")
+        }
+   "
+}
+
+set protocol {
+    Terminator = LF;
+    init {out "init \$1"; }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+assure "init ao\n" \
+       "init bo\n" \
+       "init mbbo\n" \
+       "init mbboDirect\n" \
+       "init longout\n" \
+       "init stringout\n" \
+       "init ai\n" \
+       "init bi\n" \
+       "init mbbi\n" \
+       "init mbbiDirect\n" \
+       "init longin\n" \
+       "init stringin\n" \
+       "init calcout\n" \
+       "init waveform\n" \
+
+finish

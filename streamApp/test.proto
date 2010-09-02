@@ -1,0 +1,25 @@
+terminator = CR LF;
+readtimeout = 1000;
+pollperiod = 10;
+replytimeout = 1000;
+command {
+    out "%s";
+}
+info {
+    out "%s";
+    in "%39c";
+}
+request {
+    out "%s";
+    in "%(\$1)39c";
+}
+spy {
+    extraInput=ignore;
+    in "%39c";
+}
+spybin {
+    readtimeout = 1;
+    terminator = "";
+    extraInput=ignore;
+    in "%r";
+}

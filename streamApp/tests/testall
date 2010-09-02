@@ -1,0 +1,18 @@
+for i in test*
+do
+    if [ $i != testall -a -x $i ]
+    then
+        echo $i
+        if ! $i
+        then
+            echo "Failed."
+            (( fail++ ))
+        fi
+    fi
+done
+
+if [ "$fail" ]
+then echo "$fail tests failed"
+else echo "All tests passsed."
+fi
+exit $fail

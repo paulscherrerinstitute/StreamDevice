@@ -1,0 +1,61 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (ao, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    test1 {out "%R"; out "%#R"; out "%4R"; out "%#4R"; out "%8R"; out "%#8R";}
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1 "0"}
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\x00\x00\x00\n"
+
+ioccmd {dbpf DZ:test1 "1"}
+assure "\x3f\x80\x00\x00\n"
+assure "\x00\x00\x80\x3f\n"
+assure "\x3f\x80\x00\x00\n"
+assure "\x00\x00\x80\x3f\n"
+assure "\x3f\xf0\x00\x00\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\x00\xf0\x3f\n"
+
+ioccmd {dbpf DZ:test1 "-1"}
+assure "\xbf\x80\x00\x00\n"
+assure "\x00\x00\x80\xbf\n"
+assure "\xbf\x80\x00\x00\n"
+assure "\x00\x00\x80\xbf\n"
+assure "\xbf\xf0\x00\x00\x00\x00\x00\x00\n"
+assure "\x00\x00\x00\x00\x00\x00\xf0\xbf\n"
+
+ioccmd {dbpf DZ:test1 "3.1415"}
+assure "\x40\x49\x0e\x56\n"
+assure "\x56\x0e\x49\x40\n"
+assure "\x40\x49\x0e\x56\n"
+assure "\x56\x0e\x49\x40\n"
+assure "\x40\x09\x21\xca\xc0\x83\x12\x6f\n"
+assure "\x6f\x12\x83\xc0\xca\x21\x09\x40\n"
+
+finish

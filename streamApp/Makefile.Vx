@@ -1,0 +1,20 @@
+TOP = ../../..
+
+include $(TOP)/config/CONFIG_APP
+
+LIBNAME = streamApp
+
+LDLIBS += $(COMPAT_BIN)/compatLib
+LDLIBS += $(ASYN_BIN)/asynLib
+LDLIBS += $(INSTALL_BIN)/streamLib
+
+include ../base-3-13LIBOBJS
+
+# Write StreamDevice debug output to this file
+CPPFLAGS += -DDEBUGFILE=StreamDebug.log
+
+include $(TOP)/config/RULES.Vx
+include $(TOP)/config/RULES.munch
+
+# Rebuild when  LIBOBJS change
+$(LIBNAME): ../base-3-13LIBOBJS

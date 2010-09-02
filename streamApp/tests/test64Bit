@@ -1,0 +1,94 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (ao, "DZ:ao")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto ao device")
+    }
+    record (longout, "DZ:longout")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto longout device")
+    }
+    record (bo, "DZ:bo")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto bo device")
+        field (MASK, "-1")
+    }
+    record (mbbo, "DZ:mbbo")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto mbbo device")
+        field (ZRVL, "0")
+        field (ONVL, "-1")
+   }
+    record (mbboDirect, "DZ:mbboDirect")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto mbboDirect device")
+   }
+    record (ai, "DZ:ai")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto ai device")
+    }
+    record (longin, "DZ:longin")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto longin device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+# these records use signed values: %d
+    ao {out "ao %.3f %d %(VAL).3f %(RVAL)d";}
+    longout {out "longout %d %(VAL)d";}
+    ai {out "ai?"; in "%d"; out "ai %d";}
+    longin {out "longin?"; in "%d"; out "longin %d";}
+# these records use unsigned values: %u, %x
+    bo {out "bo %u %x %b";}
+    mbbo {out "mbbo %u %x %b";}
+    mbboDirect {out "mbboDirect %u %x %b";}
+    bi {out "bi?"; in "%d"; out "bi %d %x";}
+    mbbi {out "mbbi?"; in "%d"; out "mbbi %d %x";}
+    mbbiDirect {out "mbbiDirect?"; in "%d"; out "mbbiDirect %d %x";}
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+ioccmd {dbpf DZ:ao -1}
+assure "ao -1.000 -1 -1.000 -1\n"
+ioccmd {dbpf DZ:longout -1}
+assure "longout -1 -1\n"
+ioccmd {dbpf DZ:bo 1}
+assure "bo 4294967295 ffffffff 11111111111111111111111111111111\n"
+ioccmd {dbpf DZ:mbbo 1}
+assure "mbbo 4294967295 ffffffff 11111111111111111111111111111111\n"
+ioccmd {dbpf DZ:mbboDirect.B0 1}
+assure "mbboDirect 1 1 1\n"
+ioccmd {dbpf DZ:mbboDirect -1}
+assure "mbboDirect 65535 ffff 1111111111111111\n"
+ioccmd {dbpf DZ:ai.PROC 1}
+assure "ai?\n"
+send "-1\n"
+assure "ai -1\n"
+ioccmd {dbpf DZ:longin.PROC 1}
+assure "longin?\n"
+send "-1\n"
+assure "longin -1\n"
+
+
+finish

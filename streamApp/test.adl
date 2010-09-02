@@ -1,0 +1,900 @@
+
+file {
+	name="/afs/psi.ch/user/z/zimoch/top/StreamDevice-2/streamApp/test.adl"
+	version=030100
+}
+display {
+	object {
+		x=261
+		y=341
+		width=552
+		height=362
+	}
+	clr=14
+	bclr=50
+	cmap=""
+	gridSpacing=5
+	gridOn=1
+	snapToGrid=1
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=105
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log9"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=115
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log8"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=125
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log7"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=135
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log6"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=145
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log5"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=155
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log4"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=165
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log3"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=175
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log2"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=185
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log1"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=195
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log0"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=50
+		y=265
+		width=390
+		height=20
+	}
+	control {
+		chan="$(P):cmd"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=215
+		width=390
+		height=14
+	}
+	monitor {
+		chan="$(P):spy"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+text {
+	object {
+		x=5
+		y=105
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log9"
+}
+text {
+	object {
+		x=5
+		y=115
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log8"
+}
+text {
+	object {
+		x=5
+		y=125
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log7"
+}
+text {
+	object {
+		x=5
+		y=135
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log6"
+}
+text {
+	object {
+		x=5
+		y=145
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log5"
+}
+text {
+	object {
+		x=5
+		y=155
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log4"
+}
+text {
+	object {
+		x=5
+		y=165
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log3"
+}
+text {
+	object {
+		x=5
+		y=175
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log2"
+}
+text {
+	object {
+		x=5
+		y=185
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log1"
+}
+text {
+	object {
+		x=5
+		y=195
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log0"
+}
+text {
+	object {
+		x=5
+		y=215
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="spy"
+}
+text {
+	object {
+		x=5
+		y=270
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="cmd"
+}
+text {
+	object {
+		x=5
+		y=295
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="info"
+}
+"text entry" {
+	object {
+		x=50
+		y=290
+		width=390
+		height=20
+	}
+	control {
+		chan="$(P):info"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=235
+		width=390
+		height=14
+	}
+	monitor {
+		chan="$(P):spybin"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=5
+		y=235
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="spybin"
+}
+text {
+	object {
+		x=5
+		y=320
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="request"
+}
+"text entry" {
+	object {
+		x=50
+		y=315
+		width=390
+		height=20
+	}
+	control {
+		chan="$(P):request"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=340
+		width=390
+		height=14
+	}
+	monitor {
+		chan="$(P):reply"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+text {
+	object {
+		x=5
+		y=340
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="reply"
+}
+"text update" {
+	object {
+		x=445
+		y=340
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):reply.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=445
+		y=315
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):request.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=445
+		y=290
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):info.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=445
+		y=265
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):cmd.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=445
+		y=235
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):spybin.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=445
+		y=215
+		width=100
+		height=15
+	}
+	monitor {
+		chan="$(P):spy.STAT"
+		clr=14
+		bclr=12
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=5
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log19"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=15
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log18"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=25
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log17"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=35
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log16"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=45
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log15"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=55
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log14"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=65
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log13"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=75
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log12"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=85
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log11"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=50
+		y=95
+		width=390
+		height=10
+	}
+	monitor {
+		chan="$(P):log10"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=5
+		y=5
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log19"
+}
+text {
+	object {
+		x=5
+		y=15
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log18"
+}
+text {
+	object {
+		x=5
+		y=25
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log17"
+}
+text {
+	object {
+		x=5
+		y=35
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log16"
+}
+text {
+	object {
+		x=5
+		y=45
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log15"
+}
+text {
+	object {
+		x=5
+		y=55
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log14"
+}
+text {
+	object {
+		x=5
+		y=65
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log13"
+}
+text {
+	object {
+		x=5
+		y=75
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log12"
+}
+text {
+	object {
+		x=5
+		y=85
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log11"
+}
+text {
+	object {
+		x=5
+		y=95
+		width=25
+		height=10
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="log10"
+}
