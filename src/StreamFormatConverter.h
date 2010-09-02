@@ -22,6 +22,7 @@
 
 #include "StreamFormat.h"
 #include "StreamBuffer.h"
+#include "StreamProtocol.h"
 
 #define esc (0x1b)
 
@@ -41,6 +42,7 @@ class StreamFormatConverter
     const char* _name;
 public:
     virtual ~StreamFormatConverter();
+    static int parseFormat(const char*& source, FormatType, StreamFormat&, StreamBuffer& infoString);
     const char* name() { return _name; }
     void provides(const char* name, const char* provided);
     static StreamFormatConverter* find(unsigned char c);

@@ -58,11 +58,19 @@ void StreamError(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    StreamVError(fmt, args);
+    StreamVError(0, NULL, fmt, args);
     va_end(args);
 }
 
-void StreamVError(const char* fmt, va_list args)
+void StreamError(int line, const char* file, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    StreamVError(line, file, fmt, args);
+    va_end(args);
+}
+
+void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
     char timestamp[40];
     StreamPrintTimestampFunction(timestamp, 40);
@@ -79,6 +87,10 @@ void StreamVError(const char* fmt, va_list args)
 #endif
     fprintf(stderr, "\033[31;1m");
     fprintf(stderr, "%s ", timestamp);
+    if (file)
+    {
+        fprintf(stderr, "%s line %d: ", file, line);
+    }
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\033[0m");
 }

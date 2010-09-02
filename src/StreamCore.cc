@@ -325,7 +325,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
     {
         if (!busSupportsEvent())
         {
-            protocol->errorMsg(getLineNumber(command),
+            error(getLineNumber(command), protocol->filename(),
                     "Events not supported by businterface.\n");
             return false;
         }
@@ -339,7 +339,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
             }
             if (*args != ')')
             {
-                protocol->errorMsg(getLineNumber(command),
+                error(getLineNumber(command), protocol->filename(),
                     "Expect ')' instead of: '%s'\n", args);
                 return false;
             }
@@ -360,7 +360,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
     {
         buffer.append(exec_cmd);
         if (!protocol->compileString(buffer, args,
-            PrintFormat, this))
+            NoFormat, this))
         {
             return false;
         }
@@ -383,7 +383,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
         return true;
     }
     
-    protocol->errorMsg(getLineNumber(command),
+    error(getLineNumber(command), protocol->filename(),
         "Unknown command name '%s'\n", command);
     return false;
 }
@@ -592,7 +592,6 @@ evalOut()
 {
     inputBuffer.clear(); // flush all unread input
     unparsedInput = false;
-    outputLine.clear();
     if (!formatOutput())
     {
         finishProtocol(FormatError);
@@ -634,13 +633,15 @@ formatOutput()
     const char* fieldName = NULL;
     const char* formatstring;
     int formatstringlen;
+    
+    outputLine.clear();
     while ((command = *commandIndex++) != StreamProtocolParser::eos)
     {
         switch (command)
         {
             case StreamProtocolParser::format_field:
             {
-                debug("StreamCore::formatOutput(%s): StreamProtocolParser::format_field\n",
+                debug("StreamCore::formatOutput(%s): StreamProtocolParser::redirect_format\n",
                     name());
                 // code layout:
                 // field <eos> addrlen AddressStructure formatstring <eos> StreamFormat [info]
@@ -663,6 +664,7 @@ formatOutput()
                 }
                 formatstringlen = commandIndex-formatstring;
                 commandIndex++;
+                
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
@@ -670,6 +672,7 @@ formatOutput()
                 debug("StreamCore::formatOutput(%s): format = %%%s\n",
                     name(), StreamBuffer(formatstring, formatstringlen).expand()());
 #endif
+
                 if (fmt.type == pseudo_format)
                 {
                     if (!StreamFormatConverter::find(fmt.conv)->
@@ -685,7 +688,7 @@ formatOutput()
                 if (!formatValue(fmt, fieldAddress ? fieldAddress() : NULL))
                 {
                     StreamBuffer formatstr(formatstring, formatstringlen);
-                    if (fieldName)
+                    if (fieldAddress)
                         error("%s: Cannot format field '%s' with '%%%s'\n",
                             name(), fieldName, formatstr.expand()());
                     else
@@ -694,7 +697,6 @@ formatOutput()
                     return false;
                 }
                 fieldAddress.clear();
-                fieldName = NULL;
                 continue;
             }
             case esc:
@@ -718,7 +720,6 @@ printSeparator()
     }
     if (!separator) return;
     long i = 0;
-    if (separator[0] == ' ') i++; // ignore leading space
     for (; i < separator.length(); i++)
     {
         if (separator[i] == StreamProtocolParser::skip) continue; // wildcard
@@ -744,6 +745,8 @@ printValue(const StreamFormat& fmt, long value)
             name(), value);
         return false;
     }
+    debug("StreamCore::printValue(%s, long): \"%s\"\n",
+        name(), outputLine.expand()());
     return true;
 }
 
@@ -764,6 +767,8 @@ printValue(const StreamFormat& fmt, double value)
             name(), value);
         return false;
     }
+    debug("StreamCore::printValue(%s, double): \"%s\"\n",
+        name(), outputLine.expand()());
     return true;
 }
 
@@ -785,6 +790,8 @@ printValue(const StreamFormat& fmt, char* value)
             name(), buffer.expand()());
         return false;
     }
+    debug("StreamCore::printValue(%s, char*): \"%s\"\n",
+        name(), outputLine.expand()());
     return true;
 }
 
@@ -804,8 +811,6 @@ lockCallback(StreamIoStatus status)
     flags |= BusOwner;
     if (status != StreamIoSuccess)
     {
-        error("%s: Lock timeout\n",
-            name());
         finishProtocol(LockTimeout);
         return;
     }
@@ -1107,7 +1112,9 @@ matchInput()
        is installed and starts with 'in' (then we reparse the input).
     */
     char command;
+    const char* fieldName = NULL;
     const char* formatstring;
+    int formatstringlen;
     
     consumedInput = 0;
     
@@ -1119,6 +1126,7 @@ matchInput()
             {
                 // code layout:
                 // field <StreamProtocolParser::eos> addrlen AddressStructure formatstring <StreamProtocolParser::eos> StreamFormat [info]
+                fieldName = commandIndex;
                 commandIndex += strlen(commandIndex)+1;
                 unsigned short addrlen = extract<unsigned short>(commandIndex);
                 fieldAddress.set(commandIndex, addrlen);
@@ -1130,11 +1138,23 @@ matchInput()
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
                 formatstring = commandIndex;
-                while (*commandIndex++ != StreamProtocolParser::eos); // jump after <eos>
+                // jump after <eos>
+                while (*commandIndex)
+                {
+                    if (*commandIndex == esc) commandIndex++;
+                    commandIndex++;
+                }
+                formatstringlen = commandIndex-formatstring;
+                commandIndex++;
                 
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
-                fmt.info = commandIndex;
+                fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
+#ifndef NO_TEMPORARY
+                debug("StreamCore::matchInput(%s): format = %%%s\n",
+                    name(), StreamBuffer(formatstring, formatstringlen).expand()());
+#endif
+
                 if (fmt.flags & skip_flag || fmt.type == pseudo_format)
                 {
                     long ldummy;
@@ -1185,6 +1205,53 @@ matchInput()
                     consumedInput += consumed;
                     break;
                 }
+                if (fmt.flags & compare_flag)
+                {
+                    outputLine.clear();
+                    flags &= ~Separator;
+                    if (!formatValue(fmt, fieldAddress ? fieldAddress() : NULL))
+                    {
+                        StreamBuffer formatstr(formatstring, formatstringlen);
+                        if (fieldAddress)
+                            error("%s: Cannot format field '%s' with '%%%s'\n",
+                                name(), fieldName, formatstr.expand()());
+                        else
+                            error("%s: Cannot format value with '%%%s'\n",
+                                name(), formatstr.expand()());
+                        return false;
+                    }
+                    debug("StreamCore::matchInput(%s): compare \"%s\" with \"%s\"\n",
+                        name(), inputLine.expand(consumedInput, outputLine.length())(), outputLine.expand()()); 
+                    if (inputLine.length() - consumedInput < outputLine.length())
+                    {
+                        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                        {
+                            error("%s: Input \"%s%s\" too short."
+                                  " No match for format %%%s (\"%s\")\n",
+                                name(), 
+                                inputLine.length() > 20 ? "..." : "",
+                                inputLine.expand(-20)(),
+                                formatstring,
+                                outputLine.expand()());
+                        }
+                        return false;
+                    }
+                    if (!outputLine.equals(inputLine(consumedInput),outputLine.length()))
+                    {
+                        if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
+                        {
+                            error("%s: Input \"%s%s\" does not match"
+                                  " format %%%s (\"%s\")\n",
+                                name(), inputLine.expand(consumedInput, 20)(),
+                                inputLine.length()-consumedInput > 20 ? "..." : "",
+                                formatstring,
+                                outputLine.expand()());
+                        }
+                        return false;
+                    }
+                    consumedInput += outputLine.length();
+                    break;
+                }
                 flags &= ~Separator;
                 if (!matchValue(fmt, fieldAddress ? fieldAddress() : NULL))
                 {
@@ -1202,7 +1269,7 @@ matchInput()
                     return false;
                 }
                 // matchValue() has already removed consumed bytes from inputBuffer
-                fieldAddress = NULL;
+                fieldAddress.clear();
                 break;
             }
             case StreamProtocolParser::skip:
@@ -1514,7 +1581,6 @@ timerCallback()
 bool StreamCore::
 evalExec()
 {
-    outputLine.clear();
     formatOutput();
     // release bus
     if (flags & BusOwner)

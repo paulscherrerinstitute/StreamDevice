@@ -29,7 +29,8 @@ typedef enum {
     alt_flag     = 0x08,
     zero_flag    = 0x10,
     skip_flag    = 0x20,
-    default_flag = 0x40
+    default_flag = 0x40,
+    compare_flag = 0x80
 } StreamFormatFlag;
 
 typedef enum {

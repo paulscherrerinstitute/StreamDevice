@@ -19,8 +19,8 @@
 *                                                              *
 ***************************************************************/
 
+#include <stdlib.h>
 #include "StreamFormatConverter.h"
-#include "StreamFormat.h"
 #include "StreamError.h"
 
 StreamFormatConverter* StreamFormatConverter::
@@ -29,6 +29,125 @@ registered [256];
 StreamFormatConverter::
 ~StreamFormatConverter()
 {
+}
+
+int StreamFormatConverter::
+parseFormat(const char*& source, FormatType formatType, StreamFormat& streamFormat, StreamBuffer& infoString)
+{
+/*
+    source := [flags] [width] ['.' prec] conv [extra]
+    flags := '-' | '+' | ' ' | '#' | '0' | '*' | '?' | '='
+    width := integer
+    prec :=  integer
+    conv := character
+    extra := string
+*/
+
+    // look for flags
+    streamFormat.flags = 0;
+    bool loop = true;
+    while (loop)
+    {
+        switch (*++source)
+        {
+            case '-':
+                streamFormat.flags |= left_flag;
+                break;
+            case '+':
+                streamFormat.flags |= sign_flag;
+                break;
+            case ' ':
+                streamFormat.flags |= space_flag;
+                break;
+            case '#':
+                streamFormat.flags |= alt_flag;
+                break;
+            case '0':
+                streamFormat.flags |= zero_flag;
+                break;
+            case '*':
+                if (formatType != ScanFormat)
+                {
+                    error("Use of skip modifier '*' "
+                          "only allowed in input formats\n");
+                    return false;
+                }
+                streamFormat.flags |= skip_flag;
+                break;
+            case '?':
+                if (formatType != ScanFormat)
+                {
+                    error("Use of default modifier '?' "
+                          "only allowed in input formats\n");
+                    return false;
+                }
+                streamFormat.flags |= default_flag;
+                break;
+            case '=':
+                if (formatType != ScanFormat)
+                {
+                    error("Use of compare modifier '=' "
+                          "only allowed in input formats\n");
+                    return false;
+                }
+                streamFormat.flags |= compare_flag;
+                formatType = PrintFormat;
+                break;
+            default:
+                loop = false;
+        }
+    }
+    // look for width
+    unsigned long val;
+    char* p;
+    val = strtoul (source, &p, 10);
+    source = p;
+    if (val > 0xFFFF)
+    {
+        error("Field width %ld out of range\n", val);
+        return false;
+    }
+    streamFormat.width = (unsigned short)val;
+    // look for prec
+    streamFormat.prec = -1;
+    if (*source == '.')
+    {
+        source++;
+        val = strtoul(source, &p, 10);
+        if (p == source)
+        {
+            debug("source = %s\n", source);
+            error("Numeric precision field expected after '.'\n");
+            return false;
+        }
+        source = p;
+        if (val > 0x7FFF)
+        {
+            error("Precision %ld out of range\n", val);
+            return false;
+        }
+        streamFormat.prec = (short)val;
+    }
+    // look for converter
+    streamFormat.conv = *source++;
+    if (!streamFormat.conv || strchr("'\" (.0+-*?=", streamFormat.conv))
+    {
+        error("Missing converter character\n");
+        return false;
+    }
+    debug("StreamFormatConverter::parseFormat: converter='%c'\n",
+        streamFormat.conv);
+    StreamFormatConverter* converter;
+    converter = StreamFormatConverter::find(streamFormat.conv);
+    if (!converter)
+    {
+        error("No converter registered for format '%%%c'\n",
+            streamFormat.conv);
+        return false;
+    }
+    // parse format and get info string
+    return converter->parse(streamFormat, infoString,
+        source, formatType == ScanFormat);
 }
 
 void StreamFormatConverter::
@@ -112,7 +231,7 @@ static void copyFormatString(StreamBuffer& info, const char* source)
     const char* p = source - 1;
     while (*p != '%' && *p != ')') p--;
     info.append('%');
-    while (++p != source-1) if (*p != '?') info.append(*p);
+    while (++p != source-1) if (*p != '?' && *p != '=') info.append(*p);
 }
 
 // Standard Long Converter for 'diouxX'

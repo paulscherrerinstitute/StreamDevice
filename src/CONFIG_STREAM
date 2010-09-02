@@ -42,6 +42,7 @@ FORMATS += RawFloat
 FORMATS += Binary
 FORMATS += Checksum
 FORMATS += MantissaExponent
+FORMATS += Timestamp
 
 # Want Perl regular expression matching?
 # If PCRE is installed at the same location for all

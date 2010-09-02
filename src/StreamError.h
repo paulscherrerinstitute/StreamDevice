@@ -30,11 +30,19 @@
 extern int streamDebug;
 extern void (*StreamPrintTimestampFunction)(char* buffer, int size);
 
+void StreamError(int line, const char* file, const char* fmt, ...)
+__attribute__ ((format(printf,3,4)));
+
+void StreamVError(int line, const char* file, const char* fmt, va_list args)
+__attribute__ ((format(printf,3,0)));
+
 void StreamError(const char* fmt, ...)
 __attribute__ ((format(printf,1,2)));
 
-void StreamVError(const char* fmt, va_list args)
-__attribute__ ((format(printf,1,0)));
+inline void StreamVError(const char* fmt, va_list args)
+{
+    StreamVError(0, NULL, fmt, args); 
+}
 
 class StreamDebugClass
 {

@@ -352,7 +352,6 @@ report(int interest)
                 pstream->ioLink->value.instio.string);
         }
     }
-    StreamPrintTimestampFunction = streamEpicsPrintTimestamp;
     return OK;
 }
 
@@ -968,6 +967,26 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
         long nelem = pdbaddr->no_elements;
         size_t size = nelem * typeSize[format.type];
         char* buffer = fieldBuffer.clear().reserve(size);
+        
+        if (strcmp(((dbFldDes*)pdbaddr->pfldDes)->name, "TIME") == 0)
+        {
+            double time;
+            
+            if (format.type != double_format)
+            {
+                error ("%s: can only read double values from TIME field\n", name());
+                return false;
+            }
+            if (pdbaddr->precord == record)
+            {
+                /* if getting time from own record, update timestamp first */
+                recGblGetTimeStamp(record);
+            }
+            time = pdbaddr->precord->time.secPastEpoch + 631152000u + pdbaddr->precord->time.nsec * 1e-9;
+            debug("Stream::formatValue(%s): read %f from TIME field\n", name(), time);
+            return printValue(format, time);
+        }
+
         if (dbGet(pdbaddr, dbfMapping[format.type], buffer,
             NULL, &nelem, NULL) != 0)
         {
@@ -1105,6 +1124,28 @@ noMoreElements:
             }
             return false;
         }
+        if (strcmp(((dbFldDes*)pdbaddr->pfldDes)->name, "TIME") == 0)
+        {
+#ifdef epicsTimeEventDeviceTime
+            if (format.type != double_format)
+            {
+                error ("%s: can only write double values to TIME field\n", name());
+                return false;
+            }
+            dval = dval-631152000u;
+            pdbaddr->precord->time.secPastEpoch = (long)dval;
+            /* rouding: we don't have 9 digits precision in a double of today's number of seconds */
+            pdbaddr->precord->time.nsec = (long)((dval-(long)dval)*1e6)*1000;
+            debug("Stream::matchValue(%s): writing %i.%i to TIME field\n", name(),
+                pdbaddr->precord->time.secPastEpoch, pdbaddr->precord->time.nsec);
+            pdbaddr->precord->tse = epicsTimeEventDeviceTime;
+            return true;
+#else
+            error ("%s: writing TIME field is not supported in this EPICS version\n", name());
+            return false;
+#endif
+        }
+        
         if (pdbaddr->precord == record || INIT_RUN)
         {
             // write into own record, thus don't process it
