@@ -245,6 +245,7 @@ compile(StreamProtocolParser::Protocol* protocol)
     inTerminatorDefined = false;
     outTerminatorDefined = false;
     
+    unsigned long bufferSize = 0;
     unsigned short ignoreExtraInput = false;
     if (!protocol->getEnumVariable("extrainput", ignoreExtraInput,
         extraInputNames))
@@ -259,10 +260,12 @@ compile(StreamProtocolParser::Protocol* protocol)
         protocol->getNumberVariable("maxinput", maxInput) &&
         // use replyTimeout as default for pollPeriod
         protocol->getNumberVariable("replytimeout", pollPeriod) &&
-        protocol->getNumberVariable("pollperiod", pollPeriod)))
+        protocol->getNumberVariable("pollperiod", pollPeriod) &&
+        protocol->getNumberVariable("buffersize", bufferSize)))
     {
         return false;
     }
+    inputBuffer.grow(bufferSize);
     if (!(protocol->getStringVariable("terminator", inTerminator, &inTerminatorDefined) &&
         protocol->getStringVariable("terminator", outTerminator, &outTerminatorDefined) &&
         protocol->getStringVariable("interminator", inTerminator, &inTerminatorDefined) &&
