@@ -35,13 +35,13 @@ class StreamBuffer
     long offs;
     char* buffer;
 
-    void grow(long);
     void init(const void*, long);
 
     void check(long size)
         {if (len+offs+size >= cap) grow(len+size);}
 
 public:
+    void grow(long);
     // Hints:
     // * Any index parameter (long) can be negative
     //   meaning "count from end" (-1 is the last byte)
