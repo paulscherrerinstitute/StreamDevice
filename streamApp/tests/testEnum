@@ -37,6 +37,11 @@ set records {
         field (DTYP, "stream")
         field (INP,  "@test.proto in2 device")
     }
+    record (longin, "DZ:testin3")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto in3 device")
+    }
 }
 
 set protocol {
@@ -47,6 +52,7 @@ set protocol {
     in1  {in  "%#{zero|one|two}bla"; out "%d";}
     out2 {out "%#{zero=-1|one|two=5}bla";}
     in2  {in  "%#{zero=-1|one|two=5}bla"; out "%d";}
+    in3  {in  "%{\x00|\r|}bla"; out "%d";}
 }
 
 set startup {
@@ -103,5 +109,16 @@ assure "0\n"
 ioccmd {dbpf DZ:testin2.PROC 1}
 send "twobla\n"
 assure "5\n"
+
+ioccmd {dbpf DZ:testin3.PROC 1}
+send "\000bla\n"
+assure "0\n"
+ioccmd {dbpf DZ:testin3.PROC 1}
+send "\rbla\n"
+assure "1\n"
+ioccmd {dbpf DZ:testin3.PROC 1}
+send "bla\n"
+assure "2\n"
+
 
 finish
