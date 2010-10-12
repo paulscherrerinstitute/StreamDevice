@@ -21,6 +21,7 @@
 #include "devStream.h"
 #include <waveformRecord.h>
 #include <string.h>
+#include <errlog.h>
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
