@@ -76,7 +76,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
                     if (*source == '.')
                     {
                         c = (char*) source+1;
-                        n = isdigit(*c) ? strtoul(c, &c, 10) : 9;
+                        n = isdigit(*c) ? strtoul(c, &c, 10) : 6;
                         if (toupper(*c) == 'S')
                         {
                             source = c;
