@@ -992,7 +992,9 @@ readCallback(StreamIoStatus status,
     if (inTerminator)
     {
         // look for terminator
-        end = inputBuffer.find(inTerminator);
+        long start = inputBuffer.length() - size - inTerminator.length();
+        if (start < 0) start = 0;
+        end = inputBuffer.find(inTerminator, start);
         if (end >= 0)
         {
             termlen = inTerminator.length();
