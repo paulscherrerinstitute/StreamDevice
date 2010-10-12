@@ -41,7 +41,7 @@ proc receiveHandler {sock} {
 }
 
 proc startioc {} {
-    global debug records protocol startup port sock ioc testname env
+    global debug records protocol startup port sock ioc testname env slsstyle streamversion
     set fd [open test.db w]
     puts $fd $records
     close $fd
@@ -49,9 +49,19 @@ proc startioc {} {
     puts $fd $protocol
     close $fd
     set fd [open test.cmd w 0777]
-    puts $fd "#!../O.$env(EPICS_HOST_ARCH)/streamApp"
-    puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
-    puts $fd "streamApp_registerRecordDeviceDriver"
+    
+    if {$slsstyle} {
+        puts $fd "#!/usr/local/bin/iocsh"
+        if [info exists streamversion] {
+            puts $fd "require stream,$streamversion"
+        } else {
+            puts $fd "require stream"
+        }
+    } else {
+        puts $fd "#!../O.$env(EPICS_HOST_ARCH)/streamApp"
+        puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
+        puts $fd "streamApp_registerRecordDeviceDriver"
+    }
     puts $fd "epicsEnvSet STREAM_PROTOCOL_PATH ."
     puts $fd "drvAsynIPPortConfigure device localhost:$port"
     puts $fd "dbLoadRecords test.db"
@@ -61,7 +71,11 @@ proc startioc {} {
     puts $fd "dbior stream 2"
     puts $fd "var streamDebug 1"
     close $fd
-    set ioc [open "|../O.$env(EPICS_HOST_ARCH)/streamApp test.cmd >& $testname.ioclog 2>@stderr" w]
+    if $slsstyle {
+        set ioc [open "|iocsh test.cmd >& $testname.ioclog 2>@stderr" w]
+    } else {
+        set ioc [open "|../O.$env(EPICS_HOST_ARCH)/streamApp test.cmd >& $testname.ioclog 2>@stderr" w]
+    }
     fconfigure $ioc -blocking yes -buffering none
     debugmsg "waiting to connect"
     vwait sock
@@ -178,3 +192,13 @@ proc finish {} {
 set port 40123
 socket -server deviceconnect $port
 set inputlog [open "test.inputlog" w]
+
+set slsstyle 0
+if {[lindex $argv 0] == "--sls"} {
+    set argv [lrange $argv 1 end]
+    set slsstyle 1
+}
+if {[lindex $argv 0] == "--ver"} {
+    set streamversion [lindex $argv 1]
+    set argv [lrange $argv 2 end]
+}
