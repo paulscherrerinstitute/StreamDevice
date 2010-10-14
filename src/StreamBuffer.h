@@ -35,26 +35,30 @@ class StreamBuffer
     long offs;
     char* buffer;
 
-    void init(const void*, long);
+    void init(const void* s, long minsize);
 
     void check(long size)
         {if (len+offs+size >= cap) grow(len+size);}
 
+    void grow(long minsize);
+
 public:
-    void grow(long);
     // Hints:
     // * Any index parameter (long) can be negative
     //   meaning "count from end" (-1 is the last byte)
+    // * Appending negative count deletes from end
     // * Any returned char* pointer becomes invalid when
     //   the StreamBuffer is modified.
+    // * End of StreamBuffer always contains 0x00 bytes
+    // * Deleting from start and clearing is fast
 
     StreamBuffer()
         {init(NULL, 0);}
 
-    StreamBuffer(const void*s, long size)
+    StreamBuffer(const void* s, long size)
         {init(s, size);}
 
-    StreamBuffer(const char*s)
+    StreamBuffer(const char* s)
         {init(s, s?strlen(s):0);}
 
     StreamBuffer(const StreamBuffer& s)
@@ -68,10 +72,10 @@ public:
 
     // operator (): get char* pointing to index
     const char* operator()(long index=0) const
-        {buffer[offs+len]=0; return buffer+offs+(index<0?index+len:index);}
+        {return buffer+offs+(index<0?index+len:index);}
 
     char* operator()(long index=0)
-        {buffer[offs+len]=0; return buffer+offs+(index<0?index+len:index);}
+        {return buffer+offs+(index<0?index+len:index);}
 
     // operator []: get byte at index
     char operator[](long index) const
@@ -103,11 +107,16 @@ public:
     // reserve: reserve size bytes of memory and return
     // pointer to that memory (for copying something to it)
     char* reserve(long size)
-        {grow(size); char* p=buffer+len; len+=size; return p;}
+        {check(size); char* p=buffer+offs+len; len+=size; return p;}
 
     // append: append data at the end of the buffer
-    StreamBuffer& append(char c, long count=1)
-        {check(count); while(count-->0) buffer[offs+len++]=c; return *this;}
+    StreamBuffer& append(char c)
+        {check(1); buffer[offs+len++]=c; return *this;}
+
+    StreamBuffer& append(char c, long count)
+        {if (count < 0) truncate(count);
+         else {check(count); memset(buffer+offs+len, c, count); len+=count;}
+         return *this;}
 
     StreamBuffer& append(const void* s, long size);
 
@@ -116,6 +125,16 @@ public:
 
     StreamBuffer& append(const StreamBuffer& s)
         {return append(s.buffer+s.offs, s.len);}
+        
+    // operator += alias for set
+    StreamBuffer& operator+=(char c)
+        {return append(c);}
+
+    StreamBuffer& operator+=(const char* s)
+        {return append(s);}
+
+    StreamBuffer& operator+=(const StreamBuffer& s)
+        {return append(s);}
 
     // set: clear buffer and fill with new data
     StreamBuffer& set(const void* s, long size)
@@ -127,7 +146,7 @@ public:
     StreamBuffer& set(const StreamBuffer& s)
         {clear(); return append(s.buffer+s.offs, s.len);}
 
-    // operator =: alias for set
+    // operator = alias for set
     StreamBuffer& operator=(const char* s)
         {return set(s);}
 
@@ -148,6 +167,7 @@ public:
     StreamBuffer& remove(long pos, long length)
         {return replace(pos, length, NULL, 0);}
 
+    // remove from start: no memset, no function call, fast!
     StreamBuffer& remove(long length)
         {if (length>len) length=len;
          offs+=length; len-=length; return *this;}
@@ -188,12 +208,12 @@ public:
     long int find(const StreamBuffer& s, long start=0) const
         {return find(s.buffer+s.offs, s.len, start);}
 
-    // equals: returns true if first size bytes are equal
-    bool equals(const void* s, long size) const
+    // startswith: returns true if first size bytes are equal
+    bool startswith(const void* s, long size) const
         {return len>=size ? memcmp(buffer+offs, s, size) == 0 : false;}
 
-    // equals: returns true if first string is equal (empty string match)
-    bool equals(const char* s) const
+    // startswith: returns true if first string is equal (empty string matches)
+    bool startswith(const char* s) const
         {return len ? strcmp(buffer+offs, s) == 0 : !s || !*s;}
 
 // expand: create copy of StreamBuffer where all nonprintable characters
