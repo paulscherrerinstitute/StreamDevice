@@ -46,13 +46,20 @@ init(const void* s, long minsize)
     else
     {
         // clear local buffer
-        memset(buffer+minsize, 0, cap-minsize);
+        memset(buffer, 0, cap);
     }
     if (s) {
         len = minsize;
         memcpy(buffer, s, minsize);
     }
 }
+
+// How the buffer looks like:
+// |----free-----|####used####|-------free-------|
+///|<--- offs -->|<-- len --->|<- cap-offs-len ->|
+// 0            offs      offs+len              cap
+//               |<-------------- minsize --------------->
+
 
 void StreamBuffer::
 grow(long minsize)
