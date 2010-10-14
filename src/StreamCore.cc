@@ -245,7 +245,6 @@ compile(StreamProtocolParser::Protocol* protocol)
     inTerminatorDefined = false;
     outTerminatorDefined = false;
     
-    unsigned long bufferSize = 0;
     unsigned short ignoreExtraInput = false;
     if (!protocol->getEnumVariable("extrainput", ignoreExtraInput,
         extraInputNames))
@@ -260,12 +259,10 @@ compile(StreamProtocolParser::Protocol* protocol)
         protocol->getNumberVariable("maxinput", maxInput) &&
         // use replyTimeout as default for pollPeriod
         protocol->getNumberVariable("replytimeout", pollPeriod) &&
-        protocol->getNumberVariable("pollperiod", pollPeriod) &&
-        protocol->getNumberVariable("buffersize", bufferSize)))
+        protocol->getNumberVariable("pollperiod", pollPeriod)))
     {
         return false;
     }
-    inputBuffer.grow(bufferSize);
     if (!(protocol->getStringVariable("terminator", inTerminator, &inTerminatorDefined) &&
         protocol->getStringVariable("terminator", outTerminator, &outTerminatorDefined) &&
         protocol->getStringVariable("interminator", inTerminator, &inTerminatorDefined) &&
@@ -935,7 +932,6 @@ readCallback(StreamIoStatus status,
         return 0;
     }
 ////    flags &= ~AcceptInput;
-    unparsedInput = false;
     switch (status)
     {
         case StreamIoTimeout:
@@ -992,8 +988,26 @@ readCallback(StreamIoStatus status,
     if (inTerminator)
     {
         // look for terminator
-        long start = inputBuffer.length() - size - inTerminator.length();
-        if (start < 0) start = 0;
+        // performance issue for long inputs that come in chunks:
+        // do not parse old chunks again or performance decreases to O(n^2)
+        // but make sure to get all terminators in multi-line input
+
+        long start;
+        if (unparsedInput)
+        {
+            // multi-line input sets 'unparsedInput' and removes the line
+            // remaining unparsed lines are left at start of inputBuffer
+            start = 0;
+        }
+        else
+        {
+            // long line does not set 'unparsedInput' but keeps
+            // already parsed chunks in inputBuffer
+            // start parsing at beginning of new data
+            // but beware of split terminators
+            start = inputBuffer.length() - size - inTerminator.length();
+            if (start < 0) start = 0;
+        }
         end = inputBuffer.find(inTerminator, start);
         if (end >= 0)
         {
@@ -1074,6 +1088,10 @@ readCallback(StreamIoStatus status,
         debug("StreamCore::readCallback(%s) unpared input left: \"%s\"\n",
             name(), inputBuffer.expand()());
         unparsedInput = true;
+    }
+    else
+    {
+        unparsedInput = false;
     }
     if (!matches)
     {
@@ -1241,7 +1259,7 @@ matchInput()
                         }
                         return false;
                     }
-                    if (!outputLine.equals(inputLine(consumedInput),outputLine.length()))
+                    if (!outputLine.startswith(inputLine(consumedInput),outputLine.length()))
                     {
                         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                         {
@@ -1432,7 +1450,7 @@ scanValue(const StreamFormat& fmt, double& value)
     long consumed = StreamFormatConverter::find(fmt.conv)->
         scanDouble(fmt, inputLine(consumedInput), value);
     debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\"\n",
-        name(), fmt.conv, inputLine.expand(consumedInput)());
+        name(), fmt.conv, inputLine.expand(consumedInput, 20)());
     if (consumed < 0)
     {
         if (fmt.flags & default_flag)
