@@ -106,7 +106,7 @@ getProtocol(const char* filename, const StreamBuffer& protocolAndParams)
     // Have we already seen this file?
     for (parser = parsers; parser; parser = parser->next)
     {
-        if (parser->filename.equals(filename))
+        if (parser->filename.startswith(filename))
         {
             if (!parser->valid)
             {
@@ -222,7 +222,7 @@ getProtocol(const StreamBuffer& protocolAndParams)
     Protocol* protocol;
     for (protocol = protocols; protocol; protocol = protocol->next)
     {
-        if (protocol->protocolname.equals(name()))
+        if (protocol->protocolname.startswith(name()))
         // constructor also replaces parameters
         return new Protocol(*protocol, name, 0);
     }
@@ -348,7 +348,7 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
             Protocol** ppP;
             for (ppP = &protocols; *ppP; ppP = &(*ppP)->next)
             {
-                if ((*ppP)->protocolname.equals(token()))
+                if ((*ppP)->protocolname.startswith(token()))
                 {
                     error(line, filename(), "Protocol '%s' redefined\n", token());
                     return false;
@@ -380,7 +380,7 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
             Protocol* p;
             for (p = protocols; p; p = p->next)
             {
-                if (p->protocolname.equals(token()))
+                if (p->protocolname.startswith(token()))
                 {
                     commands->append(*p->commands);
                     break;
@@ -787,7 +787,7 @@ createVariable(const char* name, int linenr)
     Variable** ppV;
     for (ppV = &variables; *ppV; ppV = &(*ppV)->next)
     {
-        if ((*ppV)->name.equals(name))
+        if ((*ppV)->name.startswith(name))
         {
             (*ppV)->line = linenr;
             return &(*ppV)->value;
@@ -805,7 +805,7 @@ getVariable(const char* name)
 
     for (pV = variables; pV; pV = pV->next)
     {
-        if (pV->name.equals(name))
+        if (pV->name.startswith(name))
         {
             pV->used = true;
             return pV;
@@ -843,7 +843,7 @@ getEnumVariable(const char* varname, unsigned short& value, const char** enumstr
     if (!pvar) return true;
     for (value = 0; enumstrings[value]; value++)
     {
-        if (pvar->value.equals(enumstrings[value]))
+        if (pvar->value.startswith(enumstrings[value]))
         {
             return true;
         }
