@@ -20,6 +20,7 @@
 ***************************************************************/
 
 #include <stdlib.h>
+#include <ctype.h>
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 
@@ -234,7 +235,53 @@ static void copyFormatString(StreamBuffer& info, const char* source)
     while (++p != source-1) if (*p != '?' && *p != '=') info.append(*p);
 }
 
+// A word on sscanf
+// GNU's sscanf implementation sucks. It calls strlen on the buffer.
+// That leads to a time consumption proportional to the buffer size.
+// When reading huge arrays element wise by repeatedly calling sscanf,
+// the performance drops to O(n^2).
+// The vxWorks implementation sucks, too. When all parsed values are skipped
+// with %*, it returns -1 instead of 0 even though it was successful.
+
 // Standard Long Converter for 'diouxX'
+
+static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
+{
+    long len = 0;
+    neg = false;
+    while (isspace(*input)) { input++; len++; }
+    if (fmt.width)
+    {
+        // take local copy because strto* don't have width parameter
+        int width = fmt.width;
+        if (fmt.flags & space_flag)
+        {
+            // normally whitespace does not count to width
+            // but do so if space flag is present
+            width -= len;
+        }
+        strncpy((char*)fmt.info, input, width);
+        ((char*)fmt.info)[width] = 0;
+        input = fmt.info;
+    }
+    if (*input == '+')
+    {
+        goto skipsign;
+    }
+    if (*input == '-')
+    {
+        neg = true;
+skipsign:
+        input++;
+        len++;
+    }
+    if (isspace(*input))
+    {
+        // allow space after sign only if # flag is set
+        if (!(fmt.flags & alt_flag)) return -1;
+    }
+    return len;
+}
 
 class StdLongConverter : public StreamFormatConverter
 {
@@ -247,22 +294,22 @@ int StdLongConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool scanFormat)
 {
-    if (scanFormat && (fmt.flags & alt_flag))
-    {
-        error("Use of modifier '#' not allowed with %%%c input conversion\n",
-            fmt.conv);
-        return false;
-    }
     if (scanFormat && fmt.prec >= 0)
     {
         error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
-    copyFormatString(info, source);
-    info.append('l');
-    info.append(fmt.conv);
-    if (scanFormat) info.append("%n");
+    if (scanFormat)
+    {
+        if (fmt.width) info.reserve(fmt.width+1);
+    }
+    else
+    {
+        copyFormatString(info, source);
+        info.append('l');
+        info.append(fmt.conv);
+    }
     return long_format;
 }
 
@@ -276,18 +323,39 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 int StdLongConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
-    int length = -1;
-    if (fmt.flags & skip_flag)
+    char* end;
+    int len;
+    bool neg;
+    int base;
+    
+    len = prepareval(fmt, input, neg);
+    if (len < 0) return -1;
+    switch (fmt.conv)
     {
-        /* can't use return value on vxWorks: sscanf with %* format
-           returns -1 at end of string whether value is found or not */
-        sscanf(input, fmt.info, &length);
+        case 'd':
+            base = 10;
+            break;
+        case 'o':
+            base = 8;
+            goto signcheck;
+        case 'x':
+        case 'X':
+            base = 16;
+signcheck:
+            if (neg && !(fmt.flags & sign_flag)) return -1;
+            break;
+        case 'u':
+            if (neg) return -1;
+            base = 10;
+            break;
+        default:
+            base = 0;
     }
-    else
-    {
-        if (sscanf(input, fmt.info, &value, &length) < 1) return -1;
-    }
-    return length;
+    value = strtoul(input, &end, base);
+    if (neg) value = -value;
+    if (end == input) return -1;
+    len += end-input;
+    return len;
 }
 
 RegisterConverter (StdLongConverter, "diouxX");
@@ -305,22 +373,21 @@ int StdDoubleConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool scanFormat)
 {
-    if (scanFormat && (fmt.flags & alt_flag))
-    {
-        error("Use of modifier '#' not allowed with %%%c input conversion\n",
-            fmt.conv);
-        return false;
-    }
     if (scanFormat && fmt.prec >= 0)
     {
         error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
-    copyFormatString(info, source);
-    if (scanFormat) info.append('l');
-    info.append(fmt.conv);
-    if (scanFormat) info.append("%n");
+    if (scanFormat)
+    {
+        if (fmt.width) info.reserve(fmt.width+1);
+    }
+    else
+    {
+        copyFormatString(info, source);
+        info.append(fmt.conv);
+    }
     return double_format;
 }
 
@@ -334,18 +401,17 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
 int StdDoubleConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
-    int length = -1;
-    if (fmt.flags & skip_flag)
-    {
-        /* can't use return value on vxWorks: sscanf with %* format
-           returns -1 at end of string whether value is found or not */
-        sscanf(input, fmt.info, &length);
-    }
-    else
-    {
-        if (sscanf(input, fmt.info, &value, &length) < 1) return -1;
-    }
-    return length;
+    char* end;
+    int len;
+    bool neg;
+
+    len = prepareval(fmt, input, neg);
+    if (len < 0) return -1;
+    value = strtod(input, &end);
+    if (neg) value = -value;
+    if (end == input) return -1;
+    len += end-input;
+    return len;
 }
 
 RegisterConverter (StdDoubleConverter, "feEgG");
