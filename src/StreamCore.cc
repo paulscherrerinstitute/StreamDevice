@@ -1286,8 +1286,8 @@ matchInput()
                                 inputLine.length()-consumedInput > 20 ? "..." : "",
                                 formatstring);
                         else
-                            error("%s: Can't scan value with format %%%s\n",
-                                name(), formatstring);
+                            error("%s: Format %%%s has data type %s which does not match this variable.\n",
+                                name(), formatstring, StreamFormatTypeStr[fmt.type] );
                     }
                     return false;
                 }
@@ -1372,26 +1372,54 @@ matchInput()
 bool StreamCore::
 matchSeparator()
 {
-    if (!(flags & Separator))
-    {
-        flags |= Separator;
-        return true;
-    }
+    // called before value is read, first value has Separator flag cleared
+    // for second and next value set Separator flag
+    // first jump over leading separator (all but first value)
+    // then find next separator and terminate with null byte to
+    // help parsing one value (e.g. %s)
+
     if (!separator) return true;
-    long i = 0;
-    if (separator[0] == ' ')
+    if (flags & Separator)
     {
-        i++;
+        // not first element in array: expect to be at the separator
+        
+        if (separatorStart == -1) return false;
+        
+        // restore deleted char for proper debug and error output
+        inputLine[separatorStart] = separatorStore;
+        
+        if (consumedInput != separatorStart)
+        {
+            long i = separatorStart - consumedInput;
+            error("%s: %ld byte%s input left before separator: \"%s%s\" after \"%s%s\"\n",
+                name(), i, i != 1 ? "s" : "",
+                inputLine.expand(consumedInput, i > 20 ? 20 : i)(),
+                i > 20 ? "..." : "",
+                consumedInput > 20 ? "..." : "",
+                inputLine.expand(consumedInput, -20)());
+            return false;
+        }
+        consumedInput = separatorEnd;
+    }
+    flags |= Separator;
+
+    // find next Separator and replace first byte with '\0' to help parsing elements
+    if (separator[0] == ' ' && separator[1] != ' ')
+    {
         // skip leading whitespaces
-        while (isspace(inputLine[consumedInput++]));
+        separatorStart = inputLine.find(separator(1), separator.length() - 1, consumedInput);
+        if (separatorStart == -1) return true;
+        separatorEnd = separatorStart + separator.length() - 1;
+        while (separatorStart > consumedInput && isspace(inputLine[separatorStart - 1])) separatorStart--;
     }
-    for (; i < separator.length(); i++,consumedInput++)
+    else
     {
-        if (!inputLine[consumedInput]) return false;
-        if (separator[i] == StreamProtocolParser::skip) continue; // wildcard
-        if (separator[i] == esc) i++;       // escaped literal byte
-        if (separator[i] != inputLine[consumedInput]) return false;
+        separatorStart = inputLine.find(separator, consumedInput);
+        if (separatorStart == -1) return true;
+        separatorEnd = separatorStart + separator.length();
     }
+    separatorStore = inputLine[separatorStart];
+    inputLine[separatorStart] = '\0';
     return true;
 }
 

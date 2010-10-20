@@ -170,6 +170,9 @@ protected:
 
     StreamIoStatus lastInputStatus;
     bool unparsedInput;
+    long separatorStart;
+    long separatorEnd;
+    char separatorStore;
 
     StreamCore(const StreamCore&); // undefined
     bool compile(StreamProtocolParser::Protocol*);
