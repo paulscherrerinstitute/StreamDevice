@@ -1053,7 +1053,6 @@ bool Stream::
 matchValue(const StreamFormat& format, const void* fieldaddress)
 {
     // this function must increase consumedInput
-    // [I use goto and feel very ashamed for it.]
     long consumed;
     long lval;
     double dval;
@@ -1077,29 +1076,25 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 case long_format:
                 {
                     consumed = scanValue(format, lval);
-                    if (consumed < 0) goto noMoreElements;
-                    ((epicsInt32*)buffer)[nord] = lval;
+                    if (consumed >= 0) ((epicsInt32*)buffer)[nord] = lval;
                     break;
                 }
                 case enum_format:
                 {
                     consumed = scanValue(format, lval);
-                    if (consumed < 0) goto noMoreElements;
-                    ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
+                    if (consumed >= 0) ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
                     break;
                 }
                 case double_format:
                 {
                     consumed = scanValue(format, dval);
-                    if (consumed < 0) goto noMoreElements;
-                    ((epicsFloat64*)buffer)[nord] = dval;
+                    if (consumed >= 0) ((epicsFloat64*)buffer)[nord] = dval;
                     break;
                 }
                 case string_format:
                 {
                     consumed = scanValue(format,
                         buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
-                    if (consumed < 0) goto noMoreElements;
                     break;
                 }
                 default:
@@ -1107,9 +1102,9 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                         "Illegal format type\n", name());
                     return false;
             }
+            if (consumed < 0) break;
             consumedInput += consumed;
         }
-noMoreElements:
         if (!nord)
         {
             // scan error: set other record to alarm status
