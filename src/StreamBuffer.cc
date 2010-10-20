@@ -273,9 +273,18 @@ StreamBuffer StreamBuffer::expand(long start, long length) const
     if (start < 0)
     {
         start += len;
-        if (start < 0) start = 0;
     }
-    end = length >= 0 ? start+length : len;
+    if (length < 0)
+    {
+        start += length;
+        length = -length;
+    }
+    if (start < 0)
+    {
+        length += start;
+        start = 0;
+    }
+    end = start+length;
     if (end > len) end = len;
     StreamBuffer result((end-start)*2);
     start += offs;

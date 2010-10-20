@@ -218,7 +218,10 @@ public:
 
 // expand: create copy of StreamBuffer where all nonprintable characters
 // are replaced by <xx> with xx being the hex code of the characters
-    StreamBuffer expand(long start=0, long length=-1) const;
+    StreamBuffer expand(long start, long length) const;
+    
+    StreamBuffer expand(long start=0) const
+        {return expand(start, len);}
 
 // dump: debug function, like expand but also show the 'hidden' memory
 // before and after the real data. Uses colours.
