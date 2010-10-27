@@ -245,11 +245,11 @@ static void copyFormatString(StreamBuffer& info, const char* source)
 
 // Standard Long Converter for 'diouxX'
 
-static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
+static int prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
 {
-    long len = 0;
+    int length = 0;
     neg = false;
-    while (isspace(*input)) { input++; len++; }
+    while (isspace(*input)) { input++; length++; }
     if (fmt.width)
     {
         // take local copy because strto* don't have width parameter
@@ -258,7 +258,7 @@ static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
         {
             // normally whitespace does not count to width
             // but do so if space flag is present
-            width -= len;
+            width -= length;
         }
         strncpy((char*)fmt.info, input, width);
         ((char*)fmt.info)[width] = 0;
@@ -273,14 +273,14 @@ static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
         neg = true;
 skipsign:
         input++;
-        len++;
+        length++;
     }
     if (isspace(*input))
     {
         // allow space after sign only if # flag is set
         if (!(fmt.flags & alt_flag)) return -1;
     }
-    return len;
+    return length;
 }
 
 class StdLongConverter : public StreamFormatConverter
@@ -324,12 +324,12 @@ int StdLongConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     char* end;
-    int len;
+    int length;
     bool neg;
     int base;
     
-    len = prepareval(fmt, input, neg);
-    if (len < 0) return -1;
+    length = prepareval(fmt, input, neg);
+    if (length < 0) return -1;
     switch (fmt.conv)
     {
         case 'd':
@@ -342,7 +342,8 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         case 'X':
             base = 16;
 signcheck:
-            if (neg && !(fmt.flags & sign_flag)) return -1;
+        // allow negative hex and oct numbers with - flag
+            if (neg && !(fmt.flags & left_flag)) return -1;
             break;
         case 'u':
             if (neg) return -1;
@@ -354,8 +355,8 @@ signcheck:
     value = strtoul(input, &end, base);
     if (neg) value = -value;
     if (end == input) return -1;
-    len += end-input;
-    return len;
+    length += end-input;
+    return length;
 }
 
 RegisterConverter (StdLongConverter, "diouxX");
@@ -402,16 +403,16 @@ int StdDoubleConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
     char* end;
-    int len;
+    int length;
     bool neg;
 
-    len = prepareval(fmt, input, neg);
-    if (len < 0) return -1;
+    length = prepareval(fmt, input, neg);
+    if (length < 0) return -1;
     value = strtod(input, &end);
     if (neg) value = -value;
     if (end == input) return -1;
-    len += end-input;
-    return len;
+    length += end-input;
+    return length;
 }
 
 RegisterConverter (StdDoubleConverter, "feEgG");
@@ -429,9 +430,9 @@ int StdStringConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool scanFormat)
 {
-    if (fmt.flags & (sign_flag|space_flag|zero_flag|alt_flag))
+    if (fmt.flags & (sign_flag|zero_flag))
     {
-        error("Use of modifiers '+', ' ', '0', '#' "
+        error("Use of modifiers '+', '0'"
             "not allowed with %%%c conversion\n",
             fmt.conv);
         return false;
@@ -459,40 +460,52 @@ int StdStringConverter::
 scanString(const StreamFormat& fmt, const char* input,
     char* value, size_t maxlen)
 {
-    int length = -1;
-    if (*input == '\0')
+    int length = 0;
+    
+    int width = fmt.width;
+    
+    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    
+    // if user does not specify width assume "ininity" (-1)
+    if (width == 0)
     {
-        // match empty string
-        if (value) value[0] = '\0';
-        return 0;
+        if (fmt.conv == 'c') width = 1;
+        else width = -1;
     }
-    if (fmt.flags & skip_flag)
+
+    while (isspace(*input) && width)
     {
-        /* can't use return value on vxWorks: sscanf with %* format
-           returns -1 at end of string whether value is found or not */
-        sscanf(input, fmt.info, &length);
+        // normally leading whitespace does not count to width
+        // but do so if space flag is present
+        if (fmt.flags & space_flag || fmt.conv == 'c')
+        {
+            if (maxlen > 1)
+            {
+                *value++ = *input;
+                maxlen--;
+            }
+            width--;
+        }
+        length++;
+        input++;
     }
-    else
+    while (*input && width)
     {
-        char tmpformat[10];
-        const char* f;
-        if (maxlen <= fmt.width || fmt.width == 0)
+        // normally whitespace ends string
+        // but don't end if # flag is present
+        if (fmt.conv == 's' && !(fmt.flags & alt_flag) && isspace(*input)) break;
+        if (maxlen > 1)
         {
-            // assure not to read too much
-            sprintf(tmpformat, "%%%ld%c%%n", (long)maxlen-1, fmt.conv);
-            f = tmpformat;
+            *value++ = *input;
+            maxlen--;
         }
-        else
-        {
-            f = fmt.info;
-        }
-        if (sscanf(input, f, value, &length) < 1) return -1;
-        if (length < 0) return -1;
-        value[length] = '\0';
-#ifndef NO_TEMPORARY
-        debug("StdStringConverter::scanString: length=%d, value=%s\n",
-            length, StreamBuffer(value,length).expand()());
-#endif
+        length++;
+        width--;
+        input++;
+    }
+    if (maxlen > 0)
+    {
+        *value = '\0';
     }
     return length;
 }
