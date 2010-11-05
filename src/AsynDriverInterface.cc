@@ -674,6 +674,23 @@ writeHandler()
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
+#ifdef ASYN_VERSION
+        case asynDisconnected:
+            error("%s: asynDisconnected in write: %s\n",
+                clientName(), pasynUser->errorMessage);
+            writeCallback(StreamIoFault);
+            return;
+        case asynDisabled:
+            error("%s: asynDisconnected in write: %s\n",
+                clientName(), pasynUser->errorMessage);
+            writeCallback(StreamIoFault);
+            return;
+#endif
+        default:
+            error("%s: unknown asyn error in write: %s\n",
+                clientName(), pasynUser->errorMessage);
+            writeCallback(StreamIoFault);
+            return;
     }
 }
 
@@ -933,6 +950,23 @@ readHandler()
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
+#ifdef ASYN_VERSION
+            case asynDisconnected:
+                error("%s: asynDisconnected in read: %s\n",
+                    clientName(), pasynUser->errorMessage);
+                writeCallback(StreamIoFault);
+                return;
+            case asynDisabled:
+                error("%s: asynDisconnected in read: %s\n",
+                    clientName(), pasynUser->errorMessage);
+                writeCallback(StreamIoFault);
+                return;
+#endif
+            default:
+                error("%s: unknown asyn error in read: %s\n",
+                    clientName(), pasynUser->errorMessage);
+                writeCallback(StreamIoFault);
+                return;
         }
         if (!readMore) break;
         if (readMore > 0)
