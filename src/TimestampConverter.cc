@@ -468,8 +468,8 @@ startover:
         }
     }
     zone -= timezone/60;
-    tm->tm_min -= zone;
-    tm->tm_hour -= tm->tm_min / 60;
+    tm->tm_min += zone;
+    tm->tm_hour += tm->tm_min / 60;
     tm->tm_min %= 60;
     if (tm->tm_min < 0)
     {
