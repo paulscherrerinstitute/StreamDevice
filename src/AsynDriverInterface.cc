@@ -531,14 +531,17 @@ void AsynDriverInterface::
 lockHandler()
 {
     int connected;
-    asynStatus status;
     debug("AsynDriverInterface::lockHandler(%s)\n",
         clientName());
     pasynManager->blockProcessCallback(pasynUser, false);
+    
+#ifndef ASYN_VERSION // asyn < 4.14
+    asynStatus status;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         debug("Failed locking port");
     }
+#endif
 
     connected = connectToAsynPort();
     lockCallback(connected ? StreamIoSuccess : StreamIoFault);
@@ -548,13 +551,17 @@ lockHandler()
 bool AsynDriverInterface::
 unlock()
 {
-    asynStatus unlockStatus;
     debug("AsynDriverInterface::unlock(%s)\n",
         clientName());
-    unlockStatus = pasynManager->unlockPort(pasynUser);
-    if (unlockStatus != asynSuccess) {
+
+#ifndef ASYN_VERSION // asyn < 4.14
+    asynStatus status;
+    status = pasynManager->unlockPort(pasynUser);
+    if (status != asynSuccess) {
         debug("Failed unlocking port");
     }
+#endif
+    
     pasynManager->unblockProcessCallback(pasynUser, false);
     return true;
 }
@@ -674,7 +681,7 @@ writeHandler()
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
-#ifdef ASYN_VERSION
+#ifdef ASYN_VERSION // asyn >= 4.14
         case asynDisconnected:
             error("%s: asynDisconnected in write: %s\n",
                 clientName(), pasynUser->errorMessage);
@@ -950,7 +957,7 @@ readHandler()
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
-#ifdef ASYN_VERSION
+#ifdef ASYN_VERSION // asyn >= 4.14
             case asynDisconnected:
                 error("%s: asynDisconnected in read: %s\n",
                     clientName(), pasynUser->errorMessage);
