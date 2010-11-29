@@ -156,7 +156,6 @@ class Stream : protected StreamCore
     friend long streamPrintf(dbCommon *record, format_t *format, ...);
     friend long streamScanfN(dbCommon *record, format_t *format,
         void*, size_t maxStringSize);
-    friend long streamScanSep(dbCommon *record);
     friend long streamReload(char* recordname);
 
 public:
@@ -486,15 +485,6 @@ long streamPrintf(dbCommon *record, format_t *format, ...)
     bool success = pstream->print(format, ap);
     va_end(ap);
     return success ? OK : ERROR;
-}
-
-long streamScanSep(dbCommon* record)
-{
-    // depreciated
-    debug("streamScanSep(%s)\n", record->name);
-    Stream* pstream = (Stream*)record->dpvt;
-    if (!pstream) return ERROR;
-    return pstream->scanSeparator() ? OK : ERROR;
 }
 
 long streamScanfN(dbCommon* record, format_t *format,

@@ -139,7 +139,6 @@ protected:
     long scanValue(const StreamFormat& format, double& value);
     long scanValue(const StreamFormat& format, char* value, long maxlen);
     long scanValue(const StreamFormat& format);
-    bool scanSeparator(); // disencouraged
 
     StreamBuffer protocolname;
     unsigned long lockTimeout;

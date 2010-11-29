@@ -85,7 +85,6 @@ long streamReport(int interest);
 long streamReadWrite(dbCommon *record);
 long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt);
 long streamPrintf(dbCommon *record, format_t *format, ...);
-long streamScanSep(dbCommon *record);
 long streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
 
@@ -99,7 +98,7 @@ long streamScanfN(dbCommon *record, format_t *format,
 #define devStreamGetIointInfo streamGetIointInfo
 #define devStreamPrintf streamPrintf
 #define devStreamPrintSep(record) (0)
-#define devStreamScanSep streamScanSep
+#define devStreamScanSep (0)
 #define devStreamScanf(record, format, value) \
     streamScanfN(record, format, value, MAX_STRING_SIZE)
 #define streamScanf(record, format, value) \
