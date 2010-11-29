@@ -26,6 +26,21 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#ifdef _WIN32
+#define tzset() _tzset()
+#define timezone _timezone
+#endif
+
+#ifdef vxWorks
+int timezone = 0;
+#define tzset() do {\
+    (void) (sscanf(getenv("TIMEZONE"), "%*[^:]::%d", &timezone) || \
+            sscanf(getenv("TIMEZONE"), "%*[^:]:%*[^:]:%d", &timezone) || \
+            sscanf(getenv("EPICS_TS_MIN_WEST"), "%d", &timezone));\
+    timezone*=60;\
+} while (0)
+#endif
+
 class TimestampConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
@@ -76,7 +91,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
                     if (*source == '.')
                     {
                         c = (char*) source+1;
-                        n = isdigit(*c) ? strtoul(c, &c, 10) : 6;
+                        n = isdigit(*c) ? strtoul(c, &c, 10) : 9;
                         if (toupper(*c) == 'S')
                         {
                             source = c;
@@ -95,7 +110,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     else
     {
-        info.append("%Y-%m-%d %H:%M:%S %z").append('\0');
+        info.append("%Y-%m-%d %H:%M:%S").append('\0');
     }
     return double_format;
 }
@@ -129,10 +144,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
         /* print fractional part */
         sprintf(fracbuffer, "%.*f", n, frac);
         p = strchr(fracbuffer, '.')+1;
-        debug("TimestampConverter::printDouble frac: %s\n", p);
-        debug("TimestampConverter::printDouble ouptput before frac: %s\n", output());
         output.replace(i, c-output(i), p);
-        debug("TimestampConverter::printDouble ouptput after frac: %s\n", output());
     }
     return true;
 }
@@ -171,8 +183,8 @@ static int nummatch(const char*& input, int min, int max)
     char *c;
 
     i = strtol(input, &c, 10);
-    if (c == input) return -1;
-    if (i < min || i > max) return -1;
+    if (c == input) return -10000;
+    if (i < min || i > max) return -10000;
     input = c;
     return i;
 }
@@ -186,9 +198,13 @@ static const char* scantime(const char* input, const char* format, struct tm *tm
         "am", "pm", 0 };
         
     int i, n;
-    int pm = 0;
+    int pm = -1;
     int century = -1;
     int zone = 0;
+    
+    tzset();
+    zone = timezone/60;
+    debug ("TimestampConverter::scantime: native time zone = %d\n", zone);
     
     while (*format)
     {
@@ -223,13 +239,14 @@ startover:
                         /* ignore */
                         break;
                     case 'u': /* day of week number (Monday = 1 to Sunday = 7) */
-                    case 'w':
+                    case 'w': /* day of week number (Sunday = 0 to Saturday = 6) */
                         i = nummatch(input, 0, 7);
                         if (i < 0)
                         {
                             error ("error parsing day of week: '%.20s'\n", input);
                             return NULL;
                         }
+                        debug ("TimestampConverter::scantime: day of week = %d\n", i);
                         /* ignore */
                         break;
                     case 'U': /* week number */
@@ -241,6 +258,7 @@ startover:
                             error ("error parsing week number: '%.20s'\n", input);
                             return NULL;
                         }
+                        debug ("TimestampConverter::scantime: week number = %d\n", i);
                         /* ignore */
                         break;
                     case 'j': /* day of year */
@@ -250,6 +268,7 @@ startover:
                             error ("error parsing day of year: '%.20s'\n", input);
                             return NULL;
                         }
+                        debug ("TimestampConverter::scantime: day of year = %d\n", i);
                         /* ignore */
                         break;
                     case 'Z': /* time zone name */
@@ -257,27 +276,23 @@ startover:
                         /* ignore */
                         break;
                 /* date */
-                    case 'b': /* month name */
+                    case 'b': /* month */
                     case 'h':
                     case 'B':
+                    case 'm':
                         i = strmatch(input, months, 3);
                         if (i < 0)
                         {
-                            error ("error parsing month name: '%.20s'\n", input);
-                            return NULL;
+                            i = nummatch(input, 1, 12);
+                            if (i < 0)
+                            {
+                                error ("error parsing month: '%.20s'\n", input);
+                                return NULL;
+                            }
+                            i--;  /* Jan = 0 */
                         }
-                        tm->tm_mon = i; /* Jan = 0 */
-                        debug ("TimestampConverter::scantime: month = %d\n", tm->tm_mon+1);
-                        break;
-                    case 'm': /* month number */
-                        i = nummatch(input, 1, 12);
-                        if (i < 0)
-                        {
-                            error ("error parsing month number: '%.20s'\n", input);
-                            return NULL;
-                        }
-                        tm->tm_mon = i - 1; /* Jan = 0 */
-                        debug ("TimestampConverter::scantime: month = %d\n", tm->tm_mon+1);
+                        tm->tm_mon = i;
+                        debug ("TimestampConverter::scantime: month = %d (%s)\n", tm->tm_mon+1, months[tm->tm_mon]);
                         break;
                     case 'd': /* day of month */
                     case 'e':
@@ -290,20 +305,18 @@ startover:
                         tm->tm_mday = i;
                         debug ("TimestampConverter::scantime: day = %d\n", tm->tm_mday);
                         break;
-                    case 'Y': /* 4 digit year */
+                    case 'Y': /* year */
+                    case 'y':
                         i = strtol(input, (char**)&input, 10);
-                        tm->tm_year = i - 1900; /* 0 = 1900 */
-                        debug ("TimestampConverter::scantime: year = %d\n", tm->tm_year + 1900);
-                        break;
-                    case 'y': /* 2 digit year */
-                        i = nummatch(input, 0, 99);
-                        if (i < 0)
-                        {
-                            error ("error parsing year\n");
-                            return NULL;
+                        if (i < 100)
+                        { /* 2 digit year */
+                            if (century == -1) century = (i >= 69);
+                            tm->tm_year = i + century * 100; /* 0 = 1900 */
                         }
-                        if (century == -1) century = (i >= 69);
-                        tm->tm_year = i + century * 100; /* 0 = 1900 */
+                        else
+                        { /* 4 digit year */
+                            tm->tm_year = i - 1900; /* 0 = 1900 */
+                        }
                         debug ("TimestampConverter::scantime: year = %d\n", tm->tm_year + 1900);
                         break;
                     case 'C': /* century */
@@ -319,27 +332,18 @@ startover:
                         break;
 
                 /* time */
-                    case 'H': /* 24 hour clock */
+                    case 'H': /* hour */
                     case 'k':
+                    case 'I':
+                    case 'l':
                         i = nummatch(input, 0, 23);
                         if (i < 0)
                         {
                             error ("error parsing hour: '%.20s'\n", input);
                             return NULL;
                         }
-                        tm->tm_hour = i;
-                        debug ("TimestampConverter::scantime: hour = %d\n", tm->tm_hour);
-                        break;
-                    case 'I': /* 12 hour clock */
-                    case 'l':
-                        i = nummatch(input, 1, 12);
-                        if (i < 0)
-                        {
-                            error ("error parsing hour: '%.20s'\n", input);
-                            return NULL;
-                        }
-                        if (i == 12) i = 0;
-                        if ((pm == 1) ^ (i == 0)) i += 12;
+                        if ((pm == 0) && (i == 12)) i = 0;
+                        if ((pm == 1) && (i < 12)) i += 12;
                         tm->tm_hour = i;
                         debug ("TimestampConverter::scantime: hour = %d\n", tm->tm_hour);
                         break;
@@ -352,9 +356,10 @@ startover:
                             return NULL;
                         }
                         pm = i;
-                        if ((pm == 1) ^ (tm->tm_hour == 0)) tm->tm_hour += 12;
+                        if ((pm == 0) && (tm->tm_hour == 12)) tm->tm_hour = 0;
+                        if ((pm == 1) && (tm->tm_hour < 12)) tm->tm_hour += 12;
+                        debug ("TimestampConverter::scantime: %s hour = %d\n", pm?"PM":"AM", tm->tm_hour);
                         break;
-                        debug ("TimestampConverter::scantime: hour = %d\n", tm->tm_hour);
                     case 'M': /* minute */
                         i = nummatch(input, 1, 59);
                         if (i < 0)
@@ -379,6 +384,7 @@ startover:
                         i = strtol(input, (char**)&input, 10);
                         tm->tm_sec = i;
                         tm->tm_mon = -1;
+                        tm->tm_isdst = 0;
                         debug ("TimestampConverter::scantime: sec = %d\n", tm->tm_sec);
                         break;
                     case '0': /* fractions of seconds like %09f */
@@ -397,7 +403,13 @@ startover:
                         break;
                     case 'z': /* time zone offset */
                         i = nummatch(input, -2400, 2400);
+                        if (i < -2400)
+                        {
+                            error ("error parsing time zone: '%.20s'\n", input);
+                            return NULL;
+                        }
                         zone = i / 100 * 60 + i % 100;
+                        tm->tm_isdst = 0;
                         debug ("TimestampConverter::scantime: zone = %d\n", zone);
                         break;
                     case '+': /* set time zone in format string */
@@ -405,39 +417,37 @@ startover:
                         format--;
                         i = nummatch(format, -2400, 2400);
                         zone = i / 100 * 60 + i % 100;
+                        tm->tm_isdst = 0;
                         debug ("TimestampConverter::scantime: zone = %d\n", zone);
                         break;
                 /* shortcuts */
                     case 'c':
-                        if (scantime(input, "%a %b %d %H:%M:%S %Z %Y", tm, ns) == NULL)
+                        if ((input = scantime(input, "%a %b %d %H:%M:%S %Y", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'D':
-                        if (scantime(input, "%m/%d/%y", tm, ns) == NULL)
+                        if ((input = scantime(input, "%m/%d/%y", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'F':
-                        if (scantime(input, "%Y-%m-%d", tm, ns) == NULL)
-                            return NULL;
-                        break;
-                    case 'r':
-                        if (scantime(input, "%I:%M:%S %p", tm, ns) == NULL)
+                        if ((input = scantime(input, "%Y-%m-%d", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'R':
-                        if (scantime(input, "%H:%M", tm, ns) == NULL)
+                        if ((input = scantime(input, "%H:%M", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'T':
-                        if (scantime(input, "%H:%M:%S", tm, ns) == NULL)
+                        if ((input = scantime(input, "%H:%M:%S", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'x':
-                        if (scantime(input, "%a %b %d %Y", tm, ns) == NULL)
+                        if ((input = scantime(input, "%m/%d/%y", tm, ns)) == NULL)
                             return NULL;
                         break;
                     case 'X':
-                        if (scantime(input, "%H:%M:%S %Z", tm, ns) == NULL)
+                    case 'r':
+                        if ((input = scantime(input, "%I:%M:%S %p", tm, ns)) == NULL)
                             return NULL;
                         break;
                     default:
@@ -452,16 +462,27 @@ startover:
             default:
                 if (*format++ != *input++)
                 {
-                    error("input '%c' does not match constant '%c'\n", *--input, *--format);
+                    error("input '%.20s' does not match constant '%.20s'\n", --input, --format);
                     return NULL;
                 }
         }
     }
-    tm->tm_min += zone;
-    tm->tm_hour += tm->tm_min / 60;
+    zone -= timezone/60;
+    tm->tm_min -= zone;
+    tm->tm_hour -= tm->tm_min / 60;
     tm->tm_min %= 60;
-    tm->tm_mday += tm->tm_hour / 24;
+    if (tm->tm_min < 0)
+    {
+        tm->tm_min += 60;
+        tm->tm_hour -= 1;
+    }
+    tm->tm_mday -= tm->tm_hour / 24;
     tm->tm_hour %= 24;
+    if (tm->tm_hour < 0)
+    {
+        tm->tm_min += 24;
+        tm->tm_mday -= 1;
+    }
     return input;
 }
 
@@ -482,20 +503,27 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     brokenDownTime.tm_min = 0;
     brokenDownTime.tm_hour = 0;
     brokenDownTime.tm_yday = 0;
+    brokenDownTime.tm_isdst = -1;
     nanoseconds = 0;
     
     end = scantime(input, format.info, &brokenDownTime, &nanoseconds);
     if (end == NULL) {
         error ("error parsing time\n");
         return -1;
-    }
+    }        
     if (brokenDownTime.tm_mon == -1) {
         seconds = brokenDownTime.tm_sec;
     } else {
         seconds = mktime(&brokenDownTime);
         if (seconds == (time_t) -1 && brokenDownTime.tm_yday == 0)
         {
-            error ("mktime failed: %s\n", strerror(errno));
+            error ("mktime failed for %02d/%02d/%04d %02d:%02d:%02d\n",
+                brokenDownTime.tm_mon+1,
+                brokenDownTime.tm_mday,
+                brokenDownTime.tm_year+1900,
+                brokenDownTime.tm_hour,
+                brokenDownTime.tm_min,
+                brokenDownTime.tm_sec);
             return -1;
         }
     }
