@@ -41,7 +41,7 @@ proc receiveHandler {sock} {
 }
 
 proc startioc {} {
-    global debug records protocol startup port sock ioc testname env slsstyle streamversion
+    global debug records protocol startup port sock ioc testname env streamversion
     set fd [open test.db w]
     puts $fd $records
     close $fd
@@ -50,13 +50,9 @@ proc startioc {} {
     close $fd
     set fd [open test.cmd w 0777]
     
-    if {$slsstyle} {
+    if [info exists streamversion] {
         puts $fd "#!/usr/local/bin/iocsh"
-        if [info exists streamversion] {
-            puts $fd "require stream,$streamversion"
-        } else {
-            puts $fd "require stream"
-        }
+        puts $fd "require stream,$streamversion"
     } else {
         puts $fd "#!../O.$env(EPICS_HOST_ARCH)/streamApp"
         puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
@@ -71,7 +67,7 @@ proc startioc {} {
     puts $fd "dbior stream 2"
     puts $fd "var streamDebug 1"
     close $fd
-    if $slsstyle {
+    if [info exists streamversion] {
         set ioc [open "|iocsh test.cmd >& $testname.ioclog 2>@stderr" w]
     } else {
         set ioc [open "|../O.$env(EPICS_HOST_ARCH)/streamApp test.cmd >& $testname.ioclog 2>@stderr" w]
@@ -94,8 +90,8 @@ proc ioccmd {command} {
 }
 
 proc send {string} {
-    global sock
-    debugmsg "sending \"[escape $string]\""
+    global sock lastsent
+    set lastsent $string
     puts -nonewline $sock $string
 }
 
@@ -125,6 +121,7 @@ set faults 0
 proc assure {args} {
     global faults
     global lastcommand
+    global lastsent
     global line
     
     incr line
@@ -146,6 +143,9 @@ proc assure {args} {
     }
     if {[llength $notfound] || [llength $input]} {
         puts stderr "In command \"$lastcommand\""
+        if [info exists lastsent] {
+            puts stderr "last sent: \"[escape $lastsent]\""
+        }
     }
     foreach string $notfound {
         puts stderr "Error in assure: line $line missing \"[escape $string]\""
@@ -182,10 +182,10 @@ proc finish {} {
     after 100
     close $ioc
     if $faults {
-        puts "Test failed."
+        puts "\033\[31;7mTest failed.\033\[0m"
         exit 1
     }
-    puts "Test passed."
+    puts "\033\[32mTest passed.\033\[0m"
     eval file delete [glob -nocomplain test.*] StreamDebug.log $testname.ioclog
 }
 
@@ -193,12 +193,8 @@ set port 40123
 socket -server deviceconnect $port
 set inputlog [open "test.inputlog" w]
 
-set slsstyle 0
-if {[lindex $argv 0] == "--sls"} {
-    set argv [lrange $argv 1 end]
-    set slsstyle 1
-}
-if {[lindex $argv 0] == "--ver"} {
+# SLS style driver modules (optionally with version)
+if {[lindex $argv 0] == "-sls"} {
     set streamversion [lindex $argv 1]
     set argv [lrange $argv 2 end]
 }

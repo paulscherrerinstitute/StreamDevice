@@ -2,17 +2,17 @@ for i in test*
 do
     if [ $i != testall -a -x $i ]
     then
-        echo $i
-        if ! $i
+        echo $i "$@"
+        if ! $i "$@"
         then
-            echo "Failed."
+            echo -e "\033[31;7mFailed.\033[0m"
             (( fail++ ))
         fi
     fi
 done
 
 if [ "$fail" ]
-then echo "$fail tests failed"
-else echo "All tests passsed."
+then echo -e "\033[31;7m$fail tests failed\033[0m"
+else echo -e "\033[32;7mAll tests passed.\033[0m"
 fi
 exit $fail

@@ -1,0 +1,124 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (waveform, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "DOUBLE")
+        field (NELM, "3")
+        field (INP,  "@test.proto testd device")
+    }
+    record (waveform, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "FLOAT")
+        field (NELM, "3")
+        field (INP,  "@test.proto testd device")
+    }
+    record (waveform, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "LONG")
+        field (NELM, "3")
+        field (INP,  "@test.proto testi device")
+    }
+    record (waveform, "DZ:test4")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "SHORT")
+        field (NELM, "3")
+        field (INP,  "@test.proto testi device")
+    }
+    record (waveform, "DZ:test5")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "STRING")
+        field (NELM, "3")
+        field (INP,  "@test.proto tests device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    testd {
+        Separator = ",";
+        @mismatch {out "mismatch after %(NORD)d elements: %.1f\n"}
+        in "text %f end"; out "%(NORD)d elements: %.1f";
+    }
+    testi {
+        Separator = " ";
+        @mismatch {out "mismatch after %(NORD)d elements: %i\n"}
+        in "%3i "; out "%(NORD)d elements: %i";
+    }
+    tests {
+        Separator = " ... ";
+        @mismatch {out "mismatch after %(NORD)d elements: %s\n"}
+        in "%s "; out "%(NORD)d elements: %s";
+    }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1.PROC 1}
+send "text 1.0,2.0,3.0 end\n"
+assure "3 elements: 1.0,2.0,3.0\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "text 3, 2,   1 end\n"
+assure "3 elements: 3.0,2.0,1.0\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "text       7 end\n"
+assure "1 elements: 7.0\n"
+
+ioccmd {dbpf DZ:test2.PROC 1}
+send "text 1.0,2.0,3.0 end\n"
+assure "3 elements: 1.0,2.0,3.0\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "text 3, 2,   1 end\n"
+assure "3 elements: 3.0,2.0,1.0\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "text       7 end\n"
+assure "1 elements: 7.0\n"
+
+ioccmd {dbpf DZ:test3.PROC 1}
+send "1 2 3\n"
+assure "3 elements: 1 2 3\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "       3     2        1    \n"
+assure "3 elements: 3 2 1\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "12345\n"
+assure "2 elements: 123 45\n"
+
+ioccmd {dbpf DZ:test4.PROC 1}
+send "1 2 3\n"
+assure "3 elements: 1 2 3\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "       3     2        1    \n"
+assure "3 elements: 3 2 1\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "12345\n"
+assure "2 elements: 123 45\n"
+
+ioccmd {dbpf DZ:test5.PROC 1}
+send "1...2...3\n"
+assure "1 elements: 1...2...3\n"
+ioccmd {dbpf DZ:test5.PROC 1}
+send "  3     ...   2  ...  1\n"
+assure "3 elements: 3 ... 2 ... 1\n"
+ioccmd {dbpf DZ:test5.PROC 1}
+send "       7 \n"
+assure "1 elements: 7\n"
+
+
+finish

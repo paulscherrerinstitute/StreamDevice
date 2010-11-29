@@ -1,0 +1,108 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (stringin, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test1 device")
+    }
+    record (stringin, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test2 device")
+    }
+    record (stringin, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test3 device")
+    }
+    record (stringin, "DZ:test4")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test4 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    extraInput=ignore;
+    @mismatch {out "mismatch";}
+    test1 {in "%[a-zA-Z1-5]%(DESC) #s"; out "%s|%(DESC)s" }
+    test2 {in "%[]A-Za-z ]%(DESC) #s"; out "%s|%(DESC)s" }
+    test3 {in "%[^]A-Z]%(DESC) #s"; out "%s|%(DESC)s" }
+    test4 {in "%[^]-A-Z]%(DESC) #s"; out "%s|%(DESC)s" }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1.PROC 1}
+send "This is a test\n"
+assure "This| is a test\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "Test123]bla\n"
+assure "Test123|]bla\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "Test123456\n"
+assure "Test12345|6\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "Test43210\n"
+assure "Test4321|0\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "test-bla\n"
+assure "test|-bla\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send " Space first\n"
+assure "| Space first\n"
+
+ioccmd {dbpf DZ:test2.PROC 1}
+send "This is a test\n"
+assure "This is a test|\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "Test]xx123bla\n"
+assure "Test]xx|123bla\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "test-bla\n"
+assure "test|-bla\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send " Space first\n"
+assure " Space first|\n"
+
+ioccmd {dbpf DZ:test3.PROC 1}
+send "this is a test\n"
+assure "this is a test|\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "test]xx123bla\n"
+assure "test|]xx123bla\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "test-bla\n"
+assure "test-bla|\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send " Space first\n"
+assure " |Space first\n"
+
+ioccmd {dbpf DZ:test4.PROC 1}
+send "this is a test\n"
+assure "this is a test|\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "test]xx123bla\n"
+assure "test|]xx123bla\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "test-bla\n"
+assure "test|-bla\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send " Space first\n"
+assure " |Space first\n"
+
+finish
+

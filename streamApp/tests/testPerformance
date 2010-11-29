@@ -1,0 +1,55 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (waveform, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "DOUBLE")
+        field (NELM, "1048576")
+        field (INP,  "@test.proto test1 device")
+    }
+}
+
+set protocol {
+    replyTimeout =600000;
+    Terminator = LF;
+    Separator = ",";
+    test1 {in "%f"; out "%(NORD)d";}
+}
+
+set startup {
+}
+
+set debug 0
+
+set message "3.1415"
+set size 1
+set timeout 600000
+
+startioc
+    ioccmd {dbpf DZ:test1.PROC 1}
+    send "$message\n"
+    assure "$size\n"
+
+ioccmd {var streamDebug 0}
+for {set log 1} {$log <= 21} {incr log} {
+    set output "$message\n"
+    set starttime [clock clicks]
+    send $output
+    ioccmd {dbpf DZ:test1.PROC 1}
+    assure "$size\n"
+    set duration [expr [clock clicks] - $starttime]
+    set performance($size) [expr $duration*1.0/$size]
+    puts [format "size %7d     duration: %8d     time/element: %6.1f" $size $duration $performance($size)]
+    if {$performance($size) > $performance(1)} {incr faults}
+    set message "$message,$message"
+    set size [expr $size*2]    
+}
+
+finish

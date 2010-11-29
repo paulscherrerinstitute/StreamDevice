@@ -29,6 +29,8 @@ set records {
         field (OUT,  "@test.proto mbbo device")
         field (ZRVL, "0")
         field (ONVL, "-1")
+        field (ZRST, "0")
+        field (ONST, "-1")
    }
     record (mbboDirect, "DZ:mbboDirect")
     {
@@ -75,7 +77,7 @@ ioccmd {dbpf DZ:longout -1}
 assure "longout -1 -1\n"
 ioccmd {dbpf DZ:bo 1}
 assure "bo 4294967295 ffffffff 11111111111111111111111111111111\n"
-ioccmd {dbpf DZ:mbbo 1}
+ioccmd {dbpf DZ:mbbo -1}
 assure "mbbo 4294967295 ffffffff 11111111111111111111111111111111\n"
 ioccmd {dbpf DZ:mbboDirect.B0 1}
 assure "mbboDirect 1 1 1\n"

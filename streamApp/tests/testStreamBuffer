@@ -8,15 +8,15 @@ int main () {
     StreamBuffer haystack = "12345abc123xyz123";
     StreamBuffer needle = "1n4m6p7q";
     needle.remove(2,4);
-    assert (needle.equals("1n7q"));
+    assert (needle.startswith("1n7q"));
     needle.append("2x3y");
-    assert (needle.equals("1n7q2x3y"));
+    assert (needle.startswith("1n7q2x3y"));
     needle.remove(4);
-    assert (needle.equals("2x3y"));
+    assert (needle.startswith("2x3y"));
     needle.remove(1,1);
-    assert (needle.equals("23y"));
+    assert (needle.startswith("23y"));
     needle.truncate(-1);
-    assert (needle.equals("23"));
+    assert (needle.startswith("23"));
     assert (haystack.find(needle) == 1);
     assert (haystack.find(needle, 2) == 9);
     assert (haystack.find(needle, -5) == 15);
@@ -54,6 +54,11 @@ EOF
 
 g++ -I ../../src ../../src/O.$EPICS_HOST_ARCH/StreamBuffer.o test.cc -o test.exe
 
-test.exe || exit 1
+test.exe
+if [ $? != 0 ]
+then
+    echo -e "\033[31;7mTest failed.\033[0m"
+    exit 1
+fi
 rm test.*
-echo "Test passed."
+echo -e "\033[32mTest passed.\033[0m"

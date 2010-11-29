@@ -1,0 +1,124 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (stringin, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test1 device")
+    }
+    record (stringin, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test2 device")
+    }
+    record (stringin, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test3 device")
+    }
+    record (stringin, "DZ:test4")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test4 device")
+    }
+    record (stringin, "DZ:test5")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test5 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    extraInput=ignore;
+    @mismatch {out "mismatch";}
+    test1 {in "%s%(DESC) #s"; out "%s|%(DESC)s" }
+    test2 {in "% s%(DESC) #s"; out "%s|%(DESC)s" }
+    test3 {in "%#s%(DESC) #s"; out "%s|%(DESC)s" }
+    test4 {in "%# s%(DESC) #s"; out "%s|%(DESC)s" }
+    test5 {in "% #s%(DESC) #s"; out "%s|%(DESC)s" }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1.PROC 1}
+send "foobar\n"
+assure "foobar|\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "  foobar  \n"
+assure "foobar|  \n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "  foo bar  \n"
+assure "foo| bar  \n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "    \n"
+assure "|\n"
+ioccmd {dbpf DZ:test1.PROC 1}
+send "ThisIsAVeryLongInputStringThatExceedsFouryCharacters right?\n"
+assure "ThisIsAVeryLongInputStringThatExceedsFo| right?\n"
+
+ioccmd {dbpf DZ:test2.PROC 1}
+send "foobar\n"
+assure "foobar|\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "  foobar  \n"
+assure "  foobar|  \n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "  foo bar  \n"
+assure "  foo| bar  \n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send "    \n"
+assure "    |\n"
+
+ioccmd {dbpf DZ:test3.PROC 1}
+send "foobar\n"
+assure "foobar|\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "  foobar  \n"
+assure "foobar  |\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "  foo bar  \n"
+assure "foo bar  |\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send "    \n"
+assure "|\n"
+
+ioccmd {dbpf DZ:test4.PROC 1}
+send "foobar\n"
+assure "foobar|\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "  foobar  \n"
+assure "  foobar  |\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "  foo bar  \n"
+assure "  foo bar  |\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send "    \n"
+assure "    |\n"
+
+ioccmd {dbpf DZ:test5.PROC 1}
+send "foobar\n"
+assure "foobar|\n"
+ioccmd {dbpf DZ:test5.PROC 1}
+send "  foobar  \n"
+assure "  foobar  |\n"
+ioccmd {dbpf DZ:test5.PROC 1}
+send "  foo bar  \n"
+assure "  foo bar  |\n"
+ioccmd {dbpf DZ:test5.PROC 1}
+send "    \n"
+assure "    |\n"
+
+finish
+
