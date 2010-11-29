@@ -238,7 +238,7 @@ static void copyFormatString(StreamBuffer& info, const char* source)
 // A word on sscanf
 // GNU's sscanf implementation sucks. It calls strlen on the buffer.
 // That leads to a time consumption proportional to the buffer size.
-// When reading huge arrays element wise by repeatedly calling sscanf,
+// When reading huge arrays element-wise by repeatedly calling sscanf,
 // the performance drops to O(n^2).
 // The vxWorks implementation sucks, too. When all parsed values are skipped
 // with %*, it returns -1 instead of 0 even though it was successful.
@@ -433,8 +433,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     if (fmt.flags & (sign_flag|zero_flag))
     {
         error("Use of modifiers '+', '0'"
-            "not allowed with %%%c conversion\n",
-            fmt.conv);
+            "not allowed with %%s conversion\n");
         return false;
     }
     if (scanFormat && fmt.prec >= 0)
@@ -477,7 +476,7 @@ scanString(const StreamFormat& fmt, const char* input,
     {
         // normally leading whitespace does not count to width
         // but do so if space flag is present
-        if (fmt.flags & space_flag || fmt.conv == 'c')
+        if (fmt.flags & space_flag)
         {
             if (maxlen > 1)
             {
@@ -493,7 +492,7 @@ scanString(const StreamFormat& fmt, const char* input,
     {
         // normally whitespace ends string
         // but don't end if # flag is present
-        if (fmt.conv == 's' && !(fmt.flags & alt_flag) && isspace(*input)) break;
+        if (!(fmt.flags & alt_flag) && isspace(*input)) break;
         if (maxlen > 1)
         {
             *value++ = *input;
@@ -514,11 +513,11 @@ RegisterConverter (StdStringConverter, "s");
 
 // Standard Characters Converter for 'c'
 
-class StdCharsConverter : public StdStringConverter
+class StdCharsConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printLong(const StreamFormat&, StreamBuffer&, long);
-    // scanString is inherited from %s format
+    virtual int scanString(const StreamFormat&, const char*, char*, size_t);
 };
 
 int StdCharsConverter::
@@ -528,8 +527,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     if (fmt.flags & (sign_flag|space_flag|zero_flag|alt_flag))
     {
         error("Use of modifiers '+', ' ', '0', '#' "
-            "not allowed with %%%c conversion\n",
-            fmt.conv);
+            "not allowed with %%c conversion\n");
         return false;
     }
     if (scanFormat && fmt.prec >= 0)
@@ -555,6 +553,37 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
+int StdCharsConverter::
+scanString(const StreamFormat& fmt, const char* input,
+    char* value, size_t maxlen)
+{
+    int length = 0;
+    
+    int width = fmt.width;
+    
+    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    
+    // if user does not specify width assume 1
+    if (width == 0) width = 1;
+
+    while (*input && width)
+    {
+        if (maxlen > 1)
+        {
+            *value++ = *input;
+            maxlen--;
+        }
+        length++;
+        width--;
+        input++;
+    }
+    if (maxlen > 0)
+    {
+        *value = '\0';
+    }
+    return length;
+}
+
 RegisterConverter (StdCharsConverter, "c");
 
 // Standard Charset Converter for '['
@@ -565,6 +594,16 @@ class StdCharsetConverter : public StreamFormatConverter
     virtual int scanString(const StreamFormat&, const char*, char*, size_t);
     // no print method, %[ is readonly
 };
+
+inline void markbit(StreamBuffer& info, bool notflag, char c)
+{
+    const char mask [8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+    
+    if (notflag)
+        info[c>>3] |= mask[c&7];
+    else
+        info[c>>3] &= ~mask[c&7];
+}
 
 int StdCharsetConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
@@ -578,8 +617,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     if (fmt.flags & (left_flag|sign_flag|space_flag|zero_flag|alt_flag))
     {
         error("Use of modifiers '-', '+', ' ', '0', '#'"
-            "not allowed with %%%c conversion\n",
-            fmt.conv);
+            "not allowed with %%[ conversion\n");
         return false;
     }
     if (scanFormat && fmt.prec >= 0)
@@ -588,18 +626,46 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
             fmt.prec, fmt.conv);
         return false;
     }
-    info.printf("%%%s%d[", fmt.flags & skip_flag ? "*" : "", fmt.width);
-    while (*source && *source != ']')
+    
+    int notflag = 0;
+    char c = 0;
+
+    info.clear().reserve(32);
+    if (*source == '^')
     {
-        if (*source == esc) source++;
-        info.append(*source++);
+        notflag = 1;
+        source++;
+    }
+    else
+    {
+        memset(info(1), 255, 32);
+    }
+    if (*source == ']')
+    {
+        markbit(info, notflag, *source++);
+    }
+    for (; *source && *source != ']'; source++)
+    {
+        if (*source == esc)
+        {
+            markbit(info, notflag, *++source);
+            continue;
+        }
+        if (*source == '-' && c && source[1] && source[1] != ']')
+        {
+            source++;
+            while (c < *source) markbit(info, notflag, c++);
+            while (c > *source) markbit(info, notflag, c--);
+        }
+        c = *source;
+        markbit(info, notflag, c);
     }
     if (!*source) {
         error("Missing ']' after %%[ format conversion\n");
         return false;
     }
     source++; // consume ']'
-    info.append("]%n");
+
     return string_format;
 }
 
@@ -607,33 +673,31 @@ int StdCharsetConverter::
 scanString(const StreamFormat& fmt, const char* input,
     char* value, size_t maxlen)
 {
-    int length = -1;
-    if (fmt.flags & skip_flag)
+    int length = 0;
+    
+    int width = fmt.width;
+    const char mask [8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+    
+    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    
+    // if user does not specify width assume "ininity" (-1)
+    if (width == 0) width = -1;
+    
+    while (*input && width)
     {
-        /* can't use return value on vxWorks: sscanf with %* format
-           returns -1 at end of string whether value is found or not */
-        sscanf(input, fmt.info, &length);
+        if (fmt.info[*input>>3] & mask[*input&7]) break;
+        if (maxlen > 1)
+        {
+            *value++ = *input;
+            maxlen--;
+        }
+        length++;
+        width--;
+        input++;
     }
-    else
+    if (maxlen > 0)
     {
-        char tmpformat[256];
-        const char* f;
-        if (maxlen <= fmt.width || fmt.width == 0)
-        {
-            const char *p = strchr (fmt.info, '[');
-            // assure not to read too much
-            sprintf(tmpformat, "%%%ld%s", (long)maxlen-1, p);
-            f = tmpformat;
-        }
-        else
-        {
-            f = fmt.info;
-        }
-        if (sscanf(input, f, value, &length) < 1) return -1;
-        if (length < 0) return -1;
-        value[length] = '\0';
-        debug("StdCharsetConverter::scanString: length=%d, value=%s\n",
-            length, value);
+        *value = '\0';
     }
     return length;
 }
