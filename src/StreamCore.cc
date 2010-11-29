@@ -1299,6 +1299,10 @@ matchInput()
                 // ignore next input byte
                 consumedInput++;
                 break;
+            case ' ':
+                // any number of whitespace (including 0)
+                while (isspace(inputLine[consumedInput])) consumedInput++;
+                break;
             case esc:
                 // escaped literal byte
                 command = *commandIndex++;
@@ -1374,20 +1378,30 @@ matchSeparator()
 {
     // called before value is read, first value has Separator flag cleared
     // for second and next value set Separator flag
-    // first jump over leading separator (all but first value)
+    // first skip over leading separator (all but first value)
     // then find next separator and terminate with null byte to
     // help parsing one value (e.g. %s)
 
-    if (!separator) return true;
+    if (!separator) {
+        separatorStart = -1;
+        return true;
+    }
     if (flags & Separator)
     {
         // not first element in array: expect to be at the separator
         
-        if (separatorStart == -1) return false;
-        
-        // restore deleted char for proper debug and error output
-        inputLine[separatorStart] = separatorStore;
-        
+        if (separatorStart == -1) {
+            return false; // no separator found
+        }
+        if (separator[0] == ' ' && separator.length() == 1
+            && consumedInput != separatorStart)
+        {
+            // space-only separator may have matched zero spaces
+            // last found separator is still ahead
+            inputLine[separatorStart] = '\0';
+            return true;
+        }
+
         if (consumedInput != separatorStart)
         {
             long i = separatorStart - consumedInput;
@@ -1401,35 +1415,59 @@ matchSeparator()
         }
         consumedInput = separatorEnd;
     }
-    flags |= Separator;
-
-    // find next Separator and replace first byte with '\0' to help parsing elements
-    if (separator[0] == ' ' && separator[1] != ' ')
+    else
     {
-        // skip leading whitespaces
-        separatorStart = inputLine.find(separator(1), separator.length() - 1, consumedInput);
-        if (separatorStart == -1) return true;
-        separatorEnd = separatorStart + separator.length() - 1;
-        while (separatorStart > consumedInput && isspace(inputLine[separatorStart - 1])) separatorStart--;
+        flags |= Separator;
+    }
+    
+    // find next Separator and replace first byte with '\0' to help parsing elements
+    // don't worry now if there is none, just set separatorStart = -1
+    if (separator[0] == ' ' && separator.length() == 1)
+    {
+        // space-only separator: find any whitespace after non-whitespace
+        long j = consumedInput;
+        while (isspace(inputLine[j])) j++;
+        if (!inputLine[j]) {
+            separatorStart = -1;
+            return true;
+        }
+        while (inputLine[j] && !isspace(inputLine[j])) j++;
+        separatorStart = j;
+        while (isspace(inputLine[j])) j++;
+        separatorEnd = j;
     }
     else
     {
-        separatorStart = inputLine.find(separator, consumedInput);
-        if (separatorStart == -1) return true;
-        separatorEnd = separatorStart + separator.length();
+        long i = 0;
+        if (separator[0] == ' ' && separator[1] != ' ')
+            i = 1; // handle leading whitespaces later
+        separatorStart = inputLine.find(separator[i], consumedInput);
+        if (separatorStart == -1) return true;    
+
+        // check rest of separator and handle escapes
+        long j;
+        for (j = separatorStart+1; ++i < separator.length(); j++)
+        {
+            if (separator[i] == StreamProtocolParser::skip) continue; // wildcard
+            // allow format here?
+            if (separator[i] == esc) i++;       // escaped literal byte
+            if (separator[i] != inputLine[j])
+            {
+                separatorStart = -1;
+                return true;
+            }
+        }
+        separatorEnd = j;
+        // separator found
+        if (separator[0] == ' ' && separator[1] != ' ')
+        {
+            // now skip leading whitespaces
+            while (separatorStart > consumedInput &&
+                isspace(inputLine[separatorStart - 1])) separatorStart--;
+        }
     }
     separatorStore = inputLine[separatorStart];
     inputLine[separatorStart] = '\0';
-    return true;
-}
-
-bool StreamCore::
-scanSeparator()
-{
-    // for compatibility only
-    // read and remove separator
-    if (!matchSeparator()) return false;
-    flags &= ~Separator;
     return true;
 }
 
@@ -1446,6 +1484,7 @@ scanValue(const StreamFormat& fmt, long& value)
     if (!matchSeparator()) return -1;
     long consumed = StreamFormatConverter::find(fmt.conv)->
         scanLong(fmt, inputLine(consumedInput), value);
+    if (separatorStart >= 0) inputLine[separatorStart] = separatorStore;
     debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput)());
     if (consumed < 0)
@@ -1477,6 +1516,7 @@ scanValue(const StreamFormat& fmt, double& value)
     if (!matchSeparator()) return -1;
     long consumed = StreamFormatConverter::find(fmt.conv)->
         scanDouble(fmt, inputLine(consumedInput), value);
+    if (separatorStart >= 0) inputLine[separatorStart] = separatorStore;
     debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput, 20)());
     if (consumed < 0)
@@ -1509,6 +1549,7 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
     if (!matchSeparator()) return -1;
     long consumed = StreamFormatConverter::find(fmt.conv)->
         scanString(fmt, inputLine(consumedInput), value, maxlen);
+    if (separatorStart >= 0) inputLine[separatorStart] = separatorStore;
     debug("StreamCore::scanValue(%s, format=%%%c, char*, maxlen=%ld) input=\"%s\"\n",
         name(), fmt.conv, maxlen, inputLine.expand(consumedInput)());
     if (consumed < 0)
