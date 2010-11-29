@@ -33,11 +33,28 @@ proc connect {sock addr port} {
     fileevent $sock readable "receiveHandler $sock"
 }
 
+proc escape {string} {
+    while {![string is print -failindex index $string]} {
+        set char [string index $string $index]
+        scan $char "%c" code
+        switch $char {
+            "\r" { set escaped "\\r" }
+            "\n" { set escaped "\\n" }
+            "\a" { set escaped "\\a" }
+            "\t" { set escaped "\\t" }
+            default { set escaped [format "<%02x>" $code] }
+        }
+        set string [string replace $string $index $index $escaped]
+    }
+    return $string
+}
+
 proc sendReply {sock text} {
     .$sock.t mark set insert end
     .$sock.t insert end $text
     .$sock.t see end
     puts -nonewline $sock $text
+#    puts "sending \"[escape $text]\"\n" 
 }
 
 proc checkNum {n} {
@@ -121,15 +138,19 @@ proc sendAsync {wait message} {
 if {[info proc tkTextInsert] != ""} {
     set insert tkTextInsert
     set paste tkTextPaste
+    set pastesel tkPasteSelection
 } else {
     set insert tk::TextInsert
     set paste tk_textPaste
+    set pastesel ::tk::TextPasteSelection
 }
 
 rename $insert tkTextInsert_org
 rename $paste tkTextPaste_org
+rename $pastesel tkTextPasteSel_org
 
 proc $insert {w s} {
+    puts [list insert $w $s]
     global socket
     if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
         return
@@ -138,9 +159,28 @@ proc $insert {w s} {
 }
 
 proc $paste {w x y} {
+    puts [list paste $w $s]
     global insert
     set s [selection get -displayof $w]
     $insert $w $s
+}
+
+proc $pastesel {w x y} {
+    global insert
+    $w mark set insert [TextClosestGap $w $x $y]
+    if {![catch {::tk::GetSelection $w PRIMARY} sel]} {
+	set oldSeparator [$w cget -autoseparators]
+	if {$oldSeparator} {
+	    $w configure -autoseparators 0
+	    $w edit separator
+	}
+	$insert $w $sel
+	if {$oldSeparator} {
+	    $w edit separator
+	    $w configure -autoseparators 1
+	}
+    }
+    if {[$w cget -state] eq "normal"} {focus $w}
 }
 
 #remove bindings on Control-<letter>
@@ -148,7 +188,7 @@ for {set ascii 0x61} {$ascii <= 0x7a} {incr ascii} {
     bind Text <Control-[format %c $ascii]> ""
 }
 #remove bindings on symbolic tags
-foreach tag {Clear Paste Copy Cut} {
+foreach tag {Clear Paste Copy Cut } {
     bind Text <<$tag>> ""
 }
 
