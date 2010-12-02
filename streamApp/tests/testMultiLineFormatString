@@ -1,0 +1,454 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    #
+    # Simple database for Dawn RuSH system monitor
+    #
+
+    record(bo, "DZ:SetPower")
+    {
+        field(DESC, "Control power supplies")
+        field(DTYP, "stream")
+        field(OUT,  "@test.proto ps() device 0")
+        field(ZNAM, "OFF")
+        field(ONAM, "ON")
+        field(FLNK, "DZ:VP3")
+    }
+    record(bo, "DZ:SetPower1")
+    {
+        field(DESC, "Control power supply 1")
+        field(DTYP, "stream")
+        field(OUT,  "@test.proto ps(1) device 0")
+        field(ZNAM, "OFF")
+        field(ONAM, "ON")
+        field(FLNK, "DZ:VP3")
+    }
+    record(bo, "DZ:SetPower2")
+    {
+        field(DESC, "Control power supply 2")
+        field(DTYP, "stream")
+        field(OUT,  "@test.proto ps(2) device 0")
+        field(ZNAM, "OFF")
+        field(ONAM, "ON")
+        field(FLNK, "DZ:VP3")
+    }
+
+    record(ai, "DZ:VP3")
+    {
+        field(DESC, "+3.3V supply")
+        field(DTYP, "stream")
+        field(INP,  "@test.proto query(DZ:) device 0")
+        field(EGU,  "V")
+        field(PREC, "3")
+        field(LINR, "SLOPE")
+        field(ESLO, "1e-3")
+        field(LOPR, "0")
+        field(HOPR, "5")
+        field(LOLO, "2.97")
+        field(LOW,  "3.135")
+        field(HIGH, "3.465")
+        field(HIHI, "3.63")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "0.033")
+        field(FLNK, "DZ:VP5")
+    }
+    record(ai, "DZ:VP5")
+    {
+        field(DESC, "+5V supply")
+        field(DTYP, "Raw Soft Channel")
+        field(EGU,  "V")
+        field(PREC, "3")
+        field(LINR, "SLOPE")
+        field(ESLO, "1e-3")
+        field(LOPR, "0")
+        field(HOPR, "5")
+        field(LOLO, "4.5")
+        field(LOW,  "4.75")
+        field(HIGH, "5.25")
+        field(HIHI, "5.5")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "0.05")
+        field(FLNK, "DZ:VP12")
+    }
+    record(ai, "DZ:VP12")
+    {
+        field(DESC, "+12V supply")
+        field(DTYP, "Raw Soft Channel")
+        field(EGU,  "V")
+        field(PREC, "3")
+        field(LINR, "SLOPE")
+        field(ESLO, "1e-3")
+        field(LOPR, "0")
+        field(HOPR, "12")
+        field(LOLO, "10.8")
+        field(LOW,  "11.4")
+        field(HIGH, "12.6")
+        field(HIHI, "13.2")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "0.12")
+        field(FLNK, "DZ:VM12")
+    }
+    record(ai, "DZ:VM12")
+    {
+        field(DESC, "-12V supply")
+        field(DTYP, "Raw Soft Channel")
+        field(EGU,  "V")
+        field(PREC, "3")
+        field(LINR, "SLOPE")
+        field(ESLO, "-1e-3")
+        field(LOPR, "0")
+        field(HOPR, "12")
+        field(LOLO, "-13.2")
+        field(LOW,  "-12.6")
+        field(HIGH, "-11.4")
+        field(HIHI, "-10.8")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "-0.12")
+        field(FLNK, "DZ:Temp1")
+    }
+    record(longin, "DZ:Temp1")
+    {
+        field(DESC, "Sensor 1 temperature")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Degrees C")
+        field(LOPR, "0")
+        field(HOPR, "100")
+        field(HIGH, "45")
+        field(HIHI, "55")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "2")
+        field(FLNK, "DZ:Temp2")
+    }
+    record(longin, "DZ:Temp2")
+    {
+        field(DESC, "Sensor 2 temperature")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Degrees C")
+        field(LOPR, "0")
+        field(HOPR, "100")
+        field(HIGH, "45")
+        field(HIHI, "55")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "2")
+        field(FLNK, "DZ:Temp3")
+    }
+    record(longin, "DZ:Temp3")
+    {
+        field(DESC, "Sensor 3 temperature")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Degrees C")
+        field(LOPR, "0")
+        field(HOPR, "100")
+        field(HIGH, "45")
+        field(HIHI, "55")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "2")
+        field(FLNK, "DZ:Temp4")
+    }
+    record(longin, "DZ:Temp4")
+    {
+        field(DESC, "Sensor 4 temperature")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Degrees C")
+        field(LOPR, "0")
+        field(HOPR, "100")
+        field(HIGH, "45")
+        field(HIHI, "55")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "2")
+        field(FLNK, "DZ:Fan1")
+    }
+    record(longin, "DZ:Fan1")
+    {
+        field(DESC, "Fan 1 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan2")
+    }
+    record(longin, "DZ:Fan2")
+    {
+        field(DESC, "Fan 2 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan3")
+    }
+    record(longin, "DZ:Fan3")
+    {
+        field(DESC, "Fan 3 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan4")
+    }
+    record(longin, "DZ:Fan4")
+    {
+        field(DESC, "Fan 4 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan5")
+    }
+    record(longin, "DZ:Fan5")
+    {
+        field(DESC, "Fan 5 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan6")
+    }
+    record(longin, "DZ:Fan6")
+    {
+        field(DESC, "Fan 6 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan7")
+    }
+    record(longin, "DZ:Fan7")
+    {
+        field(DESC, "Fan 7 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan8")
+    }
+    record(longin, "DZ:Fan8")
+    {
+        field(DESC, "Fan 8 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:Fan9")
+    }
+    record(longin, "DZ:Fan9")
+    {
+        field(DESC, "Fan 9 speed")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "RPM")
+        field(LOPR, "0")
+        field(HOPR, "2500")
+        field(LOLO, "900")
+        field(LOW,  "1050")
+        field(HIGH, "2500")
+        field(HIHI, "2600")
+        field(LLSV, "MAJOR")
+        field(LSV,  "MINOR")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(HYST, "10")
+        field(FLNK, "DZ:PS1status")
+    }
+    record(bi, "DZ:PS1status")
+    {
+        field(DESC, "Power supply 1 status")
+        field(DTYP, "Soft Channel")
+        field(ZNAM, "Off")
+        field(ONAM, "On")
+        field(FLNK, "DZ:PS2status")
+    }
+    record(bi, "DZ:PS2status")
+    {
+        field(DESC, "Power supply 2 status")
+        field(DTYP, "Soft Channel")
+        field(ZNAM, "Off")
+        field(ONAM, "On")
+        field(FLNK, "DZ:HoursOn")
+    }
+    record(ai, "DZ:HoursOn")
+    {
+        field(DESC, "Power on time")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Hours")
+        field(LOPR, "0")
+        field(HOPR, "50000")
+        field(PREC, "1")
+        field(FLNK, "DZ:MaxTemp")
+    }
+    record(longin, "DZ:MaxTemp")
+    {
+        field(DESC, "Maximum recorded temperature")
+        field(DTYP, "Soft Channel")
+        field(EGU,  "Degrees C")
+        field(LOPR, "0")
+        field(HOPR, "100")
+        field(HIGH, "45")
+        field(HIHI, "55")
+        field(HSV,  "MINOR")
+        field(HHSV, "MAJOR")
+        field(FLNK, "DZ:Serial")
+    }
+    record(longin, "DZ:Serial")
+    {
+        field(DESC, "Serial number")
+        field(DTYP, "Soft Channel")
+        field(FLNK, "DZ:Name")
+    }
+    record(stringin, "DZ:Name")
+    {
+        field(DESC, "Unit name")
+        field(DTYP, "Soft Channel")
+    }
+}
+
+set protocol {
+    InTerminator = "\r\n";
+    OutTerminator = "";
+
+    ps {
+        out "PS\$1%{OFF|ON}";
+    }
+
+    query {
+        out "Q";
+        in "Q:"
+           "V3=%d,"
+           "V5=%(\$1VP5.RVAL)d,"
+           "V+12=%(\$1VP12.RVAL)d,"
+           "V12=%(\$1VM12.RVAL)d,"
+           "T1=%(\$1Temp1.VAL)d,"
+           "T2=%(\$1Temp2.VAL)d,"
+           "T3=%(\$1Temp3.VAL)d,"
+           "T4=%(\$1Temp4.VAL)d,"
+           "F1=%(\$1Fan1.VAL)d,"
+           "F2=%(\$1Fan2.VAL)d,"
+           "F3=%(\$1Fan3.VAL)d,"
+           "F4=%(\$1Fan4.VAL)d,"
+           "F5=%(\$1Fan5.VAL)d,"
+           "F6=%(\$1Fan6.VAL)d,"
+           "F7=%(\$1Fan7.VAL)d,"
+           "F8=%(\$1Fan8.VAL)d,"
+           "F9=%(\$1Fan9.VAL)d,"
+           "PS1=%(\$1PS1status.VAL)d,"
+           "PS2=%(\$1PS2status.VAL)d,"
+           "POH=%(\$1HoursOn.VAL)g,"
+           "MAXTMP=%(\$1MaxTemp.VAL)g,"
+           "PS1=%*d,"
+           "PS2=%*d,"
+           "MSG=%*d,"
+           "SW=%*d,"
+           "SN=%(\$1Serial.VAL)d,"
+           "UN=%(\$1Name.VAL)39[^,],";
+    #    in ";";
+        out "%d\n";
+        @mismatch {out "mismatch\n"; }
+        ExtraInput = Ignore;
+    }
+}
+
+set startup {
+    var streamDebug 1
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:VP3.PROC 1}
+assure "Q"
+send "Q:V3=0,V5=0,V+12=0,V12=0,T1=38,T2=40,T3=43,T4=45,F1=1350,F2=1361,F3=1373,F4=1384,F5=1396,F6=1407,F7=1419,F8=1430,F9=1442,PS1=0,PS2=0,POH=23.5,MAXTMP=45,PS1=0,PS2=0,MSG=0,SW=1,SN=8765,UN=APEX1,IP=128.12\r\n"
+assure "0\n"
+finish

@@ -1,0 +1,40 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (stringout, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1 device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    test1 {
+           out "Escaped \"double\" quotes";
+           out 'Escaped \'single\' quotes';
+           out "Single 'quotes' in double quotes";
+           out 'Double "quotes" in single quotes'; }
+}
+
+set startup {
+    var streamDebug 1
+}
+
+set debug 0
+
+startioc
+
+ioccmd {dbpf DZ:test1 "X"}
+assure "Escaped \"double\" quotes\n"
+assure "Escaped 'single' quotes\n"
+assure "Single 'quotes' in double quotes\n"
+assure "Double \"quotes\" in single quotes\n"
+
+finish
