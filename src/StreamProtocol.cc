@@ -520,7 +520,7 @@ Each time newline is read, line is incremented.
                 break;
             }
             buffer.append(c);
-            if (c == quote && buffer[-1] != '\\')
+            if (c == quote && buffer[-2] != '\\')
             {
                 quote = false;
                 break;
@@ -1074,6 +1074,8 @@ compileString(StreamBuffer& buffer, const char*& source,
 
     while (1)
     {
+        debug("StreamProtocolParser::Protocol::compileString "
+            "buffer so far: %s\n", buffer.expand()());
         // this is step 2: replacing the formats
         if (!*source || (newline = getLineNumber(source)) != line)
         {
@@ -1082,11 +1084,15 @@ compileString(StreamBuffer& buffer, const char*& source,
             // have been replaced and after string has been coded.
             if (formatType != NoFormat)
             {
+                int nformats=0;
+                debug("StreamProtocolParser::Protocol::compileString "
+                    "looking for formats at pos %d in \"%s\"\n", formatpos, buffer.expand(formatpos)());
                 while ((formatpos = buffer.find('%', formatpos)) != -1)
                 {
                     if (buffer[formatpos-1] == esc) continue;
                     debug("StreamProtocolParser::Protocol::compileString "
                         "format=\"%s\"\n", buffer.expand(formatpos)());
+                    nformats++;
                     formatbuffer.clear();
                     const char* p = buffer(formatpos);
                     if (!compileFormat(formatbuffer, p, formatType, client))
@@ -1105,8 +1111,9 @@ compileString(StreamBuffer& buffer, const char*& source,
                         "replaced by: \"%s\"\n", buffer.expand(formatpos)());
                     formatpos += formatbuffer.length();
                 }
+                formatpos = buffer.length();
                 debug("StreamProtocolParser::Protocol::compileString "
-                    "all formats in line %d found\n", line);
+                    "%d formats found in line %d\n", nformats, line);
             }
             if (!*source) break;
             line = newline;
