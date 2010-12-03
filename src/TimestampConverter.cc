@@ -31,6 +31,10 @@
 #define timezone _timezone
 #endif
 
+#ifdef __rtems__
+#define timezone _timezone
+#endif
+
 #ifdef vxWorks
 int timezone = 0;
 #define tzset() do {\
