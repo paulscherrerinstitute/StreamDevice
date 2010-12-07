@@ -32,7 +32,7 @@ public:
 
     enum Codes
     {
-        eos = 0, skip, format, format_field, last_function_code
+        eos = 0, skip, whitespace, format, format_field, last_function_code
     };
 
     class Client;

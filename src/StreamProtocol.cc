@@ -645,6 +645,9 @@ printString(StreamBuffer& buffer, const char* s)
             case skip:
                 buffer.append("\\?");
                 break;
+            case whitespace:
+                buffer.append("\\_");
+                break;
             case '"':
                 buffer.append("\\\"");
                 break;
@@ -1135,14 +1138,10 @@ compileString(StreamBuffer& buffer, const char*& source,
                         "INTERNAL ERROR: unconverted \\$ in quoted string\n");
                     return false;
                 case '?':
-                    if (formatType != ScanFormat)
-                    {
-                        error(line, filename(),
-                            "Quoted \\? only allowed in input: %s\n",
-                            source-1);
-                        return false;
-                    }
                     buffer.append(skip);
+                    break;
+                case '_':
+                    buffer.append(whitespace);
                     break;
                 case 'a':
                     buffer.append(7);
