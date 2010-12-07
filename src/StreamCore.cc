@@ -504,6 +504,7 @@ finishProtocol(ProtocolResult status)
                 break;
             default:
                 // get rid of all the rubbish whe might have collected
+                unparsedInput = false;
                 inputBuffer.clear();
                 handler = NULL;
         }
@@ -590,8 +591,9 @@ evalCommand()
 bool StreamCore::
 evalOut()
 {
-    inputBuffer.clear(); // flush all unread input
+    // flush all unread input
     unparsedInput = false;
+    inputBuffer.clear();
     if (!formatOutput())
     {
         finishProtocol(FormatError);
@@ -1079,6 +1081,7 @@ readCallback(StreamIoStatus status,
         {
             debug("StreamCore::readCallback(%s) async timeout: just restart\n",
                 name());
+            unparsedInput = false;
             inputBuffer.clear();
             commandIndex = commandStart;
             evalIn();
