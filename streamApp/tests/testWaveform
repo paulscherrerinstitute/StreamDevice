@@ -52,14 +52,14 @@ set protocol {
         in "text %f end"; out "%(NORD)d elements: %.1f";
     }
     testi {
-        Separator = " ";
+        Separator = "\_";
         @mismatch {out "mismatch after %(NORD)d elements: %i\n"}
-        in "%3i "; out "%(NORD)d elements: %i";
+        in "%3i\_"; out "%(NORD)d elements: %i";
     }
     tests {
-        Separator = " ... ";
+        Separator = "\_...\_";
         @mismatch {out "mismatch after %(NORD)d elements: %s\n"}
-        in "%s "; out "%(NORD)d elements: %s";
+        in "%s\_"; out "%(NORD)d elements: %s";
     }
 }
 
