@@ -699,6 +699,10 @@ formatOutput()
                 fieldAddress.clear();
                 continue;
             }
+            case StreamProtocolParser::whitespace:
+                outputLine.append(' ');
+            case StreamProtocolParser::skip:
+                continue;
             case esc:
                 // escaped literal byte
                 command = *commandIndex++;
@@ -722,10 +726,19 @@ printSeparator()
     long i = 0;
     for (; i < separator.length(); i++)
     {
-        if (separator[i] == StreamProtocolParser::skip || 
-            separator[i] == StreamProtocolParser::whitespace) continue; // wildcards
-        if (separator[i] == esc) i++;       // escaped literal byte
-        outputLine.append(separator[i]);
+        switch (separator[i])
+        {
+            case StreamProtocolParser::whitespace:
+                outputLine.append(' '); // print single space
+            case StreamProtocolParser::skip:
+                continue;
+            case esc:
+                // escaped literal byte
+                i++;
+            default:
+                // literal byte
+                outputLine.append(separator[i]);
+        }
     }
 }
 
