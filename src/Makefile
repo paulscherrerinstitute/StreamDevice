@@ -72,12 +72,6 @@ endif
 
 LIB_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-ifeq ($(USE_MEMGUARD),YES)
-# memguard looks for memory leaks (gcc only)
-CPPFLAGS += -include ../memguard.h
-LIB_SRCS += memguard.cc
-endif
-
 INC += devStream.h
 
 include $(TOP)/configure/RULES

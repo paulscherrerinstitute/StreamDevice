@@ -67,10 +67,6 @@ endif
 # by "static IoccrfReg iocshReg;"
 # LOADABLE_MODULE = YES
 
-# Want to add some memory tracing
-# to find memory leaks?
-# USE_MEMGUARD = YES
-
 # Sources of Stream Kernel
 # Do not modify
 
