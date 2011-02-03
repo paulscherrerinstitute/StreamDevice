@@ -172,16 +172,6 @@ epicsExportAddress(int, streamDebug);
 }
 #endif
 
-#ifdef MEMGUARD
-static const iocshFuncDef memguardReportDef =
-    { "memguardReport", 0, NULL };
-
-static void memguardReportFunc (const iocshArgBuf *args)
-{
-    memguardReport();
-}
-#endif
-
 // for subroutine record
 extern "C" long streamReloadSub()
 {
@@ -250,9 +240,6 @@ extern "C" void streamReloadFunc (const iocshArgBuf *args)
 
 static void streamRegistrar ()
 {
-#ifdef MEMGUARD
-    iocshRegister(&memguardReportDef, memguardReportFunc);
-#endif
     iocshRegister(&reloadDef, streamReloadFunc);
     // make streamReload available for subroutine records
     registryFunctionAdd("streamReload",
