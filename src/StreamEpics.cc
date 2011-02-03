@@ -1100,7 +1100,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             // scan error: set other record to alarm status
             if (pdbaddr->precord != record)
             {
-                recGblSetSevr(pdbaddr->precord, CALC_ALARM, INVALID_ALARM);
+                (void) recGblSetSevr(pdbaddr->precord, CALC_ALARM, INVALID_ALARM);
                 if (!INIT_RUN)
                 {
                     // process other record to send alarm monitor
