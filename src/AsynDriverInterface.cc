@@ -841,6 +841,16 @@ readHandler()
                 asynStatusStr[status]);
         }
         // pasynOctet->read() has already cut off terminator.
+        
+        if (status == asynTimeout &&
+            pasynUser->timeout == 0.0 &&
+            received > 0)
+        {
+            // Jens Eden (PTB) pointed out that polling asynInterposeEos
+            // with timeout = 0.0 returns asynTimeout even when bytes
+            // have been received, but not yet the terminator.               
+            status = asynSuccess;
+        }
 
         switch (status)
         {
@@ -922,8 +932,8 @@ readHandler()
                 // read timeout
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
-                        "ioAction=%s, timeout after %d of %d bytes \"%s\"\n",
-                    clientName(), ioActionStr[ioAction],
+                        "ioAction=%s, timeout [%f seconds] after %d of %d bytes \"%s\"\n",
+                    clientName(), ioActionStr[ioAction], pasynUser->timeout,
                     (int)received, bytesToRead,
                     StreamBuffer(buffer, received).expand()());
 #endif
