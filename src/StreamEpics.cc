@@ -911,10 +911,15 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
     }
     else
     {
-        // FIELD in this record
+        // FIELD in this record or VAL in other record
         char fullname[PVNAME_SZ + 1];
         sprintf(fullname, "%s.%s", name(), fieldname);
-        if (dbNameToAddr(fullname, &dbaddr) != OK) return false;
+        if (dbNameToAddr(fullname, &dbaddr) != OK)
+        {
+            // VAL in other record
+            sprintf(fullname, "%s.VAL", fieldname);
+            if (dbNameToAddr(fullname, &dbaddr) != OK) return false;
+        }
     }
     address.append(&dbaddr, sizeof(dbaddr));
     return true;
