@@ -597,12 +597,13 @@ class StdCharsetConverter : public StreamFormatConverter
 
 inline void markbit(StreamBuffer& info, bool notflag, char c)
 {
-    const char mask [8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+    char &infobyte = info[c>>3];
+    char mask = 1<<(c&7);
     
     if (notflag)
-        info[c>>3] |= mask[c&7];
+        infobyte |= mask;
     else
-        info[c>>3] &= ~mask[c&7];
+        infobyte &= ~mask;
 }
 
 int StdCharsetConverter::
