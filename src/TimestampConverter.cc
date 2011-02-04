@@ -53,8 +53,8 @@ class TimestampConverter : public StreamFormatConverter
 };
 
 int TimestampConverter::
-parse(const StreamFormat& fmt, StreamBuffer& info,
-    const char*& source, bool scanFormat)
+parse(const StreamFormat&, StreamBuffer& info,
+    const char*& source, bool)
 {
     unsigned int n;
     char* c;

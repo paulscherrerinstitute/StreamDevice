@@ -44,8 +44,8 @@ class MantissaExponentConverter : public StreamFormatConverter
 };
 
 int MantissaExponentConverter::
-parse(const StreamFormat& fmt, StreamBuffer& info,
-    const char*& source, bool scanFormat)
+parse(const StreamFormat&, StreamBuffer&,
+    const char*&, bool)
 {
     return double_format;
 }
