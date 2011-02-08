@@ -1260,8 +1260,11 @@ matchInput()
                                 name(), formatstr.expand()());
                         return false;
                     }
+#ifndef NO_TEMPORARY
                     debug("StreamCore::matchInput(%s): compare \"%s\" with \"%s\"\n",
-                        name(), inputLine.expand(consumedInput, outputLine.length())(), outputLine.expand()()); 
+                        name(), inputLine.expand(consumedInput,
+                            outputLine.length())(), outputLine.expand()()); 
+#endif
                     if (inputLine.length() - consumedInput < outputLine.length())
                     {
                         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
@@ -1331,12 +1334,14 @@ matchInput()
                     while (commandIndex[i] >= ' ') i++;
                     if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
-                        error("%s: Input \"%s%s\" too short."
-                              " No match for \"%s\"\n",
+                        error("%s: Input \"%s%s\" too short.",
                             name(), 
                             inputLine.length() > 20 ? "..." : "",
-                            inputLine.expand(-20)(),
+                            inputLine.expand(-20)());
+#ifndef NO_TEMPORARY
+                        error(" No match for \"%s\"\n",
                             StreamBuffer(commandIndex-1,i+1).expand()());
+#endif
                     }
                     return false;
                 }
@@ -1354,10 +1359,12 @@ matchInput()
                             consumedInput,
                             consumedInput==1 ? "" : "s");
 
+#ifndef NO_TEMPORARY
                         error("%s: got \"%s\" where \"%s\" was expected\n",
                             name(),
                             inputLine.expand(consumedInput, 20)(),
                             StreamBuffer(commandIndex-1,i+1).expand()());
+#endif
                     }
                     return false;
                 }
