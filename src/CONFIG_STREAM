@@ -30,6 +30,8 @@ SYNAPPS_RECORDS += scalcout
 # asynDriver interface is added automatically
 # if ASYN is defined in your RELEASE file.
 # BUSSES += Debug
+BUSSES += Debug
+BUSSES += Dummy
 
 # You may add more format converters
 # This requires the naming convention
