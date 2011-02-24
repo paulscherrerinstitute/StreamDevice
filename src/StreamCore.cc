@@ -39,7 +39,6 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
 {
     unsigned long timeout;
     unsigned long eventnumber;
-    unsigned short cmdlen;
     while (1)
     {
         switch(*c++)
@@ -67,7 +66,6 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
                 break;
             case exec_cmd:
                 buffer.append("    exec \"");
-                cmdlen = extract<unsigned short>(c);
                 c = StreamProtocolParser::printString(buffer, c);
                 buffer.append("\";\n");
                 break;
@@ -360,7 +358,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
     {
         buffer.append(exec_cmd);
         if (!protocol->compileString(buffer, args,
-            NoFormat, this))
+            PrintFormat, this))
         {
             return false;
         }
@@ -1642,6 +1640,7 @@ bool StreamCore::
 evalExec()
 {
     formatOutput();
+    debug ("StreamCore::evalExec: command = \"%s\"\n", outputLine.expand()());
     // release bus
     if (flags & BusOwner)
     {
