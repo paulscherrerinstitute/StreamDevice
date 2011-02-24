@@ -1073,7 +1073,7 @@ compileString(StreamBuffer& buffer, const char*& source,
     // 1) read a line from protocol source and code quoted strings,
     //    numerical bytes, tokens, etc, and replace variables and parameters
     // 2) replace the formats in the line
-    // thus variables can be replaces inside the format info string
+    // thus variables can be replaced inside the format info string
 
     while (1)
     {
@@ -1088,33 +1088,39 @@ compileString(StreamBuffer& buffer, const char*& source,
             if (formatType != NoFormat)
             {
                 int nformats=0;
-                debug("StreamProtocolParser::Protocol::compileString "
-                    "looking for formats at pos %d in \"%s\"\n", formatpos, buffer.expand(formatpos)());
-                while ((formatpos = buffer.find('%', formatpos)) != -1)
+                char c;
+                while ((c = buffer[formatpos]) != '\0')
                 {
-                    if (buffer[formatpos-1] == esc) continue;
-                    debug("StreamProtocolParser::Protocol::compileString "
-                        "format=\"%s\"\n", buffer.expand(formatpos)());
-                    nformats++;
-                    formatbuffer.clear();
-                    const char* p = buffer(formatpos);
-                    if (!compileFormat(formatbuffer, p, formatType, client))
-                    {
-                        p = buffer(formatpos);
-                        formatbuffer.clear();
-                        printString(formatbuffer, p);
-                        error(line, filename(),
-                            "in format string: \"%s\"\n",
-                            formatbuffer());
-                        return false;
+                    if (c == esc) {
+                        // ignore escaped %
+                        formatpos+=2;
+                        continue;
                     }
-                    int formatlen = p - buffer(formatpos);
-                    buffer.replace(formatpos, formatlen, formatbuffer);
-                    debug("StreamProtocolParser::Protocol::compileString "
-                        "replaced by: \"%s\"\n", buffer.expand(formatpos)());
-                    formatpos += formatbuffer.length();
+                    if (c == '%') {
+                        debug("StreamProtocolParser::Protocol::compileString "
+                            "format=\"%s\"\n", buffer.expand(formatpos)());
+                        nformats++;
+                        formatbuffer.clear();
+                        const char* p = buffer(formatpos);
+                        if (!compileFormat(formatbuffer, p, formatType, client))
+                        {
+                            p = buffer(formatpos);
+                            formatbuffer.clear();
+                            printString(formatbuffer, p);
+                            error(line, filename(),
+                                "in format string: \"%s\"\n",
+                                formatbuffer());
+                            return false;
+                        }
+                        int formatlen = p - buffer(formatpos);
+                        buffer.replace(formatpos, formatlen, formatbuffer);
+                        debug("StreamProtocolParser::Protocol::compileString "
+                            "replaced by: \"%s\"\n", buffer.expand(formatpos)());
+                        formatpos += formatbuffer.length();
+                        continue;
+                    }
+                    formatpos ++;
                 }
-                formatpos = buffer.length();
                 debug("StreamProtocolParser::Protocol::compileString "
                     "%d formats found in line %d\n", nformats, line);
             }
