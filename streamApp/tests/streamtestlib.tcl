@@ -93,6 +93,7 @@ proc send {string} {
     global sock lastsent
     set lastsent $string
     puts -nonewline $sock $string
+    flush $sock
 }
 
 set timeout 5000

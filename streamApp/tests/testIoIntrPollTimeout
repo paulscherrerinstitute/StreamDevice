@@ -1,0 +1,81 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (bo, "DZ:ready")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto ready device")
+        field (PINI, "YES")
+    }
+    record (longin, "DZ:read")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto readintr device")
+        field (SCAN, "I/O Intr")
+        field (FLNK, "DZ:count")
+    }
+    record (calc, "DZ:count")
+    {
+        field (INPA, "DZ:count")
+        field (CALC, "A+1")
+        field (FLNK, "DZ:errorcount")
+    }
+    record (calc, "DZ:errorcount")
+    {
+        field (INPA, "DZ:errorcount")
+        field (INPB, "DZ:read")
+        field (INPC, "DZ:count")
+        field (CALC, "A+(B#C)")
+    }
+    record (longout, "DZ:printresult")
+    {
+        field (DTYP, "stream")
+        field (DOL,  "DZ:read")
+        field (OMSL, "closed_loop")
+        field (OUT,  "@test.proto printresult device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    PollPeriod=10;
+    ReadTimeout=50;
+    ready {out "ready"; }
+    readintr {in "This is a line in chunks with number %d"; }
+    printresult {out "Last line received: %d";
+                 out "Line count: %(DZ:count)d";
+                 out "Error count: %(DZ:errorcount)d"; }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+set rep 10
+
+assure "ready\n"
+for {set i 1} {$i <= $rep} {incr i} {
+    send "This "
+    after 10
+    send "is a "
+    after 10
+    send "line in chunks "
+    after 10
+    send "with number $i\n"
+    after 100
+}
+ioccmd {dbpf "DZ:printresult.PROC" 1}
+assure "Last line received: $rep\n"
+assure "Line count: $rep\n"
+assure "Error count: 0\n"
+finish
+
