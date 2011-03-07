@@ -490,6 +490,7 @@ static checksum checksumMap[] =
     {"ccitt16a",crc_0x1021,       0x1D0F,     0x0000,     2}, // 0xE5CC
     {"ccitt16x",crc_0x1021,       0x0000,     0x0000,     2}, // 0x31C3
     {"crc16c",  crc_0x1021,       0x0000,     0x0000,     2}, // 0x31C3
+    {"xmodem",  crc_0x1021,       0x0000,     0x0000,     2}, // 0x31C3
     {"crc32",   crc_0x04C11DB7,   0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFC891918
     {"crc32r",  crc_0x04C11DB7_r, 0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xCBF43926
     {"jamcrc",  crc_0x04C11DB7_r, 0xFFFFFFFF, 0x00000000, 4}, // 0x340BC6D9
