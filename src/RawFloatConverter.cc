@@ -40,10 +40,10 @@ parse(const StreamFormat& format, StreamBuffer&,
     if (!endian) {
         union {long l; char c [sizeof(long)];} u;
         u.l=1;
-        if (u.c[0]) { endian = 1234;} // little endian 
-        else if (u.c[sizeof(long)-1]) { endian = 4321;} // big endian 
+        if (u.c[0]) { endian = 1234;} // little endian
+        else if (u.c[sizeof(long)-1]) { endian = 4321;} // big endian
         else {
-            error ("Cannot find out byte order for %%R format.\n"); 
+            error ("Cannot find out byte order for %%R format.\n");
             return false;
         }
     }
@@ -64,16 +64,16 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
         float  fval;
         char   bytes[8];
     } buffer;
-    
+
     nbOfBytes = format.width;
     if (nbOfBytes == 0)
         nbOfBytes = 4;
 
     if (nbOfBytes == 4)
-        buffer.fval = value;
-    else 
+        buffer.fval = (float)value;
+    else
         buffer.dval = value;
-    
+
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
@@ -86,7 +86,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     	{
             output.append(buffer.bytes[n]);
     	}
-    } 
+    }
     return true;
 }
 
@@ -101,7 +101,7 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
         float  fval;
         char   bytes[8];
     } buffer;
-    
+
     nbOfBytes = format.width;
     if (nbOfBytes == 0)
         nbOfBytes = 4;
@@ -110,7 +110,7 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     {
         return(nbOfBytes); // just skip input
     }
-    
+
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
@@ -127,7 +127,7 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
 
     if (nbOfBytes == 4)
         value = buffer.fval;
-    else 
+    else
         value = buffer.dval;
 
     return nbOfBytes;
