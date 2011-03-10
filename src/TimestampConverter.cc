@@ -29,6 +29,7 @@
 #ifdef _WIN32
 #define tzset() _tzset()
 #define timezone _timezone
+#define localtime_r(timet,tm) localtime_s(tm,timet) /* Windows sucks */
 #endif
 
 #ifdef __rtems__
@@ -58,7 +59,7 @@ parse(const StreamFormat&, StreamBuffer& info,
 {
     unsigned int n;
     char* c;
-    
+
     if (*source == '(')
     {
         while (*++source != ')')
@@ -139,7 +140,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     length = strftime(buffer, sizeof(buffer), format.info, &brokenDownTime);
     i = output.length();
     output.append(buffer, length);
-    
+
     /* look for fractional seconds */
     while ((i = output.find("%0",i)) != -1)
     {
@@ -156,7 +157,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
 /* many OS don't have strptime or strptime does not fully support
    all fields, e.g. %z.
  */
- 
+
 static int strmatch(const char*& input, const char** strings, int minlen)
 {
     int i;
@@ -176,7 +177,7 @@ static int strmatch(const char*& input, const char** strings, int minlen)
                 }
                 break;
             }
-        } 
+        }
     }
     return -1;
 }
@@ -194,22 +195,22 @@ static int nummatch(const char*& input, int min, int max)
 }
 
 static const char* scantime(const char* input, const char* format, struct tm *tm, unsigned long *ns)
-{ 
+{
     static const char* months[] = {
         "january", "february", "march", "april", "may", "june",
         "july", "august", "september", "november", "december", 0 };
     static const char* ampm[] = {
         "am", "pm", 0 };
-        
+
     int i, n;
     int pm = -1;
     int century = -1;
     int zone = 0;
-    
+
     tzset();
     zone = timezone/60;
     debug ("TimestampConverter::scantime: native time zone = %d\n", zone);
-    
+
     while (*format)
     {
         switch (*format)
@@ -499,7 +500,7 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     time_t seconds;
     unsigned long nanoseconds;
     const char* end;
-    
+
     /* Init time stamp with "today" */
     time (&seconds);
     localtime_r(&seconds, &brokenDownTime);
@@ -509,12 +510,12 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     brokenDownTime.tm_yday = 0;
     brokenDownTime.tm_isdst = -1;
     nanoseconds = 0;
-    
+
     end = scantime(input, format.info, &brokenDownTime, &nanoseconds);
     if (end == NULL) {
         error ("error parsing time\n");
         return -1;
-    }        
+    }
     if (brokenDownTime.tm_mon == -1) {
         seconds = brokenDownTime.tm_sec;
     } else {
