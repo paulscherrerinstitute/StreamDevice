@@ -327,7 +327,7 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     int length;
     bool neg;
     int base;
-    
+
     length = prepareval(fmt, input, neg);
     if (length < 0) return -1;
     switch (fmt.conv)
@@ -460,11 +460,11 @@ scanString(const StreamFormat& fmt, const char* input,
     char* value, size_t maxlen)
 {
     int length = 0;
-    
+
     int width = fmt.width;
-    
+
     if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
-    
+
     // if user does not specify width assume "ininity" (-1)
     if (width == 0)
     {
@@ -558,11 +558,11 @@ scanString(const StreamFormat& fmt, const char* input,
     char* value, size_t maxlen)
 {
     int length = 0;
-    
+
     int width = fmt.width;
-    
+
     if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
-    
+
     // if user does not specify width assume 1
     if (width == 0) width = 1;
 
@@ -599,7 +599,7 @@ inline void markbit(StreamBuffer& info, bool notflag, char c)
 {
     char &infobyte = info[c>>3];
     char mask = 1<<(c&7);
-    
+
     if (notflag)
         infobyte |= mask;
     else
@@ -627,14 +627,14 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
             fmt.prec, fmt.conv);
         return false;
     }
-    
-    int notflag = 0;
+
+    bool notflag = false;
     char c = 0;
 
     info.clear().reserve(32);
     if (*source == '^')
     {
-        notflag = 1;
+        notflag = true;
         source++;
     }
     else
@@ -675,18 +675,16 @@ scanString(const StreamFormat& fmt, const char* input,
     char* value, size_t maxlen)
 {
     int length = 0;
-    
     int width = fmt.width;
-    const char mask [8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
-    
+
     if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
-    
+
     // if user does not specify width assume "ininity" (-1)
     if (width == 0) width = -1;
-    
+
     while (*input && width)
     {
-        if (fmt.info[*input>>3] & mask[*input&7]) break;
+        if (fmt.info[*input>>3] & 1<<(*input&7)) break;
         if (maxlen > 1)
         {
             *value++ = *input;
