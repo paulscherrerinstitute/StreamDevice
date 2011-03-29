@@ -65,7 +65,8 @@ ifdef PCRE
 LIB_LIBS += pcre
 else
 ifneq ($(words $(PCRE_LIB) $(PCRE_INCLUDE)),0)
-LIB_SYS_LIBS += pcre
+LIB_SYS_LIBS_DEFAULT += pcre
+LIB_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre
 SHRLIB_DEPLIB_DIRS += $(PCRE_LIB)
 endif
 endif
@@ -86,22 +87,11 @@ FORCE:
 StreamCore$(OBJ): streamReferences
 
 streamReferences: ../CONFIG_STREAM
-	@for i in $(BUSSES); \
-	do echo "extern void* ref_$${i}Interface;"; \
-           echo "void* p$$i = ref_$${i}Interface;"; \
-	done > $@
-	@for i in $(FORMATS); \
-	do echo "extern void* ref_$${i}Converter;"; \
-           echo "void* p$$i = ref_$${i}Converter;"; \
-	done >> $@
+	$(PERL) ../makeref.pl Interface $(BUSSES) > $@
+	$(PERL) ../makeref.pl Converter $(FORMATS) >> $@
 
 # create stream.dbd from all RECORDS
 $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
-	@for r in $(RECORDS); \
-	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
-	done > $@
-	@echo "driver(stream)" >> $@
-	@echo "variable(streamDebug, int)" >> $@
-	@echo "registrar(streamRegistrar)" >> $@
+	$(PERL) ../makedbd.pl $(RECORDS) > $@
 
 endif
