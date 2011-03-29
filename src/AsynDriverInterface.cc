@@ -534,15 +534,6 @@ lockHandler()
     debug("AsynDriverInterface::lockHandler(%s)\n",
         clientName());
     pasynManager->blockProcessCallback(pasynUser, false);
-    
-#ifndef ASYN_VERSION // asyn < 4.14
-    asynStatus status;
-    status = pasynManager->lockPort(pasynUser);
-    if(status!=asynSuccess) {
-        debug("Failed locking port");
-    }
-#endif
-
     connected = connectToAsynPort();
     lockCallback(connected ? StreamIoSuccess : StreamIoFault);
 }
@@ -553,15 +544,6 @@ unlock()
 {
     debug("AsynDriverInterface::unlock(%s)\n",
         clientName());
-
-#ifndef ASYN_VERSION // asyn < 4.14
-    asynStatus status;
-    status = pasynManager->unlockPort(pasynUser);
-    if (status != asynSuccess) {
-        debug("Failed unlocking port");
-    }
-#endif
-    
     pasynManager->unblockProcessCallback(pasynUser, false);
     return true;
 }
