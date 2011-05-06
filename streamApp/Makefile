@@ -25,21 +25,10 @@ PROD_SRCS_vxWorks = -nil-
 
 PROD_LIBS = stream
 
-ifdef PCRE
-# With local PCRE package
-PROD_LIBS += pcre
-else
-ifneq ($(words $(PCRE_LIB) $(PCRE_INCLUDE)),0)
-# With system wide PCRE installation
-PROD_SYS_LIBS += pcre
-PROD_DEPLIB_DIRS += $(PCRE_LIB)
-endif
-endif
-
 ifdef ASYN
 # Which types of asyn busses do you have?
 ifneq ($(OS_CLASS), WIN32)
-# asynDriver up to version 4-8 does not support serial port for Windows!
+# asynDriver up to version 4-16 does not support serial port for Windows!
 streamApp_DBD += drvAsynSerialPort.dbd
 endif
 streamApp_DBD += drvAsynIPPort.dbd
@@ -69,7 +58,7 @@ include $(TOP)/configure/RULES
 clean:: myclean
 
 myclean:
-	rm -f core* StreamDebug.log
+	$(RM) core* StreamDebug.log
 
 endif
 
