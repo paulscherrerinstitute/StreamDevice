@@ -158,19 +158,22 @@ proc assure {args} {
 }
 
 proc escape {string} {
-    while {![string is print -failindex index $string]} {
-        set char [string index $string $index]
-        scan $char "%c" code
-        switch $char {
-            "\r" { set escaped "\\r" }
-            "\n" { set escaped "\\n" }
-            "\a" { set escaped "\\a" }
-            "\t" { set escaped "\\t" }
-            default { set escaped [format "<%02x>" $code] }
+    set result ""
+    set length [string length $string]
+    for {set i 0} {$i < $length} {incr i} {
+        set c [string index $string $i]
+        scan $c %c n
+        if {$n == 13} {
+            append result "\\r"
+        } elseif {$n == 10} {
+            append result "\\n"
+        } elseif {($n & 127) < 32} {
+            append result [format "<%02x>" $n]
+        } else {
+            append result $c
         }
-        set string [string replace $string $index $index $escaped]
     }
-    return $string
+    return $result
 }
 
 proc finish {} {
