@@ -1,3 +1,4 @@
+rm -f test.* *.out *.ioclog StreamDebug.log
 for i in test*
 do
     if [ $i != testall -a -x $i ]
@@ -6,7 +7,7 @@ do
         if ! $i "$@"
         then
             echo -e "\033[31;7mFailed.\033[0m"
-            (( fail++ ))
+            (( fail+=1 ))
         fi
     fi
 done
