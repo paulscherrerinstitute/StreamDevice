@@ -48,6 +48,7 @@ int main () {
     assert (haystack.find(needle) == 0);
     haystack.clear();
     assert (haystack.find(needle) == 0);
+    haystack.reserve(10000);
     return 0;
 }
 EOF
