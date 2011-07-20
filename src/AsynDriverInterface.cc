@@ -739,38 +739,44 @@ readHandler()
     streameos = getInTerminator(streameoslen);
     deveos = streameos;
     deveoslen = streameoslen;
-    if (streameos) do // streameos == NULL means: don't change eos
+    if (streameos) // streameos == NULL means: don't change eos
     {
         asynStatus status;
         status = pasynOctet->getInputEos(pvtOctet,
             pasynUser, oldeos, sizeof(oldeos)-1, &oldeoslen);
         if (status != asynSuccess)
         {
-            oldeoslen = -1;
             // No EOS support?
-        }
-        // device (e.g. GPIB) might not accept full eos length
-        if (pasynOctet->setInputEos(pvtOctet, pasynUser,
-            deveos, deveoslen) == asynSuccess)
-        {
-#ifndef NO_TEMPORARY
-            if (ioAction != AsyncRead)
+            if (streameos[0])
             {
-                debug("AsynDriverInterface::readHandler(%s) "
-                    "input EOS set to %s\n",
-                    clientName(),
-                    StreamBuffer(deveos, deveoslen).expand()());
+                error("%s: warning: No input EOS support.\n",
+                    clientName());
             }
+            oldeoslen = -1;
+        } else do {
+            // device (e.g. GPIB) might not accept full eos length
+            if (pasynOctet->setInputEos(pvtOctet, pasynUser,
+                deveos, deveoslen) == asynSuccess)
+            {
+#ifndef NO_TEMPORARY
+                if (ioAction != AsyncRead)
+                {
+                    debug("AsynDriverInterface::readHandler(%s) "
+                        "input EOS set to %s\n",
+                        clientName(),
+                        StreamBuffer(deveos, deveoslen).expand()());
+                }
 #endif
-            break;
-        }
-        deveos++; deveoslen--;
-        if (!deveoslen)
-        {
-            error("%s: warning: pasynOctet->setInputEos() failed: %s\n",
-                clientName(), pasynUser->errorMessage);
-        }
-    } while (deveoslen);
+                break;
+            }
+            deveos++; deveoslen--;
+            if (!deveoslen)
+            {
+                error("%s: warning: pasynOctet->setInputEos() failed: %s\n",
+                    clientName(), pasynUser->errorMessage);
+            }
+        } while (deveoslen);
+    }
 
     int bytesToRead = peeksize;
     long buffersize;
