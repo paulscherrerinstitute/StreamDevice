@@ -12,10 +12,26 @@ set records {
         field (DTYP, "stream")
         field (OUT,  "@test.proto test1 device")
     }
+    record (longin, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test2 device")
+    }
+    record (longin, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test3 device")
+    }
+    record (longin, "DZ:test4")
+    {
+        field (DTYP, "stream")
+        field (INP,  "@test.proto test4 device")
+    }
 }
 
 set protocol {
-    Terminator = LF;
+    OutTerminator = LF;
+    MaxInput = 4;
     test1 {
            out "%r"; out "%.1r"; out "%.2r"; out "%.3r"; out "%.4r"; out "%.5r";
            out "%#r"; out "%#.1r"; out "%#.2r"; out "%#.3r"; out "%#.4r"; out "%#.5r";
@@ -23,6 +39,18 @@ set protocol {
            out "%0r"; out "%01r"; out "%02r"; out "%03r"; out "%04r"; out "%05r";
            out "%#0r"; out "%#01r"; out "%#02r"; out "%#03r"; out "%#04r"; out "%#05r";
            };
+    test2 {
+        in "%04.4r";        
+        out "%08x";
+    }
+    test3{
+        in "%#3r\?";        
+        out "%08x";
+    }
+    test4{
+        in "%#03r\?";        
+        out "%08x";
+    }
 }
 
 set startup {
@@ -192,6 +220,35 @@ assure "\xef\x00\x00\n"
 assure "\xef\x00\x00\x00\n"
 assure "\xef\x00\x00\x00\x00\n"
 
+ioccmd {dbpf DZ:test2.PROC 1}
+send   "\x01\x02\x03\x04"
+assure "01020304\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send   "\xde\xad\xbe\xef"
+assure "deadbeef\n"
+ioccmd {dbpf DZ:test2.PROC 1}
+send   "\x00\x00\x00\x00"
+assure "00000000\n"
+
+ioccmd {dbpf DZ:test3.PROC 1}
+send   "\x04\x03\x02\x01"
+assure "00020304\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send   "\xde\xad\xbe\xef"
+assure "ffbeadde\n"
+ioccmd {dbpf DZ:test3.PROC 1}
+send   "\x00\x00\x00\x00"
+assure "00000000\n"
+
+ioccmd {dbpf DZ:test4.PROC 1}
+send   "\x04\x03\x02\x01"
+assure "00020304\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send   "\xde\xad\xbe\xef"
+assure "00beadde\n"
+ioccmd {dbpf DZ:test4.PROC 1}
+send   "\x00\x00\x00\x00"
+assure "00000000\n"
 
 
 finish
