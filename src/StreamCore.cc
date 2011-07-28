@@ -650,9 +650,12 @@ formatOutput()
                 unsigned short addrlen = extract<unsigned short>(commandIndex);
                 fieldAddress.set(commandIndex, addrlen);
                 commandIndex += addrlen;
+                goto normal_format;
             }
             case StreamProtocolParser::format:
             {
+                fieldAddress.clear();
+normal_format:
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
                 formatstring = commandIndex;
@@ -696,7 +699,6 @@ formatOutput()
                             name(), formatstr.expand()());
                     return false;
                 }
-                fieldAddress.clear();
                 continue;
             }
             case StreamProtocolParser::whitespace:
@@ -1169,9 +1171,12 @@ matchInput()
                 unsigned short addrlen = extract<unsigned short>(commandIndex);
                 fieldAddress.set(commandIndex, addrlen);
                 commandIndex += addrlen;
+                goto normal_format;
             }
             case StreamProtocolParser::format:
             {
+                fieldAddress.clear();
+normal_format:
                 int consumed;
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
@@ -1310,7 +1315,6 @@ matchInput()
                     return false;
                 }
                 // matchValue() has already removed consumed bytes from inputBuffer
-                fieldAddress.clear();
                 break;
             }
             case StreamProtocolParser::skip:
@@ -1332,12 +1336,12 @@ matchInput()
                     while (commandIndex[i] >= ' ') i++;
                     if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
-                        error("%s: Input \"%s%s\" too short.",
+                        error("%s: Input \"%s%s\" too short.\n",
                             name(), 
                             inputLine.length() > 20 ? "..." : "",
                             inputLine.expand(-20)());
 #ifndef NO_TEMPORARY
-                        error(" No match for \"%s\"\n",
+                        error("No match for \"%s\"\n",
                             StreamBuffer(commandIndex-1,i+1).expand()());
 #endif
                     }
