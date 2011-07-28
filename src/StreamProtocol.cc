@@ -227,7 +227,7 @@ getProtocol(const StreamBuffer& protocolAndParams)
         return new Protocol(*protocol, name, 0);
     }
     error("Protocol '%s' not found in protocol file '%s'\n",
-        name(), filename());
+        protocolAndParams(), filename());
     return NULL;
 }
 
