@@ -1053,30 +1053,43 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         buffer = fieldBuffer.clear().reserve(size);
         for (nord = 0; nord < nelem; nord++)
         {
+            debug("Stream::matchValue(%s): buffer before: %s\n", name(), fieldBuffer.expand()());
             switch (format.type)
             {
                 case long_format:
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsInt32*)buffer)[nord] = lval;
+                    debug("Stream::matchValue(%s): %s[%li] = %li\n",
+                            name(), pdbaddr->precord->name, nord, lval);
                     break;
                 }
                 case enum_format:
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
+                    debug("Stream::matchValue(%s): %s[%li] = %li\n",
+                            name(), pdbaddr->precord->name, nord, lval);
                     break;
                 }
                 case double_format:
                 {
                     consumed = scanValue(format, dval);
-                    if (consumed >= 0) ((epicsFloat64*)buffer)[nord] = dval;
+                    // Direct assignment to buffer fails fith gcc 3.4.3 for xscale_be
+                    // Optimization bug?
+                    epicsFloat64 f64=dval;
+                    if (consumed >= 0) memcpy(((epicsFloat64*)buffer)+nord, &f64, sizeof(f64));
+                    debug("Stream::matchValue(%s): %s[%li] = %#g %#g\n",
+                            name(), pdbaddr->precord->name, nord, dval,
+                            ((epicsFloat64*)buffer)[nord]);
                     break;
                 }
                 case string_format:
                 {
                     consumed = scanValue(format,
                         buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
+                    debug("Stream::matchValue(%s): %s[%li] = \"%.*s\"\n",
+                            name(), pdbaddr->precord->name, nord, MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
                     break;
                 }
                 default:
@@ -1084,6 +1097,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                         "Illegal format type\n", name());
                     return false;
             }
+            debug("Stream::matchValue(%s): buffer after: %s\n", name(), fieldBuffer.expand()());
             if (consumed < 0) break;
             consumedInput += consumed;
         }
@@ -1127,12 +1141,13 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         {
             // write into own record, thus don't process it
             // in @init we must not process other record
-            debug("Stream::matchValue(%s): dbPut(%s.%s,...)\n",
+            debug("Stream::matchValue(%s): dbPut(%s.%s,%s)\n",
                 name(),
                 pdbaddr->precord->name,
-                ((dbFldDes*)pdbaddr->pfldDes)->name);
+                ((dbFldDes*)pdbaddr->pfldDes)->name,
+                fieldBuffer.expand()());
             putfunc = "dbPut";
-            status = dbPut(pdbaddr, dbfMapping[format.type], fieldBuffer(), nord);
+            status = dbPut(pdbaddr, dbfMapping[format.type], buffer, nord);
             if (INIT_RUN && pdbaddr->precord != record)
             {
                 // clean error status of other record in @init
@@ -1144,12 +1159,13 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         else
         {
             // write into other record, thus process it
-            debug("Stream::matchValue(%s): dbPutField(%s.%s,...)\n",
+            debug("Stream::matchValue(%s): dbPutField(%s.%s,%s)\n",
                 name(),
                 pdbaddr->precord->name,
-                ((dbFldDes*)pdbaddr->pfldDes)->name);
+                ((dbFldDes*)pdbaddr->pfldDes)->name,
+                fieldBuffer.expand()());
             putfunc = "dbPutField";
-            status = dbPutField(pdbaddr, dbfMapping[format.type], fieldBuffer(), nord);
+            status = dbPutField(pdbaddr, dbfMapping[format.type], buffer, nord);
         }
         if (status != 0)
         {
