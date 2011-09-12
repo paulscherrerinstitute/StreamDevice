@@ -74,6 +74,9 @@ proc receiveHandler {sock} {
     set l [split $a]
     if [catch {
         switch -- [lindex $l 0] {
+            "exit" {
+                exit
+            }
             "disconnect" {
                 sendReply $sock [string range $a 11 end]
                 destroy .$sock
