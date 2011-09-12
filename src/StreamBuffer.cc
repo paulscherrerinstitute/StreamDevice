@@ -109,7 +109,7 @@ grow(long minsize)
     memset(newbuffer+len, 0, newcap-len);
     if (buffer != local)
     {
-        delete buffer;
+        delete [] buffer;
     }
     buffer = newbuffer;
     cap = newcap;
@@ -219,7 +219,7 @@ replace(long remstart, long remlen, const void* ins, long inslen)
         memset(newbuffer+newlen, 0, newcap-newlen);
         if (buffer != local)
         {
-            delete buffer;
+            delete [] buffer;
         }
         buffer = newbuffer;
         cap = newcap;
