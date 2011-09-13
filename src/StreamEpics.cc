@@ -690,6 +690,7 @@ process()
         debug("Stream::process(%s): could not start, status=%d\n",
             name(), status);
         (void) recGblSetSevr(record, status, INVALID_ALARM);
+        record->pact = false;
         return false;
     }
     debug("Stream::process(%s): protocol started\n", name());
