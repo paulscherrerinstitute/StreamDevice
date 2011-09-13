@@ -825,10 +825,16 @@ lockCallback(StreamIoStatus status)
     }
     flags &= ~LockPending;
     flags |= BusOwner;
-    if (status != StreamIoSuccess)
+    switch (status)
     {
-        finishProtocol(LockTimeout);
-        return;
+        case StreamIoSuccess:
+            break;
+        case StreamIoTimeout:
+            finishProtocol(LockTimeout);
+            return;
+        default:
+            finishProtocol(Fault);
+            return;
     }
     flags |= WritePending;
     if (!busWriteRequest(outputLine(), outputLine.length(), writeTimeout))

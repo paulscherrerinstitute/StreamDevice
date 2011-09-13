@@ -502,6 +502,26 @@ connectToAsynPort()
             clientName(), pasynUser->errorMessage);
         return false;
     }
+    // Is it really connected? 
+    if (connected && !pasynGpib)
+    {
+        size_t received;
+        int eomReason;
+        char buffer[8];
+
+        pasynUser->timeout = 0.0;
+        status = pasynOctet->read(pvtOctet, pasynUser,
+            buffer, 0, &received, &eomReason);
+        debug("AsynDriverInterface::connectToAsynPort(%s): "
+            "read(..., 0, ...) [timeout=%f seconds] = %s\n",
+            clientName(), pasynUser->timeout,
+            asynStatusStr[status]);
+        pasynManager->isConnected(pasynUser, &connected);
+        debug("AsynDriverInterface::connectToAsynPort(%s): "
+            "device was %sconnected!\n",
+            clientName(),connected?"":"dis");
+    }
+        
     debug("AsynDriverInterface::connectToAsynPort(%s) is %s connected\n",
         clientName(), connected ? "already" : "not yet");
     if (!connected)
@@ -622,6 +642,24 @@ writeHandler()
     }
     status = pasynOctet->write(pvtOctet, pasynUser,
         outputBuffer, outputSize, &written);
+    debug("AsynDriverInterface::writeHandler(%s): "
+        "write(..., outputSize=%d, written=%d) [timeout=%f seconds] = %s\n",
+        clientName(), outputSize,  written, pasynUser->timeout,
+        asynStatusStr[status]);
+
+    // Up to asyn 4.17 I can't see when the server has disconnected. Why?
+    int connected;
+    pasynManager->isConnected(pasynUser, &connected);
+    debug("AsynDriverInterface::writeHandler(%s): "
+        "device is %sconnected\n",
+        clientName(),connected?"":"dis");
+    if (!connected) {
+        error("%s: connection closed in write\n",
+            clientName());
+        writeCallback(StreamIoFault);
+        return;
+    }
+
     if (oldeoslen >= 0) // restore asyn terminator
     {
         pasynOctet->setOutputEos(pvtOctet, pasynUser,
@@ -812,6 +850,7 @@ readHandler()
     int eomReason;
     asynStatus status;
     long readMore;
+    int connected;
 
     while (1)
     {
@@ -827,6 +866,16 @@ readHandler()
                 "read(..., bytesToRead=%d, ...) [timeout=%f seconds] = %s\n",
                 clientName(), bytesToRead, pasynUser->timeout,
                 asynStatusStr[status]);
+        }
+        pasynManager->isConnected(pasynUser, &connected);
+        debug("AsynDriverInterface::readHandler(%s): "
+            "device is %sconnected\n",
+            clientName(),connected?"":"dis");
+        if (!connected) {
+            error("%s: connection closed in read\n",
+                clientName());
+            readCallback(StreamIoFault);
+            return;
         }
         // pasynOctet->read() has already cut off terminator.
         
@@ -959,18 +1008,18 @@ readHandler()
             case asynDisconnected:
                 error("%s: asynDisconnected in read: %s\n",
                     clientName(), pasynUser->errorMessage);
-                writeCallback(StreamIoFault);
+                readCallback(StreamIoFault);
                 return;
             case asynDisabled:
                 error("%s: asynDisconnected in read: %s\n",
                     clientName(), pasynUser->errorMessage);
-                writeCallback(StreamIoFault);
+                readCallback(StreamIoFault);
                 return;
 #endif
             default:
                 error("%s: unknown asyn error in read: %s\n",
                     clientName(), pasynUser->errorMessage);
-                writeCallback(StreamIoFault);
+                readCallback(StreamIoFault);
                 return;
         }
         if (!readMore) break;
