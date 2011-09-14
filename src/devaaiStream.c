@@ -207,7 +207,7 @@ static long writeData (dbCommon *record, format_t *format)
                         break;
                     case DBF_USHORT:
                     case DBF_ENUM:
-                        lval = ((picsUInt16 *)aai->bptr)[nowd];
+                        lval = ((epicsUInt16 *)aai->bptr)[nowd];
                         break;
                     case DBF_CHAR:
                         lval = ((epicsInt8 *)aai->bptr)[nowd];
