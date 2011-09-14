@@ -205,7 +205,7 @@ class AsynDriverInterface : StreamBusInterface
     void connectHandler();
     void disconnectHandler();
     bool connectToAsynPort();
-    void asynReadHandler(const char *data, int numchars, int eomReason);
+    void asynReadHandler(const char *data, size_t numchars, int eomReason);
     asynQueuePriority priority() {
         return static_cast<asynQueuePriority>
             (StreamBusInterface::priority());
@@ -643,9 +643,10 @@ writeHandler()
     status = pasynOctet->write(pvtOctet, pasynUser,
         outputBuffer, outputSize, &written);
     debug("AsynDriverInterface::writeHandler(%s): "
-        "write(..., outputSize=%d, written=%d) [timeout=%f seconds] = %s\n",
-        clientName(), outputSize,  written, pasynUser->timeout,
-        asynStatusStr[status]);
+        "write(..., outputSize=%ld, written=%ld) "
+        "[timeout=%f seconds] = %s\n",
+        clientName(), (long)outputSize,  (long)written,
+        pasynUser->timeout, asynStatusStr[status]);
 
     // Up to asyn 4.17 I can't see when the server has disconnected. Why?
     int connected;
@@ -816,7 +817,7 @@ readHandler()
         } while (deveoslen);
     }
 
-    int bytesToRead = peeksize;
+    long bytesToRead = peeksize;
     long buffersize;
 
     if (expectedLength > 0)
@@ -863,9 +864,10 @@ readHandler()
         if (ioAction == Read || status != asynTimeout)
         {
             debug("AsynDriverInterface::readHandler(%s): "
-                "read(..., bytesToRead=%d, ...) [timeout=%f seconds] = %s\n",
-                clientName(), bytesToRead, pasynUser->timeout,
-                asynStatusStr[status]);
+                "read(..., bytesToRead=%ld, received=%ld...) "
+                "[timeout=%f seconds] = %s\n",
+                clientName(), bytesToRead, (long)received,
+                pasynUser->timeout, asynStatusStr[status]);
         }
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
@@ -896,10 +898,10 @@ readHandler()
                 {
 #ifndef NO_TEMPORARY
                     debug("AsynDriverInterface::readHandler(%s): "
-                        "AsyncRead poll: received %d of %d bytes \"%s\" "
+                        "AsyncRead poll: received %ld of %ld bytes \"%s\" "
                         "eomReason=%s [data ignored]\n",
-                        clientName(), (int)received, bytesToRead,
-                        StreamBuffer(buffer, (int)received).expand()(),
+                        clientName(), (long)received, bytesToRead,
+                        StreamBuffer(buffer, received).expand()(),
                         eomReasonStr[eomReason&0x7]);
 #endif
                     // ignore what we got from here.
@@ -910,10 +912,10 @@ readHandler()
                 }
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
-                        "received %d of %d bytes \"%s\" "
+                        "received %ld of %ld bytes \"%s\" "
                         "eomReason=%s\n",
-                    clientName(), (int)received, bytesToRead,
-                    StreamBuffer(buffer, (int)received).expand()(),
+                    clientName(), (long)received, bytesToRead,
+                    StreamBuffer(buffer, received).expand()(),
                     eomReasonStr[eomReason&0x7]);
 #endif
                 // asynOctet->read() cuts off terminator, but:
@@ -969,9 +971,10 @@ readHandler()
                 // read timeout
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
-                        "ioAction=%s, timeout [%f seconds] after %d of %d bytes \"%s\"\n",
+                        "ioAction=%s, timeout [%f seconds] "
+                        "after %ld of %ld bytes \"%s\"\n",
                     clientName(), ioActionStr[ioAction], pasynUser->timeout,
-                    (int)received, bytesToRead,
+                    (long)received, bytesToRead,
                     StreamBuffer(buffer, received).expand()());
 #endif
                 if (ioAction == AsyncRead || ioAction == AsyncReadMore)
@@ -1032,7 +1035,7 @@ readHandler()
             bytesToRead = inputBuffer.capacity();
         }
         debug("AsynDriverInterface::readHandler(%s) "
-            "readMore=%ld bytesToRead=%d\n",
+            "readMore=%ld bytesToRead=%ld\n",
             clientName(), readMore, bytesToRead);
         pasynUser->timeout = readTimeout;
         waitForReply = false;
@@ -1064,7 +1067,7 @@ void intrCallbackOctet(void* /*pvt*/, asynUser *pasynUser,
 
 // get asynchronous input
 void AsynDriverInterface::
-asynReadHandler(const char *buffer, int received, int eomReason)
+asynReadHandler(const char *buffer, size_t received, int eomReason)
 {
     // Due to multithreading, timerExpired() might come at any time.
     // It queues the next poll request which is now useless because
@@ -1080,9 +1083,9 @@ asynReadHandler(const char *buffer, int received, int eomReason)
     
 #ifndef NO_TEMPORARY
     debug("AsynDriverInterface::asynReadHandler(%s, buffer=\"%s\", "
-            "received=%d eomReason=%s) ioAction=%s\n",
+            "received=%ld eomReason=%s) ioAction=%s\n",
         clientName(), StreamBuffer(buffer, received).expand()(),
-        received, eomReasonStr[eomReason&0x7], ioActionStr[ioAction]);
+        (long)received, eomReasonStr[eomReason&0x7], ioActionStr[ioAction]);
 #endif
 
     ioAction = None;
@@ -1138,7 +1141,7 @@ asynReadHandler(const char *buffer, int received, int eomReason)
             // set by stream, cut it off now.
             status = pasynOctet->getInputEos(pvtOctet,
                 pasynUser, deveos, sizeof(deveos)-1, &deveoslen);
-            if (status == asynSuccess && received >= deveoslen)
+            if (status == asynSuccess && (long)received >= (long)deveoslen)
             {
                 int i;
                 for (i = 1; i <= deveoslen; i++)
