@@ -44,7 +44,7 @@ static long readData (dbCommon *record, format_t *format)
                 switch (wf->ftvl)
                 {
                     case DBF_DOUBLE:
-                        ((epicsFloat64 *)wf->bptr)[wf->nord] = dval;
+                        ((epicsFloat64 *)wf->bptr)[wf->nord] = (epicsFloat64)dval;
                         break;
                     case DBF_FLOAT:
                         ((epicsFloat32 *)wf->bptr)[wf->nord] = (epicsFloat32)dval;
@@ -74,7 +74,7 @@ static long readData (dbCommon *record, format_t *format)
                         break;
                     case DBF_LONG:
                     case DBF_ULONG:
-                        ((epicsInt32 *)wf->bptr)[wf->nord] = lval;
+                        ((epicsInt32 *)wf->bptr)[wf->nord] = (epicsInt32)lval;
                         break;
                     case DBF_SHORT:
                     case DBF_USHORT:
