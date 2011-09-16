@@ -13,7 +13,7 @@ RECORDS += longout longin
 RECORDS += stringout stringin
 RECORDS += waveform
 RECORDS += calcout
-#RECORDS += aai aao
+RECORDS += aai aao
 
 # Do you have synApps and want support for scalcout?
 # Then define CALC or SYNAPPS in your RELEASE file
@@ -22,6 +22,7 @@ RECORDS += calcout
 # you have to build the 'sscan' and 'genSub'
 # modules before building 'calc'.
 # See doc/scalcout.html for a required fix in scalcout.
+
 SYNAPPS_RECORDS += scalcout
 
 # You may add more bus interfaces
@@ -29,7 +30,7 @@ SYNAPPS_RECORDS += scalcout
 # $(BUS)Interface.cc
 # asynDriver interface is added automatically
 # if ASYN is defined in your RELEASE file.
-# BUSSES += Debug
+
 BUSSES += Debug
 BUSSES += Dummy
 
