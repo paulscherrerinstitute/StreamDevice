@@ -3,18 +3,219 @@
 <html>
 <head>
 <title>StreamDevice: Format Converter API</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: Format Converter API</h1>
 
-<h2>Sorry, this documentation is still missing.</h2>
+<a name="class"></a>
+<h2>Converter Class</h2>
+<p>
+A user defined converter class inherits public from
+<i>StreamFormatConverter</i> and handles one or more conversion characters.
+It is not necessary that a given conversion character supports both,
+printing and scanning.
+But if it does, both must be handled by the same converter class.
+</p>
+<p>
+Any conversion corresponds to one data type. The converter class must
+implement print and/or scan methods for this data type. It must also
+implement a parse method to analyse the format string.
+</p>
+<p>
+A converter class must be registered with a call to RegisterConverter()
+in the global file context.
+</p>
+<p>
+The converter must not contain any class variables, because there will be
+only one global instance for each conversion character - not one for each
+format string!
+</p>
+
+<h3>Example: LONG converter for <code>%Q</code></h3>
+<pre>
+#include "StreamFormatConverter.h"
+
+class MyConverter : public StreamFormatConverter
+{
+    int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
+    bool printLong(const StreamFormat&, StreamBuffer&, long);
+    int scanLong(const StreamFormat&, const char*, long&);
+};
+
+RegisterConverter(MyConverter,"Q");
+
+// ... (implementation)
+</pre>
+
+<a name="theory"></a>
+<h2>Theroy of Operation</h2>
+
+<a name="registration"></a>
+<h3>Registration </h3>
+<div class="indent"><code>
+RegisterConverter(<i>converterClass</i>, "<i>characters</i>");
+</code></div>
+<p>
+This macro registers the converter class for all given conversion
+characters. In most cases, you will give only one character.
+The macro must be called once for each class in the global file context.
+</p>
+<p>
+HINT: Do not branch depending on the conversion character.
+Provide multiple classes, that's more efficient.
+</p>
+
+<a name="parsing"></a>
+<h3>Parsing</h3>
+<div class="indent"><code>
+int parse (const&nbsp;StreamFormat&&nbsp;fmt, StreamBuffer&&nbsp;info,
+const&nbsp;char*&&nbsp;source, bool&nbsp;scanFormat);
+</code></div>
+<div class="indent"><code>
+struct&nbsp;StreamFormat {
+char&nbsp;conv;
+StreamFormatType&nbsp;type;
+unsigned&nbsp;char&nbsp;flags;
+short&nbsp;prec;
+unsigned&nbsp;short&nbsp;width;
+unsigned&nbsp;short&nbsp;infolen;
+const&nbsp;char*&nbsp;info;
+};
+</code></div>
+
+<p>
+During initialization, <code>parse()</code> is called whenever one of the
+conversion characters handled by your converter class is found in a protocol.
+The fields <code>fmt.conv</code>, <code>fmt.flags</code>,
+<code>fmt.prec</code>, and <code>fmt.width</code> have
+already been filled in. If a scan format is parsed, <code>scanFormat</code>
+is <code>true</code>. If a print format is parsed, <code>scanFormat</code>
+is <code>false</code>.
+</p>
+<p>
+The <code>fmt.flags</code> field is a bitset and can have any of the following
+flags set:
+</p>
+<ul>
+ <li><code>left_flag</code>: the format contained a <code>-</code>.
+   This is normaly used to indicate that the value should be printed
+   left-aligned.
+ </li>
+ <li><code>sign_flag</code>: the format contained a <code>+</code>.
+   This normaly requests to print a sign even for positive numbers.
+ </li>
+ <li><code>space_flag</code>: the format contained a '<code>&nbsp;</code>' (space).
+   This normaly requests to print a space instead of a sign for positive numbers.
+ </li>
+ <li><code>alt_flag</code>: the format contained a <code>#</code>.
+   This indicated the request to use an alternative format. For example in
+   <code>%#x</code> the hex number is preficed with <code>0x</code>.
+ </li>
+ <li><code>zero_flag</code>: the format contained a <code>0</code>.
+   This normaly requests to pad a numerical value with leading zeros
+   instead of leading spaces.
+ <li><code>skip_flag</code>: the format contained a <code>*</code>.
+   The value is parsed and checked but then discarded.
+</ul>
+<p>
+It is not necessary that these flags have exactly the same meaning in your
+formats, but a similar and intuitive meaning helpful for the user.
+</p>
+<p>
+There are two additional flags, <code>default_flag</code> indicating a
+<code>?</code> and <code>compare_flag</code> indicating a <code>=</code>
+int the format, that are handled internally by <em>StreamDevice</em> and
+are not of interest to the converter class.
+</p>
+<p>
+The <code>source</code> pointer points to the character of the format string
+just after the conversion character. You can parse additional characters if
+they belong to the format string handled by your class.
+Move the <code>source</code> pointer so that is points to the first character
+after your format string.
+This is done for example in the builtin formats
+<code>%[charset]</code> or <code>%{enum0|enum1}</code>.
+However, many formats don't need additional characters.
+
+</p>
+<h4>Example</h4>
+<pre>
+ source       source
+ before       after
+ parse()      parse()
+     |         |
+"%39[0-9a-zA-Z]constant text"
+    |
+ conversion
+ character
+</pre>
+
+<p>
+You can write any data you may need later in <code>print*()</code> or
+<code>scan*()</code> to the
+<a href="streambuffer.html"><i>Streambuffer</i></a> <code>info</code>.
+This will probably be necessary if you have parsed additional characters
+from the format string as in the above example<br>
+</p>
+<p>
+Return <code>long_format</code>, <em>double_format</em>,
+<em>string_format</em>, or <code>enum_format</code> depending on the
+datatype associated with the conversion character.
+It is not necessary to return the same value for print and for scan
+formats.
+You can even return different values depending on the format string,
+but I can't imagine why anyone should do that.
+</p>
+<p>
+If the format is not a real data conversion but does other things with
+the data (append or check a checksum, encode or decode the data,...),
+return <code>pseudo_format</code>.
+</p>
+<p>
+Return <code>false</code> if there is any parse error or if print or scan
+is requested but not supported by this conversion.
+</p>
+
+<a name="printing_scanning"></a>
+<h3>Printing and Scanning</h3>
+<p>
+Provide a <code>print[Long|Double|String|Pseudo]()</code> and/or
+<code>scan[Long|Double|String|Pseudo]()</code> method appropriate
+for the data type you have returned in the <code>parse()</code> method.
+That method is called whenever the conversion appears in an output or input,
+respectively.
+You only need to implement the flavour of print and/or scan suitable for
+the datatype returned by <code>parse()</code>.
+</p>
+<p>
+Now, <code>fmt.type</code> contains the value returned by <code>parse()</code>.
+With <code>fmt.info()</code> get access to the string you have written to
+<code>info</code> in <code>parse()</code> (null terminated).
+</p>
+<p>
+The length of the info string can be found in <code>fmt.infolen</code>.
+</p>
+<p>
+In <code>print*()</code>, append the converted value to <code>output</code>.
+Do not modify what is already in output (unless you really know what you're
+doing).
+Return <code>true</code> on success, <code>false</code> on failure.
+</p>
+<p>
+In <code>scan*()</code>, read the value from input and return the number of
+consumed bytes.
+In the string version, don't write more bytes than <code>maxlen</code>!
+If the <code>skip_flag</code> is set, you don't need to write to
+<code>value</code>, since the value will be discarded anyway. 
+Return <code>-1</code> on failure.
+</p>
 
 <hr>
-<p><small>Dirk Zimoch, 2006</small></p>
-<script src="stream.js" type="text/javascript"></script>
+<p><small>Dirk Zimoch, 2007</small></p>
 </body>
 </html>

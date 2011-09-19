@@ -3,12 +3,13 @@
 <html>
 <head>
 <title>StreamDevice: Protocol Files</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: Protocol Files</h1>
 <a name="gen"></a>
 <h2>1. General Information</h2>
@@ -241,8 +242,12 @@ that hex value.<br>
 that octal value.<br>
 <code>\1</code> to <code>\9</code> followed by up to two more decimal
 digits means a byte with that decimal value.<br>
-<code>\?</code> in the argument string of an <code>in</code>
-<a href="#cmd">command</a> matches any input byte<br>
+<code>\?</code> in input matches any byte, in output it does not print
+anything.<br>
+<span class="new">
+<code>\_</code> in input matches any amount of white space (including none),
+in output it prints a single space.<br>
+</span>
 <code>\$</code> followed by the name of a
 <a href="#var">protocol varible</a> is replaced by the contents of that
 variable.
@@ -251,29 +256,54 @@ variable.
 For non-printable characters, it is often easier to write sequences of
 byte values instead of escaped quoted string literals.
 A byte is written as an unquoted decimal, hexadecimal, or octal
-number in the range of -128 to 255 (-0x80 to 0xff, -0200 to 0377).
-<em>StreamDevice</em> also defines some symbolic names for frequently
-used byte codes as aliases for the numeric byte value:<br>
-<code>EOT</code> means <em>end of transmission</em> (ASCII code 4).<br>
-<code>ACK</code> means <em>acknowledge</em> (ASCII code 6).<br>
-<code>BEL</code> means <em>bell</em> (ASCII code 7).<br>
-<code>BS</code> means <em>backspace</em> (ASCII code 8).<br>
-<code>HT</code> or <code>TAB</code> mean <em>horizontal tabulator</em>
-(ASCII code 9).<br>
-<code>LF</code> or <code>NL</code> mean <em>line feed</em> /
-<em>new line</em> (ASCII code 10).<br>
-<code>CR</code> means <em>carriage return</em> (ASCII code 13).<br>
-<code>ESC</code> means <em>escape</em> (ASCII code 27).<br>
-<code>DEL</code> means <em>delete</em> (ASCII code 127).<br>
-<code>SKIP</code> in the argument string of an <code>in</code>
-<a href="#cmd">command</a> matches any input byte.
+number in the range of <code>-128</code> to <code>255</code>,
+<code>-0x80</code> to <code>0xff</code> (not case sesitive),
+or <code>-0200</code> to <code>0377</code>, respectively. 
+</p>
+<p>
+<em>StreamDevice</em> also recordgnizes the ASCII symbolic names
+(not case sensitive) for several byte codes:<br>
+<code>NUL </code>(= <code>0x00</code>) <em>null</em><br>
+<code>SOH </code>(= <code>0x01</code>) <em>start of heading</em><br>
+<code>STX </code>(= <code>0x02</code>) <em>start of text</em><br>
+<code>ETX </code>(= <code>0x03</code>) <em>end of text</em><br>
+<code>EOT </code>(= <code>0x04</code>) <em>end of transmission</em><br>
+<code>ENQ </code>(= <code>0x05</code>) <em>enquiry</em><br>
+<code>ACK </code>(= <code>0x06</code>) <em>acknowledge</em><br>
+<code>BEL </code>(= <code>0x07</code>) <em>bell</em><br>
+<code>BS&nbsp; </code>(= <code>0x08</code>) <em>backspace</em><br>
+<code>HT</code> or <code>TAB</code> (= <code>0x09</code>) <em>horizontal tabulator</em><br>
+<code>LF</code> or <code>NL</code> (= <code>0x0A</code> or <code>10</code>) <em>line feed / new line</em><br>
+<code>VT&nbsp; </code>(= <code>0x0B</code> or <code>11</code>) <em>vertical tabulator</em><br>
+<code>FF</code> or <code>NP</code> (= <code>0x0C</code> or <code>12</code>) <em>form feed / new page</em><br>
+<code>CR&nbsp; </code>(= <code>0x0D</code> or <code>13</code>) <em>carriage return</em><br>
+<code>SO&nbsp; </code>(= <code>0x0E</code> or <code>14</code>) <em>shift out</em><br>
+<code>SI&nbsp; </code>(= <code>0x0F</code> or <code>15</code>) <em>shift in</em><br>
+<code>DLE </code>(= <code>0x10</code> or <code>16</code>) <em>data link escape</em><br>
+<code>DC1 </code>(= <code>0x11</code> or <code>17</code>) <em>device control 1</em><br>
+<code>DC2 </code>(= <code>0x12</code> or <code>18</code>) <em>device control 2</em><br>
+<code>DC3 </code>(= <code>0x13</code> or <code>19</code>) <em>device control 3</em><br>
+<code>DC4 </code>(= <code>0x14</code> or <code>20</code>) <em>device control 4</em><br>
+<code>NAK </code>(= <code>0x15</code> or <code>21</code>) <em>negative acknowledge</em><br>
+<code>SYN </code>(= <code>0x16</code> or <code>22</code>) <em>synchronous idle</em><br>
+<code>ETB </code>(= <code>0x17</code> or <code>23</code>) <em>end of transmission block</em><br>
+<code>CAN </code>(= <code>0x18</code> or <code>24</code>) <em>cancel</em><br>
+<code>EM&nbsp; </code>(= <code>0x19</code> or <code>25</code>) <em>end of medium</em><br>
+<code>SUB </code>(= <code>0x1A</code> or <code>26</code>) <em></em>substitute<br>
+<code>ESC </code>(= <code>0x1B</code> or <code>27</code>) <em>escape</em><br>
+<code>FS&nbsp; </code>(= <code>0x1C</code> or <code>28</code>) <em>file separator</em><br>
+<code>GS&nbsp; </code>(= <code>0x1D</code> or <code>29</code>) <em>group separator</em><br>
+<code>RS&nbsp; </code>(= <code>0x1E</code> or <code>30</code>) <em>record separator</em><br>
+<code>US&nbsp; </code>(= <code>0x1F</code> or <code>31</code>) <em>unit separator</em><br>
+<code>DEL </code>(= <code>0x7F</code> or <code>127</code>) <em>delete</em><br>
+<code>SKIP</code> or <code>?</code> matches any input byte
 </p>
 <p>
 A single string can be built from several quoted literals and byte values
 by writing them separated by whitespaces or comma.
 </p>
 
-<h3>Example:</h3>
+<h3>Examples:</h3>
 <p>
 The following lines represent the same string:<br>
 <code>"Hello world\r\n"</code><br>
@@ -408,9 +438,12 @@ what they influence.
   (see <a href="formats.html">formats</a> and
   <a href="waveform.html">waveform record</a>), what string
   to write or to expect between values?
-  If the first character of the <code>Separator</code> is a
+  <span class="new">
+  <strike>If the first character of the <code>Separator</code> is a
   space, it matches any number of any whitespace characters in
-  an <code>in</code> command. 
+  an <code>in</code> command.</strike> To match arbitrary amount of
+  whitespace in input, use <code>"\_"</code>.
+  </span>
  </dd>
  <dt><code>ExtraInput = Error;</code></dt>
  <dd>
@@ -546,7 +579,6 @@ settings from the protocol in which the exception occurred.
 </p>
 <hr>
 <p align="right"><a href="formats.html">Next: Format Converters</a></p>
-<p><small>Dirk Zimoch, 2006</small></p>
-<script src="stream.js" type="text/javascript"></script>
+<p><small>Dirk Zimoch, 2011</small></p>
 </body>
 </html>

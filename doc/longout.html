@@ -3,12 +3,13 @@
 <html>
 <head>
 <title>StreamDevice: longout Records</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: longout Records</h1>
 
 <h2>Normal Operation</h2>
@@ -25,6 +26,8 @@ written or read value.
   <dd>
    <u>Output:</u> <code><i>x</i>=VAL</code><br>
    <u>Input:</u> <code>VAL=<i>x</i></code>
+   Using unsigned formats with values &ge; 0x800000 gives different results
+   on 64 bit machines.
   </dd>
  <dt>ENUM format (e.g. <code>%{</code>):</dt>
   <dd>
@@ -63,6 +66,5 @@ written or read value.
 <a href="scalcout.html">scalcout</a>
 </p>
 <p><small>Dirk Zimoch, 2005</small></p>
-<script src="stream.js" type="text/javascript"></script>
 </body>
 </html>

@@ -3,12 +3,13 @@
 <html>
 <head>
 <title>StreamDevice: ai Records</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: ai Records</h1>
 
 <h2>Normal Operation</h2>
@@ -38,6 +39,8 @@ written or read value.
    definition. <em>StreamDevice</em> does not set it. For example,
    <code>EOFF=-10</code> and <code>ESLO=0.000305180437934</code>
    (=20.0/0xFFFF) maps 0x0000 to -10.0, 0x7FFF to 0.0 and 0xFFFF to 10.0.
+   Using unsigned formats with values &ge; 0x800000 gives different results
+   on 64 bit machines.
   </dd>
  <dt>ENUM format (e.g. <code>%{</code>):</dt>
   <dd>
@@ -76,6 +79,5 @@ written or read value.
 <a href="scalcout.html">scalcout</a>
 </p>
 <p><small>Dirk Zimoch, 2005</small></p>
-<script src="stream.js" type="text/javascript"></script>
 </body>
 </html>

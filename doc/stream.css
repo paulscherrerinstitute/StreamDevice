@@ -1,13 +1,17 @@
-a:link    {color: #0000D0; text-decoration:none;}
-a:visited {color: #0000D0; text-decoration:none;}
-a:hover   {color: #FF0000; text-decoration:none;}
+a:link    {color: #0000D0;}
+a:visited {color: #0000D0;}
+a:hover   {color: #FF0000;}
 
 body {
-    margin-right:20px;
-    font-family:sans-serif;
+    margin-right:1em;
+    margin-left:15em;
+    margin-top:11ex;
+    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
     font-size:14px;
     background-color:#ffffff;
-}    
+}
+
+a[name] { position:relative; top:-11ex;}
 
 pre {
     background-color:#f4f4f4;
@@ -15,6 +19,10 @@ pre {
     border:1px solid #000000;
     white-space:pre;
     margin:2ex;
+}
+
+kbd {
+    font-weight:bold;
 }
 
 dt {
@@ -26,6 +34,22 @@ h1 {
     margin-top:0;
     font-style:italic;
     font-family:serif;
+    text-align:center;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    min-height:60px;
+    height: 4ex;
+    line-height:190%;
+    background-color:white;
+    border-top:6px solid #1b4486;
+    border-bottom:4px solid #1b4486;
+    white-space:nowrap;
+    background-image:url(PSI.gif);
+    background-repeat:no-repeat;
+    background-position:10px 2px;
+    text-shadow: .1em .1em .1em lightgray;           
 }
 
 h2 {
@@ -34,6 +58,11 @@ h2 {
 }
 
 h3 {
+    font-size:120%;
+    margin-bottom:0.25ex;
+}
+
+h4 {
     font-size:100%;
     margin-bottom:0.25ex;
 }
@@ -58,22 +87,41 @@ code {
     text-align:left;
 }
 
-/*
-  a[target=ex] {
-      background-image:url(ex.png);
-      background-repeat:no-repeat;
-      background-position:right center;
-      padding-right: 12px;
-  }
+#navleft {
+    position:fixed;
+    left:0;
+    top:0;
+    padding-top:9ex;
+    width:14em;
+    height:100%;
+    border-style:solid;
+    border-color:black;
+    border-width:0 1px 0 0;
+    background-color:#e3eaf6;
+    overflow:hidden;
+    z-index:0;
+}
 
-  a[target=ex]:hover {
-      background-image:url(exr.png);
-  }
-*/
+.new {
+    background-color: #ffc;
+}
+
+a[target=ex]:after {
+  content:" " url(ex.png);
+}
+
+a[target=ex]:hover:after {
+  content: " " url(exr.png);
+}
 
 @media print {
   a:link    {color: black; text-decoration:none;}
   a:visited {color: black; text-decoration:none;}
   a:hover   {color: black; text-decoration:none;}
+  a[target=ex] {text-decoration:underline;}
+  a[target=ex]:after {content:" [" attr(href) "]";}
   code      {color: black; }
+  body      {margin-left:10px;}
+  h1        {position:absolute;}
+  #navleft  {display:none;}
 }

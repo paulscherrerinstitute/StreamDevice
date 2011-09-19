@@ -3,79 +3,159 @@
 <html>
 <head>
 <title>StreamDevice: Setup</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: Setup</h1>
 
 <a name="pre"></a>
 <h2>1. Prerequisites</h2>
 <p>
-<em>StreamDevice</em> requires either 
+<em>StreamDevice</em> requires either
 <a href="http://www.aps.anl.gov/epics/base/R3-14/index.php"
 target="ex">EPICS base R3.14.6 or higher</a> or
 <a href="http://www.aps.anl.gov/epics/base/R3-13.php"
 target="ex">EPICS base R3.13.7 or higher</a>.
 How to use <em>StreamDevice</em> on EPICS R3.13 is described on a
 <a href="epics3_13.html">separate page</a>.
-Because <em>StreamDevice</em> comes with an interface to
-<a href="http://www.aps.anl.gov/epics/modules/soft/asyn/"
-target="ex"><em>asynDriver</em> version R4-3 or higher</a> as the
-underlying driver layer,
-you should have <em>asynDriver</em> installed first.
 </p>
-<p>
-<em>StreamDevice</em> has support for the
-<a href="scalcout.html"><em>scalcout</em></a> record from the
-<em>calc</em> module of <a target="ex"
-href="http://www.aps.anl.gov/aod/bcda/synApps/index.php"
-><em>synApps</em></a>.
-Up to <em>calc</em> release R2-6 (<em>synApps</em> release R5_1),
-the <em>scalcout</em> record needs a fix.
-(See separate <a href="scalcout.html"><em>scalcout</em> page</a>.)
-Support for the scalcout is optional. <em>StreamDevice</em> works
-as well without scalcout or SynApps.
-</p>
+<h3>Fix required for base R3.14.8.2 and earlier on Windows</h3>
 <p>
 Up to release R3.14.8.2, a fix in EPICS base is required to build
 <em>StreamDevice</em> on Windows (not cygwin).
-In <kbd>src/iocsh/iocsh.h</kbd>, add the following line
+Add the following line to <kbd>src/iocsh/iocsh.h</kbd>
 and rebuild base.
 </p>
 <pre>
 epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 </pre>
 
+<h3>Configuration</h3>
 <p>
-Make sure that the <em>asyn</em> library (and the <em>calc</em> module of
-<em>synApps</em>, if desired) can be found, e.g. by
-adding <code>ASYN</code>
-and (if installed) <code>CALC</code> or <code>SYNAPPS</code>
-to your <kbd>&lt;top&gt;/configure/RELEASE</kbd> file:
+<em>StreamDevice</em> does not come with its own <kbd>&lt;top&gt;</kbd>
+location and <kbd>&lt;top&gt;/configure</kbd> directory.
+It expects to be put into an already existing <kbd>&lt;top&gt;</kbd>
+directory structure.
+You can simply create one with <code>makeBaseApp.pl</code>
+(which is part of EPICS base):
 </p>
+<p>
+<code>mkdir top</code><br>
+<code>cd top</code><br>
+<code>makeBaseApp.pl -t support</code>
+</p>
+<p>
+When asked for "Application names" just hit Enter.
+Then go to the newly created <kbd>configure</kbd> subdirectory and
+edit the <kbd>RELEASE</kbd> file you find there according to the
+instructions below.
+</p>
+<p>
+After changing any configuration, you should run <code>make</code>
+in this directory.
+</p>
+<p>
+For details on <kbd>&lt;top&gt;</kbd> directories and <kbd>RELEASE</kbd>
+files please refer to the
+<a href="http://www.aps.anl.gov/epics/base/R3-14/8-docs/AppDevGuide.pdf"
+target="ex"><em>IOC Application Developer's Guide</em></a> chapter 4:
+EPICS Build Facility.
+</p>
+
+<h4>Support for <em>asynDriver</em></h4>
+<p>
+You most probably want <em>asynDriver</em> support included, because that is the
+standard way for <em>StreamDevice</em> to talk to hardware.
+First get and install <a href="http://www.aps.anl.gov/epics/modules/soft/asyn/"
+target="ex"><em>asynDriver</em></a> version 4-3 or higher before you build <em>StreamDevice</em>.
+I have tested <em>StreamDevice</em> with <em>asynDriver</em> versions up to 4-17.
+Make sure that the <em>asyn</em> library can be found by adding the path to the
+<em>&lt;top&gt;</em> directory of your <em>asyn</em> installation to the
+<kbd>RELEASE</kbd> file:
 <pre>
-ASYN=/home/epics/asyn/4-5
-CALC=/home/epics/synApps/calc/2-7
+ASYN=/home/epics/asyn4-17
+</pre>
+
+<h4>Support for sCalcout record</h4>
+<p>
+The <a target="ex"
+href="http://www.aps.anl.gov/bcda/synApps/calc/R2-8/sCalcoutRecord.html"
+><em>sCalcout</em></a> record is part of <a target="ex"
+href="http://www.aps.anl.gov/aod/bcda/synApps/index.php"
+><em>synApps</em></a>.
+If <em>streamDevice</em> should be built with support for this record,
+you have to install the <em>calc</em> module from <em>SynApps</em> first.
+Add references to the <kbd>RELEASE</kbd> file as shown here:
+<pre>
+CALC=/home/epics/synApps/calc-2-8
 </pre>
 <p>
+Up to <em>calc</em> release R2-6 (<em>synApps</em> release R5_1),
+the <em>sCalcout</em> record needs a fix.
+(See separate <a href="scalcout.html"><em>scalcout</em> page</a>.)
+And the <em>calc</em> modue had dependencies on other <em>SynApps</em>
+modules. Release R2-8 or newer is recommended.
+</p>
+<p>
+Support for the scalcout is optional. <em>StreamDevice</em> works
+as well without scalcout or SynApps.
+</p>
+
+<h4>Support for regular expression matching</h4>
+<p>
 If you want to enable regular expression matching, you need the <em>PCRE</em> package.
-For most Linux systems, it is already installed. In that case add the locations
-of the <em>PCRE</em> header and library to your <kbd>RELEASE</kbd> file:
+For most Linux systems, it is already installed.
+In that case add the locations you have to make the locations of the
+<em>PCRE</em> header file and library known.
+However, the pre-installed package can only by used for the host architecture.
+Thus, add them not to <kbd>RELEASE</kbd> but to <kbd>RELEASE.Common.linux-x86</kbd>
+(if linux-x86 is your EPICS_HOST_ARCH).
+Note that different Linux distributions may locate the files in different directories.
 </p>
 <pre>
 PCRE_INCLUDE=/usr/include/pcre
 PCRE_LIB=/usr/lib
 </pre>
 <p>
-If you want to build <em>StreamDevice</em> for platforms without <em>PCRE</em> support,
-it is the easiest to build <em>PCRE</em> as an EPICS application.
-Download the <em>PCRE</em> package from <a target=ex href="http://www.pcre.org">www.pcre.org</a>
-and compile it with my EPICS compatible
-<a target=ex href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>.
-Then define the location of the application in your RELEASE file.
+A pre-compiled Windows version of <em>PCRE</em> is available at
+<a href="http://sourceforge.net/projects/gnuwin32/files/pcre/7.0/pcre-7.0.exe/download"
+target="ex">sourceforge</a>
+</p>
+<p>
+If you want to have <em>PCRE</em> support on platforms that don't support it natively,
+e.g. vxWorks, it is probably the easiest to build <em>PCRE</em> as an EPICS application.
+</p>
+<p>
+<h4>Building the <em>PCRE</em> package as an EPICS module</h4>
+<p>
+<ol>
+<li>
+Download the <em>PCRE</em> package from <a target=ex href="http://www.pcre.org">www.pcre.org</a>.
+</li>
+<li>
+Extract the <em>PCRE</em> package in the <kbd>&lt;top&gt;</kbd> directory of
+<em>StreamDevice</em> or create a separate <kbd>&lt;top&gt;</kbd> location using
+<code>makeBaseApp.pl</code>.
+</li>
+<li>
+Download this <a target=ex href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile"
+>Makefile</a> and this
+<a target=ex href="http://epics.web.psi.ch/software/streamdevice/pcre/fixforvxworks.pl"
+>fixforvxworks.pl</a> script and save them to the extracted pcre directory.
+</li>
+<li>
+Change into the pcre direcrory and run <code>perl fixforvxworks.pl</code>
+</li>
+<li>
+Run <code>make</code> (or <code>gmake</code>)
+</li>
+</ol>
+<p>
+Define the location of the pcre <kbd>&lt;top&gt;</kbd> in the RELEASE file for <em>StreamDevice</em>.
 </p>
 <pre>
 PCRE=/home/epics/pcre
@@ -84,25 +164,17 @@ PCRE=/home/epics/pcre
 Regular expressions are optional. If you don't want them, you don't need this.
 </p>
 
-<p>
-For details on <kbd>&lt;top&gt;</kbd> directories and RELEASE files,
-please refer to the
-<a href="http://www.aps.anl.gov/epics/base/R3-14/8-docs/AppDevGuide.pdf"
-target="ex"><em>IOC Application Developer's Guide</em></a> chapter 4:
-EPICS Build Facility.
-</p>
-
 <a name="lib"></a>
 <h2>2. Build the <em>StreamDevice</em> Library</h2>
 <p>
 Unpack the
 <a href="http://epics.web.psi.ch/software/streamdevice/StreamDevice-2.tgz"
-><em>StreamDevice</em> package</a> in a <kbd>&lt;top&gt;</kbd> directory
+><em>StreamDevice</em> package</a> in the <kbd>&lt;top&gt;</kbd> directory
 of your application build area.
 (You might probably have done this already.)
 Go to the newly created <em>StreamDevice</em> directory
-and run <kbd>make</kbd> (or <kbd>gmake</kbd>).
-This will create and install the <em>stream</em> library and the 
+and run <code>make</code> (or <code>gmake</code>).
+This will create and install the <em>stream</em> library and the
 <kbd>stream.dbd</kbd> file.
 </p>
 <a name="app"></a>
@@ -121,7 +193,8 @@ PROD_LIBS += asyn
 </pre>
 <p>
 Include the following lines in your xxxAppInclude.dbd file to use
-<em>stream</em> and <em>asyn</em> with serial lines and IP sockets:
+<em>stream</em> and <em>asyn</em> with serial lines, IP sockets,
+and vxi11 ("GPIB over ethernet") support.
 </p>
 <pre>
 include "base.dbd"
@@ -129,6 +202,7 @@ include "stream.dbd"
 include "asyn.dbd"
 registrar(drvAsynIPPortRegisterCommands)
 registrar(drvAsynSerialPortRegisterCommands)
+registrar(vxi11RegisterCommands)
 </pre>
 <p>
 You can find an example application in the <kbd>streamApp</kbd>
@@ -151,7 +225,7 @@ i.e. the current directory.
 <p>
 Also configure the buses (in <em>asynDriver</em> terms: ports) you want
 to use with <em>StreamDevice</em>.
-You can give the buses any name you want, like <kbd>COM1</kbd> or 
+You can give the buses any name you want, like <kbd>COM1</kbd> or
 <kbd>socket</kbd>, but I recommend to use names related to the
 connected device.
 </p>
@@ -189,7 +263,7 @@ drvAsynIPPortConfigure ("PS1", "192.168.164.10:23")
 </pre>
 
 <p>
-With a VXI11 (GPIB via TCP/IP) connection, e.g. a 
+With a VXI11 (GPIB via TCP/IP) connection, e.g. a
 HP E2050A on IP address 192.168.164.10, it would look like this:
 </p>
 <pre>
@@ -211,7 +285,7 @@ During <code>iocInit</code>, <em>streamDevice</em> loads and parses
 the required protocol files.
 If the files contain errors, they are printed on the IOC shell.
 Put the protocol file in one of the directories listed in
-<code>STREAM_PROTOCOL_PATH</code>. 
+<code>STREAM_PROTOCOL_PATH</code>.
 </p>
 <h3>Example:</h3>
 <p>
@@ -234,7 +308,7 @@ Terminator = CR LF;
 
 setCurrent {
     out "CURRENT %.2f";
-    @init { 
+    @init {
         out "CURRENT?";
         in "CURRENT %f A";
     }
@@ -270,19 +344,24 @@ See the <a href="protocol.html">next chapter</a> for protocol files in depth.
 <p>
 To make a record use <em>StreamDevice</em>, set its <code>DTYP</code> field to
 <code>"stream"</code>.
+</p>
+<p>
 The <code>INP</code> or <code>OUT</code> link has the form
 <code>"@<var>file&nbsp;protocol&nbsp;bus</var>&nbsp;[<var>address</var>&nbsp;[<var>parameters</var>]]"</code>.
 </p>
 <p>
 Here, <code><var>file</var></code> is the name of the protocol file and
 <code><var>protocol</var></code> is the name of a protocol defined in this file.
+(See the <a href="protocol.html">next chapter</a>.)
+</p>
+<p>
 If the protocol requires <a href="protocol.html#argvar">arguments</a>,
 specify them enclosed in parentheses:
 <code><var>protocol</var>(<var>arg1,arg2,...</var>)</code>.
 </p>
 <p>
-The communication channel is specified with <code><var>bus</var></code> and
-<code><var>addr</var></code>.
+The communication channel is specified with <code><var>bus</var></code>
+(aka <em>asynDriver</em> "port") and <code><var>addr</var></code>.
 If the bus does not have addresses, <code><var>addr</var></code> is dispensable.
 Optional <code><var>parameters</var></code> are passed to the bus driver.
 </p>
@@ -298,8 +377,8 @@ The bus is called <em>PS1</em> like the device.
 record (ao, "PS1:I-set")
 {
     field (DESC, "Set current of PS1")
-    field (DTYP, "stream")
-    field (OUT,  "@ExamplePS.proto setCurrent PS1")
+    <b>field (DTYP, "stream")</b>
+    <b>field (OUT,  "@ExamplePS.proto setCurrent PS1")</b>
     field (EGU,  "A")
     field (PREC, "2")
     field (DRVL, "0")
@@ -311,7 +390,6 @@ record (ao, "PS1:I-set")
 
 <hr>
 <p align="right"><a href="protocol.html">Next: Protocol Files</a></p>
-<p><small>Dirk Zimoch, 2007</small></p>
-<script src="stream.js" type="text/javascript"></script>
+<p><small>Dirk Zimoch, 2011</small></p>
 </body>
 </html>

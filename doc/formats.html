@@ -3,12 +3,13 @@
 <html>
 <head>
 <title>StreamDevice: Format Converters</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
 <body>
+<iframe src="nav.html" id="navleft"></iframe>
 <h1>StreamDevice: Format Converters</h1>
 
 <a name="syntax"></a>
@@ -27,8 +28,8 @@ A format converter consists of
 </p>
 <ul>
  <li>The <code>%</code> character</li>
- <li>Optionally a field name in <code>()</code></li>
- <li>Optionally flags out of the characters <code>*# +0-</code></li>
+ <li>Optionally a field <span class="new">or record</span> name in <code>()</code></li>
+ <li>Optionally flags out of the characters <code>*# +0-<span class="new">?=</span></code></li>
  <li>Optionally an integer <em>width</em> field</li>
  <li>Optionally a period character (<code>.</code>) followed
      by an integer <em>precision</em> field (input ony for most formats)</li>
@@ -36,6 +37,11 @@ A format converter consists of
  <li>Additional information required by some converters</li>
 </ul>
 
+<p>
+The flags <code>*# +0-</code> work like in the C functions
+<em>printf()</em> and <em>scanf()</em>.
+The flags <code>?</code> and <code>=</code> are extensions.
+</p>
 <p>
 The <code>*</code> flag skips data in input formats.
 Input is consumed and parsed, a mismatch is an error, but the read
@@ -61,6 +67,16 @@ The <code>0</code> flag says that numbers should be left padded with
 The <code>-</code> flag specifies that output is left justified if
 <em>width</em> is larger than required.
 </p>
+<p class="new">
+The <code>?</code> flag makes failing input conversions succeed with
+a default zero value (0, 0.0, or "", depending on the format type).
+</p>
+<p class="new">
+The <code>=</code> flag allows to compare input with current values.
+It is only allowed in input formats.
+Instead of reading a new value from input, the current value is
+formatted (like for output) and then compared to the input.
+</p>
 
 <h3>Examples:</h3>
 <table>
@@ -83,6 +99,14 @@ The <code>-</code> flag specifies that output is left justified if
  <tr>
   <td><code>in "%*i";</code></td>
   <td>skipped integer number</td>
+ </tr>
+ <tr>
+  <td><code>in "%?d";</code></td>
+  <td>decimal number or nothing (read as 0)</td>
+ </tr>
+ <tr>
+  <td><code>in "%=.3f";</code></td>
+  <td>compare input to the current value formatted as a float with precision 3</td>
  </tr>
 </table>
 
@@ -108,18 +132,24 @@ Thus, data type modifiers like <code>l</code> or <code>h</code> do not
 exist in <em>StreamDevice</em> formats.
 </p>
 
-<h3>Accessing record fields directly</h3>
+<h3>Redirection</h3>
 <p>
 To use other fields of the record or even fields of other records on the
 same IOC for the conversion, write the field name in parentheses directly
 after the <code>%</code>.
 For example <code>out&nbsp;"%(EGU)s";</code> outputs the <code>EGU</code>
 field formatted as a string.
-Use <code>in&nbsp;"%(<i>otherrecord</i>.VAL)f";</code> to write the floating
-point input value into the <code>VAL</code> field of
-<code><i>otherrecord</i></code>.
-(You can't skip <code>.VAL</code> here.)
-This is very useful when one line of input contains many values that should
+Use <code>in&nbsp;"%(<i>otherrecord</i>.RVAL)f";</code> to write the floating
+point input value into the <code>RVAL</code> field of
+<code><i>otherrecord</i></code>. 
+<span class="new">
+If no field is given for an other record .VAL is assumed.
+When a record name conflicts with a field name use .VAL explicitly.
+</span>
+
+</p>
+<p>
+This feature is very useful when one line of input contains many values that should
 be distributed to many records.
 If <code><i>otherrecord</i></code> is passive and the field has the PP
 attribute (see
@@ -129,6 +159,8 @@ It is your responsibility that the data type of the record field is
 compatible to the the data type of the converter.
 Note that using this syntax is by far not as efficient as using the
 default field.
+At the moment it is not possible to set <code>otherrecord</code> to an alarm
+state when anything fails.
 </p>
 
 <h3>Pseudo-converters</h3>
@@ -144,31 +176,42 @@ No data type corresponds to those <em>pseudo-converters</em> and the
 <h2>3. Standard DOUBLE Converters (<code>%f</code>, <code>%e</code>,
 <code>%E</code>, <code>%g</code>, <code>%G</code>)</h2>
 <p>
-In output, <code>%f</code> prints fixed point, <code>%e</code> prints
+<b>Output:</b> <code>%f</code> prints fixed point, <code>%e</code> prints
 exponential notation and <code>%g</code> prints either fixed point or
 exponential depending on the magnitude of the value.
 <code>%E</code> and <code>%G</code> use <code>E</code> instead of
 <code>e</code> to separate the exponent.
+</p>
+<p>
 With the <code>#</code> flag, output always contains a period character.
 </p>
 <p>
-In input, all these formats are equivalent.
-Leading whitespaces are skipped.
+<b>Input:</b> All these formats are equivalent. Leading whitespaces are skipped.
+</p>
+<p class="new">
+With the <code>#</code> flag additional whitespace between sign and number
+is accepted.
+</p>
+<p class="new">
+When a maximum field width is given, leading whitespace only counts to the
+field witdth when the space flag is given.
 </p>
 
 <a name="stdl"></a>
 <h2>4. Standard LONG Converters (<code>%d</code>, <code>%i</code>,
 <code>%u</code>, <code>%o</code>, <code>%x</code>, <code>%X</code>)</h2>
 <p>
-In output, <code>%d</code> and <code>%i</code> print signed decimal,
+<b>Output</b>: <code>%d</code> and <code>%i</code> print signed decimal,
 <code>%u</code> unsigned decimal, <code>%o</code> unsigned octal, and
 <code>%x</code> or <code>%X</code> unsigned hexadecimal.
 <code>%X</code> uses upper case letters.
+</p>
+<p>
 With the <code>#</code> flag, octal values are prefixed with <code>0</code>
 and hexadecimal values with <code>0x</code> or <code>0X</code>.
 </p>
 <p>
-In input, <code>%d</code> matches signed decimal, <code>%u</code> matches
+<b>Input:</b> <code>%d</code> matches signed decimal, <code>%u</code> matches
 unsigned decimal, <code>%o</code> unsigned octal.
 <code>%x</code> and <code>%X</code> both match upper or lower case unsigned
 hexadecimal.
@@ -177,23 +220,40 @@ Octal and hexadecimal values can optionally be prefixed.
 hexadecimal notation.
 Leading whitespaces are skipped.
 </p>
+<p class="new">
+With the <code>-</code> negative octal and hexadecimal values are accepted. 
+</p>
+<p class="new">
+With the <code>#</code> flag additional whitespace between sign and number
+is accepted.
+</p>
+<p class="new">
+When a maximum field width is given, leading whitespace only counts to the
+field witdth when the space flag is given.
+</p>
 
 <a name="stds"></a>
 <h2>5. Standard STRING Converters (<code>%s</code>, <code>%c</code>)</h2>
 <p>
-In output, <code>%s</code> prints a string.
+<b>Output:</b> <code>%s</code> prints a string.
 If <em>precision</em> is specified, this is the maximum string length.
 <code>%c</code> is a LONG format in output, printing one character!
 </p>
 <p>
-In input, <code>%s</code> matches a sequence of non-whitespace characters
-and <code>%c</code> a sequence of not-null characters.
+<b>Input:</b> <code>%s</code> matches a sequence of non-whitespace characters
+and <code>%c</code> matches a sequence of not-null characters.
 The maximum string length is given by <em>width</em>.
 The default <em>width</em> is infinite for <code>%s</code> and
 1 for <code>%c</code>.
-Leading whitespaces are skipped with <code>%s</code> but not with
-<code>%c</code>.
-The empty string matches. 
+Leading whitespaces are skipped with <code>%s</code> 
+<span class="new">
+except when the space flag is given</span>
+but not with <code>%c</code>.
+The empty string matches.
+</p>
+<p class="new">
+With the <code>#</code> flag <code>%s</code> matches a sequence of not-null
+characters instead of non-whitespace characters.
 </p>
 
 <a name="cset"></a>
@@ -217,12 +277,22 @@ to <code>z</code>.
 This format maps an unsigned integer value on a set of strings.
 The value 0 corresponds to <em>string0</em> and so on.
 The strings are separated by <code>|</code>.
-If one of the strings contains <code>|</code> or <code>}</code>,
-a <code>\</code> must be used to escape the character.
 </p>
 <p>
 Example: <code>%{OFF|STANDBY|ON}</code> mapps the string <code>OFF</code>
 to the value 0, <code>STANDBY</code> to 1 and <code>ON</code> to 2.
+</p>
+<p>
+When using the <code>#</code> flag it is allowed to assign integer values
+to the strings using <code>=</code>.
+</p>
+<p>
+Example: <code>%#{neg=-1|stop=0|pos=1|fast=10}</code>.
+</p>
+<p>
+If one of the strings contains <code>|</code> or <code>}</code>
+(or <code>=</code>  if the <code>#</code> flag is used)
+a <code>\</code> must be used to escape the character.
 </p>
 <p>
 In output, depending on the value, one of the strings is printed.
@@ -248,12 +318,11 @@ Examples: <code>%B.!</code> or <code>%B\x00\xff</code>.
 <code>%B01</code> is equivalent to <code>%b</code>.
 </p>
 <p>
-If in output <em>width</em> is larger than the number of significant bits,
+In output, if <em>width</em> is larger than the number of significant bits,
 then the flag <code>0</code> means that the value should be padded with
 with the chosen zero character instead of spaces.
 If <em>precision</em> is set, it means the number of significant bits.
 Otherwise, the highest 1 bit defines the number of significant bits. 
-There is no alternate format when <code>#</code> is used.
 </p>
 <p>
 In input, leading spaces are skipped.
@@ -275,11 +344,9 @@ endian</em>, i.e. least significant byte first.
 With the <code>0</code> flag, the value is unsigned, otherwise signed.
 </p>
 <p>
-In output, the <em>width</em> least significant bytes of the value
-are written.
-If <em>width</em> is larger than the size of a <code>long</code>,
-the value is sign extended or zero extended, depending on the
-<code>0</code> flag.
+In output, the <em>prec</em> (or sizeof(long) whatever is less) least
+significant bytes of the value are sign extended or zero extended
+(depending on the <code>0</code> flag) to <em>width</em> bytes.
 </p>
 <p>
 In input, <em>width</em> bytes are read and put into the value.
@@ -289,9 +356,25 @@ If <em>width</em> is smaller than the size of a <code>long</code>,
 the value is sign extended or zero extended, depending on the
 <code>0</code> flag.
 </p>
+<p>
+Example: <code>out "%.2r"</code>
+</p>
+
+<a name="rawdouble"></a>
+<h2>10. Raw DOUBLE Converter (<code>%R</code>)</h2>
+<p>
+The raw converter does not really "convert".
+A float or double value is written or read in the internal
+(maybe IEEE) representation of the computer.
+The normal byte order is <em>big endian</em>, i.e. most significant byte
+first.
+With the <code>#</code> flag, the byte order is changed to <em>little
+endian</em>, i.e. least significant byte first.
+The <em>width</em> must be 4 (float) or 8 (double). The default is 4.
+</p>
 
 <a name="bcd"></a>
-<h2>10. Packed BCD (Binary Coded Decimal) LONG Converter (<code>%D</code>)</h2>
+<h2>11. Packed BCD (Binary Coded Decimal) LONG Converter (<code>%D</code>)</h2>
 <p>
 Packed BCD is a format where each byte contains two binary coded
 decimal digits (<code>0</code> ... <code>9</code>).
@@ -320,7 +403,7 @@ than 9.
 </p>
 
 <a name="chksum"></a>
-<h2>11. Checksum Pseudo-Converter (<code>%&lt;<em>checksum</em>&gt;</code>)</h2>
+<h2>12. Checksum Pseudo-Converter (<code>%&lt;<em>checksum</em>&gt;</code>)</h2>
 <p>
 This is not a normal "converter", because no user data is converted.
 Instead, a checksum is calculated from the input or output.
@@ -399,6 +482,9 @@ In input, the next byte or bytes must match the checksum.
    href="http://www.joegeluso.com/software/articles/ccitt.htm">correct?</a>)
    implementation of the CCITT standard 16 bit crc checksum with augment.
    (poly=0x1021, init=0x1D0F, xorout=0x0000).</dd>
+ <dt><code>%&lt;ccitt16x&gt;</code> or <code>%&lt;crc16c&gt;</code> or <code>%&lt;xmodem&gt;</code></dt>
+  <dd>Two bytes. The XMODEM checksum.
+   (poly=0x1021, init=0x0000, xorout=0x0000).</dd>
  <dt><code>%&lt;crc32&gt;</code></dt>
   <dd>Four bytes. The standard 32 bit crc checksum.
    (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
@@ -450,7 +536,7 @@ If <em>prec</em> is given, it specifies the sub-expression whose match
 is retuned.
 Otherwise the complete match is returned.
 In any case, the complete match is consumed from the input buffer.
-If the expression contains a <code>/</code> is must be escaped.
+If the expression contains a <code>/</code> it must be escaped.
 </p>
 <p>
 Example: <code>%.1/&lt;title&gt;(.*)&lt;\/title&gt;/</code> returns
@@ -458,23 +544,82 @@ the title of an HTML page, skipps anything before the
 <code>&lt;title&gt</code> tag and leaves anything after the
 <code>&lt;/title&gt;</code> tag in the input buffer.
 </p>
-<a name="exp"></a>
-<h2>13. Exponential DOUBLE converter (<code>%m</code>)</h2>
+<a name="mantexp"></a>
+<h2>13. MantissaExponent DOUBLE converter (<code>%m</code>)</h2>
 <p>
-This experimental input-only format matches numbers in the format
-<i>[sign] mantissa sign exponent<i>, e.g <code>+123-4</code> meaning
-123e-4 or 0.0123. Mantissa and exponent are integers. The sign of the
-mantissa is optional. Compared to the standard <code>%e</code> format,
-this format does not contain the characters <code>.</code> and <code>e</code>.
+This exotic and experimental format matches numbers in the format
+<i>[sign] mantissa sign exponent</i>, e.g <code>+123-4</code> meaning
+123e-4 or 0.0123. Mantissa and exponent are decimal integers.
+The sign of the mantissa is optional.
+Compared to the standard <code>%e</code> format, this format does not
+contain the characters <code>.</code> and <code>e</code>.
 </p>
 <p>
 Output formatting is ambigous (e.g. <code>123-4</code> versus
-<code>1230-5</code>). Until it has been specified how to handle this,
-output is not supported.
+<code>1230-5</code>). I chose the following convention:
+Format <em>precision</em> defines number of digits in mantissa.
+No leading '0' in mantissa (except for 0.0 of course).
+Number of digits in exponent is at least 2.
+Format flags <code>+</code>, <code>-</code>, and space are supported in
+the usual way (always sign, left justified, space instead of + sign).
+Flags <code>#</code> and <code>0</code> are unsupported.
 </p>
+<div class="new">
+<a name="timestamp"></a>
+<h2>14. Timestamp DOUBLE converter (<code>%T(<em>timeformat</em>)</code>)</h2>
+<p>
+This format reads or writes timestamps and converts them to a double number.
+The value represents the number of seconds since 1970 (the UNIX epoch).
+The precision of a double is large enough for microseconds (but not for
+nanoseconds). This format is probably used best in combination with a
+redirection to the <code>TIME</code> field. In this case, the value is
+converted to EPICS timestamps (seconds since 1990 and nanoseconds).
+The timestamp format understands the usual converters that the C function
+<em>strftime()</em> understands. In addition, fractions of a second can
+be specified and the time zone can be set in the format string.
+</p>
+<p>
+Example: <code>%(TIME)T(%d %b %Y %H:%M:%.3S %z)</code> may print something like
+<code> 3 Sep 2010 15:45:59 +0200</code>.
+</p>
+<p>
+Fractions of a second can be specified as <code>%.<em>n</em>S</code>
+(seconds with <em>n</em> fractional digits), as <code>%0<em>n</em>f</code>
+or <code>%<em>n</em>f</code> (<em>n</em> fractional digits) or as
+<code>%N</code> (nanoseconds).
+In input, <em>n</em> is the maximum number of digits parsed, there may be
+actually less digits in the input.
+If <em>n</em> is not specified (<code>%.S</code> or <code>%f</code>) it uses
+a default value of 6.
+</p>
+<p>
+In input, the time zone can be specified in the format like
+<code>%+<em>hhmm</em></code> or <code>%-<em>hhmm</em></code> for cases
+where the parsed time stamp does not specify the time zone, where
+<em>hhmm</em> is a 4 digit number specifying the offset in hours and minutes.
+</p>
+<p>
+In output, the system function <em>strftime()</em> is used to format the time.
+There may be differences in the implementation between operating systems.
+</p>
+<p>
+In input, <em>StreamDevice</em> used its own implementation because many
+systems are missing the <em>strptime()</em> function and additional formats
+are supported.
+</p>
+<p>
+Day of the week can be parsed but is ignored because the information is
+redundant when used together with day, month and year and more or less
+useless otherwise. No check is done for consistency.
+</p>
+<p>
+Because of the complexity of the problem, locales are not supported.
+Thus, only the English month names can be used (week day names are
+ignored anyway).
+</p>
+</div>
 <hr>
 <p align="right"><a href="processing.html">Next: Record Processing</a></p>
-<p><small>Dirk Zimoch, 2007</small></p>
-<script src="stream.js" type="text/javascript"></script>
+<p><small>Dirk Zimoch, 2011</small></p>
 </body>
 </html>

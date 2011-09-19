@@ -1,20 +1,116 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"
-   "http://www.w3.org/TR/html4/frameset.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>StreamDevice Documentation</title>
-<link rel="shortcut icon" href="sls_icon.ico">
+<title>StreamDevice</title>
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="stylesheet" type="text/css" href="stream.css">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <meta name="author" content="Dirk Zimoch">
 </head>
-<frameset rows="80,*" framespacing=0 frameborder=0 border=0>
-  <frame src="head.html" name="head" scrolling="no" noresize> 
-  <frameset cols="180,*" >
-    <frame src="nav.html" name="nav" noresize> 
-    <frame src="stream.html" name="text"> 
-  </frameset>
-  <noframes>
-    <a href="stream.html">Click here for no-frames version.</a>
-  </noframes>
-</frameset>
+<body>
+<iframe src="nav.html" id="navleft"></iframe>
+<h1>EPICS <em>StreamDevice</em></h1>
+
+<h2>What is <em>StreamDevice</em>?</h2>
+<p>
+<em>StreamDevice</em> is a generic
+<a href="http://www.aps.anl.gov/epics" target="ex">EPICS</a>
+device support for devices with a "byte stream" based
+communication interface.
+That means devices that can be controlled by sending and
+receiving strings (in the broadest sense, including non-printable
+characters and even null-bytes). 
+Examples for this type of communication interface are
+serial line (RS-232, RS-485, ...),
+IEEE-488 (also known as GPIB or HP-IB), and telnet-like TCP/IP.
+</p>
+<p>
+<em>StreamDevice</em> is not limited to a specific device type or
+manufacturer nor is it necessary to re-compile anything to support a
+new device type.
+Instead, it can be configured for any device type with
+<a href="protocol.html"><em>protocol files</em></a> in plain ASCII text
+which describes the commands a device understands and the replies it sends.
+If the device can be controlled with strings like
+"<kbd>RF:FREQ 499.655 MHZ</kbd>" <em>StreamDevice</em> can be used.
+Formatting and parsing of values is done with
+<a href="formats.html"><em>format converters</em></a> similar to those
+known from the C functions <em>printf()</em> and <em>scanf()</em>.
+To support other formats, it is possible to
+<a href="formatconverter.html">write your own converters</a>.
+</p>
+<p>
+Each record with <em>StreamDevice</em> support runs one protocol
+from the protocol file to read or write its value.
+Protocols can be as simple as just one output string or can
+consist of many strings sent to and read from the device.
+However, a protocol is linear.
+That means it runs from start to end each time the record is
+<a href="processing.html">processed</a>.
+It does not provide loops or branches.
+</p>
+<p>
+<em>StreamDevice</em> comes with an interface to<a target="ex"
+href="http://www.aps.anl.gov/epics/modules/soft/asyn/">
+<em>asynDriver</em></a>
+but can be extended to
+<a href="businterface.html">support other bus drivers</a>.
+Note that <em>StreamDevice</em> is not an alternative or replacement
+but a supplement for <em>asynDriver</em>.
+<em>StreamDevice</em> converts record values to and from strings but
+leaves it to <em>asynDriver</em> (or other bus interfaces) to exchange
+these strings with the device.
+Thus any bus type supported by <em>asynDriver</em> (to be exact by
+<em>asynOctet</em>) can automatically be used with <em>StreamDevice</em>.
+</p>
+<p>
+<em>StreamDevice</em> supports all
+<a href="recordtypes.html">standard records</a> of EPICS base
+which can have device support.
+It is also possible to
+<a href="recordinterface.html">write support for new record types</a>.
+</p>
+
+<h2>What is <em>StreamDevice</em> not?</h2>
+<p>
+It is not a programming language for a high-level application.
+It is, for example, not possible to write a complete scanning program
+in a protocol.
+Use other tools for that and use <em>StreamDevice</em> only for the
+primitive commands.
+</p>
+<p>
+It is not a block oriented device support.
+It is not possible to send or receive huge blocks of data that contain
+many process variables distributed over many records.
+</p>
+
+<h2>Recommended Readings</h2>
+<p>
+<a href="http://www.aps.anl.gov/epics/base/R3-14/8-docs/AppDevGuide.pdf"
+target="ex">IOC Application Developer's Guide (PDF)</a>
+</p>
+<p>
+<a href="http://www.aps.anl.gov/asd/controls/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-1.html"
+target="ex">EPICS Record Reference Manual</a>
+</p>
+
+<h2>Color and Style Conventions</h2>
+<p>
+In this document, code is witten in <code>green fixed width font</code>.
+This marks text you typically type in configuration files etc.
+</p>
+<pre>
+Longer code segments are often set in a box.
+</pre>
+<p>
+Important modifications and new features are
+<span class="new">highlighted with a yellow background</span>.
+Obsolete features are <strike class="new">highlighted and crossed out</strike>.
+</p>
+<hr>
+<p align="right"><a href="setup.html">Next: Setup</a></p>
+<p><small>Dirk Zimoch, 2011</small></p>
+</body>
 </html>
