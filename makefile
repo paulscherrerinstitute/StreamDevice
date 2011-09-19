@@ -1,4 +1,3 @@
-first: stream.dbd build
 include /ioc/tools/driver.makefile
 EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream2
@@ -53,8 +52,4 @@ streamReferences:
 	perl ../src/makeref.pl Converter $(FORMATS) >> $@
 
 stream.dbd:
-	perl src/makedbd.pl $(RECORDTYPES) > $@
-
-clean::
-	rm -rf stream.dbd
-
+	perl ../src/makedbd.pl $(RECORDTYPES) > $@
