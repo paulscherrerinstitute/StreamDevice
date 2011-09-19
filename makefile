@@ -1,3 +1,4 @@
+first: stream.dbd build
 include /ioc/tools/driver.makefile
 EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream2
@@ -8,6 +9,8 @@ BUILDCLASSES += Linux
 DBDS = stream.dbd
 
 BUSSES  += AsynDriver
+BUSSES  += Dummy
+
 FORMATS += Enum
 FORMATS += BCD
 FORMATS += Raw
@@ -46,27 +49,12 @@ endif
 StreamCore.o: streamReferences
 
 streamReferences:
-	@for i in $(BUSSES); \
-	do echo "extern void* ref_$${i}Interface;"; \
-           echo "void* p$$i = ref_$${i}Interface;"; \
-	done > $@
-	@for i in $(FORMATS); \
-	do echo "extern void* ref_$${i}Converter;"; \
-           echo "void* p$$i = ref_$${i}Converter;"; \
-	done >> $@
+	perl ../src/makeref.pl Interface $(BUSSES) > $@
+	perl ../src/makeref.pl Converter $(FORMATS) >> $@
 
-ifeq (${EPICS_BASETYPE},3.13)
 stream.dbd:
-	@for r in $(RECORDTYPES); \
-	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
-	done > $@
-	@echo "driver(stream)" >> $@
-else
-stream.dbd:
-	@for r in $(RECORDTYPES) calcout; \
-	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
-	done > $@
-	@echo "driver(stream)" >> $@
-	@echo "variable(streamDebug, int)" >> $@
-	@echo "registrar(streamRegistrar)" >> $@
-endif
+	perl src/makedbd.pl $(RECORDTYPES) > $@
+
+clean::
+	rm -rf stream.dbd
+
