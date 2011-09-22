@@ -503,6 +503,9 @@ connectToAsynPort()
         return false;
     }
     // Is it really connected? 
+
+/*  does not work because read(...,0,...) deletes 1 byte from input.
+
     if (connected && !pasynGpib)
     {
         size_t received;
@@ -521,6 +524,7 @@ connectToAsynPort()
             "device was %sconnected!\n",
             clientName(),connected?"":"dis");
     }
+*/
         
     debug("AsynDriverInterface::connectToAsynPort(%s) is %s connected\n",
         clientName(), connected ? "already" : "not yet");
