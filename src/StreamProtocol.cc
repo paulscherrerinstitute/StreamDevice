@@ -742,7 +742,7 @@ Protocol(const Protocol& p, StreamBuffer& name, int _line)
     int i;
     const char* nextparameter;
     parameter[0] = protocolname();
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 9; i++)
     {
         debug("StreamProtocolParser::Protocol::Protocol $%d=\"%s\"\n",
             i, parameter[i]);
