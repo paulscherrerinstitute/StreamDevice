@@ -265,7 +265,7 @@ static ulong crc_0x04C11DB7(const uchar* data, ulong len, ulong crc)
 {
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
-    const static ulong table[] = {
+    const static unsigned int table[] = {
         0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,
         0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,
         0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
@@ -340,7 +340,7 @@ static ulong crc_0x04C11DB7_r(const uchar* data, ulong len, ulong crc)
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
     // reflected
-    const static ulong table[] = {
+    const static unsigned int table[] = {
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
         0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
         0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -615,6 +615,24 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
 
     int i,j;
     unsigned inchar;
+    
+    if (format.flags & sign_flag) // decimal
+    {
+        ulong sumin = 0;
+        // get number of decimal digits from number of bytes: ceil(xbytes*2.5)
+        j = (checksumMap[fnum].bytes+1)*25/10-2;
+        for (i = 0; i < j; i++)
+        {
+            inchar = input[cursor+i];
+            if (isdigit(inchar)) sumin = sumin*10+inchar-'0';
+            else break;
+        }
+        if (sumin==sum) return i;
+        error("Input %0*lu does not match checksum %0*lu\n", 
+            i, sumin, j, sum);
+        return -1;
+    }
+    
     
     if (format.flags & alt_flag) // lsb first (little endian)
     {
