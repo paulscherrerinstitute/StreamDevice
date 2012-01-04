@@ -57,12 +57,12 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
                 break;
             case wait_cmd:
                 timeout = extract<unsigned long>(c);
-                buffer.printf("    wait %ld;\n # ms", timeout);
+                buffer.print("    wait %ld;\n # ms", timeout);
                 break;
             case event_cmd:
                 eventnumber = extract<unsigned long>(c);
                 timeout = extract<unsigned long>(c);
-                buffer.printf("    event(%ld) %ld; # ms\n", eventnumber, timeout);
+                buffer.print("    event(%ld) %ld; # ms\n", eventnumber, timeout);
                 break;
             case exec_cmd:
                 buffer.append("    exec \"");
@@ -71,7 +71,7 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
                 break;
             case connect_cmd:
                 timeout = extract<unsigned long>(c);
-                buffer.printf("    connect %ld; # ms\n", timeout);
+                buffer.print("    connect %ld; # ms\n", timeout);
                 break;
             case disconnect_cmd:
                 buffer.append("    disconnect;\n");

@@ -70,7 +70,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         }
         if (*source == esc) {
             source++;
-            pattern.printf("\\x%02x", *source++ & 0xFF);
+            pattern.print("\\x%02x", *source++ & 0xFF);
             continue;
         }
         pattern.append(*source++);

@@ -563,7 +563,7 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
             debug("ChecksumConverter %s: little endian appending 0x%X\n",
                 checksumMap[fnum].name, outchar);
             if (format.flags & zero_flag) // ASCII
-                output.printf("%02X", outchar);
+                output.print("%02X", outchar);
             else                          // binary
                 output.append(outchar);
             sum >>= 8;
@@ -578,7 +578,7 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
             debug("ChecksumConverter %s: big endian appending 0x%X\n",
                 checksumMap[fnum].name, outchar);
             if (format.flags & zero_flag) // ASCII
-                output.printf("%02X", outchar);
+                output.print("%02X", outchar);
             else                          // binary
                 output.append(outchar);
             sum <<= 8;

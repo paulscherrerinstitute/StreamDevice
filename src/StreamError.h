@@ -20,8 +20,8 @@
 #ifndef StreamError_h
 #define StreamError_h
 
-#include <stdio.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #ifndef __GNUC__
 #define __attribute__(x)

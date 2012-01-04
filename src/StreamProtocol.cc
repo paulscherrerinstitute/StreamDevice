@@ -634,7 +634,7 @@ printString(StreamBuffer& buffer, const char* s)
         switch (*s)
         {
             case esc:
-                buffer.printf("\\x%02x", (*++s) & 0xff);
+                buffer.print("\\x%02x", (*++s) & 0xff);
                 break;
             case '\r':
                 buffer.append("\\r");
@@ -655,7 +655,7 @@ printString(StreamBuffer& buffer, const char* s)
                 buffer.append("\\\\");
                 break;
             case format_field:
-                buffer.printf("%%(%s)", ++s);
+                buffer.print("%%(%s)", ++s);
                 while (*s++);
                 s += extract<unsigned short>(s); // skip fieldaddress
                 goto format;
@@ -670,7 +670,7 @@ format:         {
                 continue;
             default:
                 if ((*s & 0x7f) < 0x20 || (*s & 0x7f) == 0x7f)
-                    buffer.printf("\\x%02x", *s & 0xff);
+                    buffer.print("\\x%02x", *s & 0xff);
                 else
                     buffer.append(*s);
         }

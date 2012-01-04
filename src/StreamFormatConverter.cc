@@ -316,7 +316,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdLongConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    output.printf(fmt.info, value);
+    output.print(fmt.info, value);
     return true;
 }
 
@@ -395,7 +395,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdDoubleConverter::
 printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
 {
-    output.printf(fmt.info, value);
+    output.print(fmt.info, value);
     return true;
 }
 
@@ -451,7 +451,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdStringConverter::
 printString(const StreamFormat& fmt, StreamBuffer& output, const char* value)
 {
-    output.printf(fmt.info, value);
+    output.print(fmt.info, value);
     return true;
 }
 
@@ -549,7 +549,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdCharsConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    output.printf(fmt.info, value);
+    output.print(fmt.info, value);
     return true;
 }
 

@@ -82,14 +82,14 @@ parse(const StreamFormat&, StreamBuffer& info,
                         if (*c == 'f')
                         {
                             source = c;
-                            info.printf("%%0%uf", n);
+                            info.print("%%0%uf", n);
                             break;
                         }
                     }
                     /* look for nanoseconds %N of %f */
                     if (*source == 'N' || *source == 'f')
                     {
-                        info.printf("%%09f");
+                        info.print("%%09f");
                         break;
                     }
                     /* look for seconds with fractions like %.3S */
@@ -100,7 +100,7 @@ parse(const StreamFormat&, StreamBuffer& info,
                         if (toupper(*c) == 'S')
                         {
                             source = c;
-                            info.printf("%%%c.%%0%uf", *c, n);
+                            info.print("%%%c.%%0%uf", *c, n);
                             break;
                         }
                     }

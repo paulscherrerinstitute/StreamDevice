@@ -75,7 +75,7 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     int prec = fmt.prec;
     
     if (prec < 1) prec = 6;
-    buf.printf("%.*e", prec-1, fabs(value)/pow(10.0, prec-1));
+    buf.print("%.*e", prec-1, fabs(value)/pow(10.0, prec-1));
     buf.remove(1,1);
     buf.remove(buf.find('e'),1);
     
