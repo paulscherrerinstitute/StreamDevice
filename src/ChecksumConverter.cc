@@ -555,6 +555,17 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     int i;
     unsigned outchar;
     
+    if (format.flags & sign_flag) // decimal
+    {
+        // get number of decimal digits from number of bytes: ceil(xbytes*2.5)
+        i = (checksumMap[fnum].bytes+1)*25/10-2;
+        output.print("%0*ld", i, sum);
+        debug("ChecksumConverter %s: decimal appending %0*ld\n",
+            checksumMap[fnum].name, i, sum);
+        return true;
+    }
+    
+    
     if (format.flags & alt_flag) // lsb first (little endian)
     {
         for (i = 0; i < checksumMap[fnum].bytes; i++)
