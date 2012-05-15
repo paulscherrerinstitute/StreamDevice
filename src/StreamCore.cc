@@ -118,7 +118,6 @@ printProtocol()
     if (onMismatch)
         printf("  @Mismatch {\n%s  }\n",
         printCommands(buffer.clear(), onMismatch()));
-    debug("StreamCore::printProtocol: commands=%s\n", commands.expand()());
     printf("\n%s}\n",
         printCommands(buffer.clear(), commands()));
 }
@@ -1159,8 +1158,7 @@ matchInput()
     */
     char command;
     const char* fieldName = NULL;
-    const char* formatstring;
-    int formatstringlen;
+    StreamBuffer formatstring;
     
     consumedInput = 0;
     
@@ -1186,22 +1184,14 @@ normal_format:
                 int consumed;
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
-                formatstring = commandIndex;
-                // jump after <eos>
-                while (*commandIndex)
-                {
-                    if (*commandIndex == esc) commandIndex++;
-                    commandIndex++;
-                }
-                formatstringlen = commandIndex-formatstring;
-                commandIndex++;
+                commandIndex = StreamProtocolParser::printString(formatstring, commandIndex);
                 
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
 #ifndef NO_TEMPORARY
-                debug("StreamCore::matchInput(%s): format = %%%s\n",
-                    name(), StreamBuffer(formatstring, formatstringlen).expand()());
+                debug("StreamCore::matchInput(%s): format = \"%%%s\"\n",
+                    name(), formatstring());
 #endif
 
                 if (fmt.flags & skip_flag || fmt.type == pseudo_format)
@@ -1243,10 +1233,10 @@ normal_format:
                         {
                             if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                             {
-                                error("%s: Input \"%s%s\" does not match format %%%s\n",
+                                error("%s: Input \"%s%s\" does not match format \"%%%s\"\n",
                                     name(), inputLine.expand(consumedInput, 20)(),
                                     inputLine.length()-consumedInput > 20 ? "..." : "",
-                                    formatstring);
+                                    formatstring());
                             }
                             return false;
                         }
@@ -1260,13 +1250,12 @@ normal_format:
                     flags &= ~Separator;
                     if (!formatValue(fmt, fieldAddress ? fieldAddress() : NULL))
                     {
-                        StreamBuffer formatstr(formatstring, formatstringlen);
                         if (fieldAddress)
-                            error("%s: Cannot format field '%s' with '%%%s'\n",
-                                name(), fieldName, formatstr.expand()());
+                            error("%s: Cannot format variable \"%s\" with \"%%%s\"\n",
+                                name(), fieldName, formatstring());
                         else
-                            error("%s: Cannot format value with '%%%s'\n",
-                                name(), formatstr.expand()());
+                            error("%s: Cannot format value with \"%%%s\"\n",
+                                name(), formatstring());
                         return false;
                     }
 #ifndef NO_TEMPORARY
@@ -1279,11 +1268,11 @@ normal_format:
                         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                         {
                             error("%s: Input \"%s%s\" too short."
-                                  " No match for format %%%s (\"%s\")\n",
+                                  " No match for format \"%%%s\" (\"%s\")\n",
                                 name(), 
                                 inputLine.length() > 20 ? "..." : "",
                                 inputLine.expand(-20)(),
-                                formatstring,
+                                formatstring(),
                                 outputLine.expand()());
                         }
                         return false;
@@ -1292,11 +1281,10 @@ normal_format:
                     {
                         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                         {
-                            error("%s: Input \"%s%s\" does not match"
-                                  " format %%%s (\"%s\")\n",
+                            error("%s: Input \"%s%s\" does not match format \"%%%s\" (\"%s\")\n",
                                 name(), inputLine.expand(consumedInput, 20)(),
                                 inputLine.length()-consumedInput > 20 ? "..." : "",
-                                formatstring,
+                                formatstring(),
                                 outputLine.expand()());
                         }
                         return false;
@@ -1310,13 +1298,13 @@ normal_format:
                     if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
                         if (flags & ScanTried)
-                            error("%s: Input \"%s%s\" does not match format %%%s\n",
+                            error("%s: Input \"%s%s\" does not match format \"%%%s\"\n",
                                 name(), inputLine.expand(consumedInput, 20)(),
                                 inputLine.length()-consumedInput > 20 ? "..." : "",
-                                formatstring);
+                                formatstring());
                         else
-                            error("%s: Format %%%s has data type %s which does not match this variable.\n",
-                                name(), formatstring, StreamFormatTypeStr[fmt.type] );
+                            error("%s: Format \"%%%s\" has data type %s which does not match variable \"%s\".\n",
+                                name(), formatstring(), StreamFormatTypeStr[fmt.type], fieldName);
                     }
                     return false;
                 }
