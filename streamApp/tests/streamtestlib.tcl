@@ -52,7 +52,7 @@ proc startioc {} {
     
     if [info exists streamversion] {
         puts $fd "#!/usr/local/bin/iocsh"
-        puts $fd "require stream,$streamversion"
+        puts $fd "require stream2,$streamversion"
     } else {
         puts $fd "#!../O.$env(EPICS_HOST_ARCH)/streamApp"
         puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
