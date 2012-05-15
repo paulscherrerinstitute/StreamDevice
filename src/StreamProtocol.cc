@@ -1374,7 +1374,7 @@ compileString(StreamBuffer& buffer, const char*& source,
         if (c) continue;
         // source may contain a function name
         error(line, filename(),
-            "Unexpected word: %s\n", source);
+            "Unexpected word: \"%s\"\n", source);
         return false;
     }
     debug("StreamProtocolParser::Protocol::compileString buffer=%s\n", buffer.expand()());
@@ -1493,8 +1493,10 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
     buffer.append(&streamFormat, sizeof(streamFormat));
     buffer.append(infoString);
 
-    debug("StreamProtocolParser::Protocol::compileFormat: format.type=%s, infolen=%d\n",
-        StreamFormatTypeStr[streamFormat.type], streamFormat.infolen);
+    debug("StreamProtocolParser::Protocol::compileFormat: format.type=%s, "
+        "infolen=%d infostring=\"%s\"\n",
+        StreamFormatTypeStr[streamFormat.type],
+        streamFormat.infolen, infoString.expand()());
     formatstr = source; // move pointer after parsed format
     return true;
 }
