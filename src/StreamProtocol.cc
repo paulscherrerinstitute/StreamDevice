@@ -1059,7 +1059,6 @@ compileString(StreamBuffer& buffer, const char*& source,
     FormatType formatType, Client* client, int quoted)
 {
     bool escaped = false;
-    int n;
     int newline = 0;
     StreamBuffer formatbuffer;
     int formatpos = buffer.length();
@@ -1136,7 +1135,8 @@ compileString(StreamBuffer& buffer, const char*& source,
         if (escaped)   // char after \ in quoted text
         {
             escaped = false;
-            unsigned int temp;
+            unsigned int c;
+            int n=1;
             switch (*source)
             {
                 case '$': // can't be: readToken would have made a token from this
@@ -1145,61 +1145,50 @@ compileString(StreamBuffer& buffer, const char*& source,
                     return false;
                 case '?':
                     buffer.append(skip);
-                    break;
+                    source++;
+                    continue;
                 case '_':
                     buffer.append(whitespace);
-                    break;
+                    source++;
+                    continue;
                 case 'a':
-                    buffer.append(7);
+                    c=7;
                     break;
                 case 'b':
-                    buffer.append(8);
+                    c=8;
                     break;
                 case 't':
-                    buffer.append(9);
+                    c=9;
                     break;
                 case 'n':
-                    buffer.append('\n');
+                    c='\n';
                     break;
                 case 'r':
-                    buffer.append('\r');
+                    c='\r';
                     break;
                 case 'e':
-                    buffer.append(esc).append(esc);
+                    c=esc;
                     break;
-                case '0':  // octal numbers (max 3 digits after 0)
-                    sscanf (source, "%3o%n", &temp, &n);
-                    if (temp > 0xFF)
+                case '0':  // octal numbers (max 4 digits)
+                    sscanf (source, "%4o%n", &c, &n); //cannot fail
+                    if (c > 0xFF)
                     {
                         error(line, filename(),
-                            "Octal source %#o does not fit in byte: %s\n",
-                            temp, source-1);
+                            "Octal number %#o does not fit in byte: \"%s\"\n",
+                            c, source-1);
                         return false;
                     }
-                    if (formatType != NoFormat &&
-                        (temp < last_function_code || temp == esc))
-                    {
-                        buffer.append(esc);
-                    }
-                    buffer.append(temp);
-                    source += n;
-                    continue;
-                case 'x':  // hex numbers (max 2 digits after 0)
-                    if (sscanf (source+1, "%2x%n", &temp, &n) < 1)
+                    break;
+                case 'x':  // hex numbers (max 2 digits after x)
+                    if (sscanf (source+1, "%2x%n", &c, &n) < 1)
                     {
                         error(line, filename(),
-                            "Hex digit expected after \\x: %s\n",
+                            "Hex digit expected after \\x: \"%s\"\n",
                             source-1);
                         return false;
                     }
-                    if (formatType != NoFormat &&
-                        (temp < last_function_code || temp == esc))
-                    {
-                        buffer.append(esc);
-                    }
-                    buffer.append(temp);
-                    source += n+1;
-                    continue;
+                    n++;
+                    break;
                 case '1': // decimal numbers (max 3 digits)
                 case '2':
                 case '3':
@@ -1209,26 +1198,25 @@ compileString(StreamBuffer& buffer, const char*& source,
                 case '7':
                 case '8':
                 case '9':
-                    sscanf (source, "%3u%n", &temp, &n);
-                    if (temp > 0xFF)
+                    sscanf (source, "%3u%n", &c, &n); //cannot fail
+                    if (c > 0xFF)
                     {
                         error(line, filename(),
-                            "Decimal source %d does not fit in byte: %s\n",
-                            temp, source-1);
+                            "Decimal number %d does not fit in byte: \"%s\"\n",
+                            c, source-1);
                         return false;
                     }
-                    if (formatType != NoFormat &&
-                        (temp < last_function_code || temp == esc))
-                    {
-                        buffer.append(esc);
-                    }
-                    buffer.append(temp);
-                    source += n;
-                    continue;
+                    break;
                 default:  // escaped literals
-                    buffer.append(esc).append(*source);
+                    c=*source;
             }
-            source++;
+            source+=n;
+            if (formatType != NoFormat &&
+                (c < last_function_code || c == esc || c == '%'))
+            {
+                buffer.append(esc);
+            }
+            buffer.append(c);
             continue;
         }
         if (quoted) // look for ending quotes and escapes
@@ -1281,7 +1269,7 @@ compileString(StreamBuffer& buffer, const char*& source,
         }
         // try numeric byte value
         char* p;
-        int temp = strtol(source, &p, 0);
+        int c = strtol(source, &p, 0);
         if (p != source)
         {
             if (*p != 0)
@@ -1290,18 +1278,18 @@ compileString(StreamBuffer& buffer, const char*& source,
                     "Garbage after numeric source: %s", source);
                 return false;
             }
-            if (temp > 0xFF || temp < -0x80)
+            if (c > 0xFF || c < -0x80)
             {
                 error(line, filename(),
                     "Value %s does not fit in byte\n", source);
                 return false;
             }
             if (formatType != NoFormat &&
-                (temp < last_function_code || temp == esc))
+                (c < last_function_code || c == esc || c == '%'))
             {
                 buffer.append(esc);
             }
-            buffer.append(temp);
+            buffer.append(c);
             source = p+1+sizeof(int);
             continue;
         }
@@ -1348,7 +1336,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             {"del",  0x7f}
         };
         size_t i;
-        char c = 0;
+        c=-1;
         for (i = 0; i < sizeof(codes)/sizeof(*codes); i++)
         {
             if (strcmp(source, codes[i].name) == 0)
@@ -1362,7 +1350,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                     return false;
                 }
                 if (formatType != NoFormat &&
-                    (temp < last_function_code || temp == esc))
+                    (c < last_function_code || c == esc))
                 {
                     buffer.append(esc);
                 }
@@ -1371,7 +1359,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                 break;
             }
         }
-        if (c) continue;
+        if (c >= 0) continue;
         // source may contain a function name
         error(line, filename(),
             "Unexpected word: \"%s\"\n", source);
