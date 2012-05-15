@@ -1,7 +1,5 @@
 #!/usr/bin/env wish
 
-wm iconify .
-
 proc createTerm {sock} {
     global socket port
     toplevel .$sock
@@ -17,14 +15,6 @@ proc createTerm {sock} {
     set socket(.$sock.t) $sock
     focus .$sock.t
     wm title .$sock "port $port <-> [fconfigure $sock -peername]" 
-}
-
-set port [lindex $argv 0]
-if {$port == ""} { set port 40000 }
-if [catch {
-    socket -server connect $port
-} msg ] {
-    return -code error "$msg (port $port)"
 }
 
 proc connect {sock addr port} {
@@ -84,6 +74,10 @@ proc receiveHandler {sock} {
             "echo" {
                 sendReply $sock [string range $a 5 end]
             }
+            "binary" {
+                set x [checkNum [lindex $l 1]]
+                sendReply $sock  [format %c $x]
+            }
             "longmsg" {
                 set length [checkNum [lindex $l 1]]
                 sendReply $sock "[string range x[string repeat 0123456789abcdefghijklmnopqrstuvwxyz [expr $length / 36 + 1]] 1 $length]\n"
@@ -95,7 +89,7 @@ proc receiveHandler {sock} {
             "start" {
                 set wait [checkNum [lindex $l 1]]
                 set ::counter 0
-                after $wait sendAsync $wait [list [lindex $l 2]]
+                after $wait sendAsync $wait [list [lrange $l 2 end-1]]
                 sendReply $sock "Started\n"
             }
             "stop" {
@@ -116,12 +110,16 @@ proc receiveHandler {sock} {
             "help" {
                 sendReply $sock "help             this text\n"
                 sendReply $sock "echo string      reply string\n"
-                sendReply $sock "wait msec        reply Done after some time\n"
+                sendReply $sock "binary number    reply byte with value number\n"
+                sendReply $sock "longmsg length   reply string with length characters\n"
+                sendReply $sock "wait msec        reply \"Done\" after some time\n"
                 sendReply $sock "start msec       start sending messages priodically\n"
                 sendReply $sock "stop             stop sending messages\n"
-                sendReply $sock "set key value    set a value\n"
-                sendReply $sock "get key          reply value\n"
+                sendReply $sock "set key value    store a value into variable key\n"
+                sendReply $sock "get key          reply previously stored value from key\n"
                 sendReply $sock "disconnect       close connection\n"
+                sendReply $sock "exit             kill terminal server\n"
+                
             }
         }
     } msg] {
@@ -136,6 +134,14 @@ proc sendAsync {wait message} {
         sendReply $::socket($term) "Message number [incr ::counter] $message\n";
     }
     after $wait sendAsync $wait [list $message]
+}
+
+proc sendAsyncX {wait} {
+    if {$::counter < 0} return
+    foreach term [array names ::socket] {
+        sendReply $::socket($term) "\u00101\u0004~\u0005~\u00100\u0002|0062|2|1|0|1216|0|0.1087E+0 \u0003\u0012"
+    }
+    after $wait sendAsyncX $wait
 }
 
 if {[info proc tkTextInsert] != ""} {
@@ -153,7 +159,6 @@ rename $paste tkTextPaste_org
 rename $pastesel tkTextPasteSel_org
 
 proc $insert {w s} {
-    puts [list insert $w $s]
     global socket
     if {[string equal $s ""] || [string equal [$w cget -state] "disabled"]} {
         return
@@ -196,3 +201,15 @@ foreach tag {Clear Paste Copy Cut } {
 }
 
 bind Text <Control-Key> [list $insert %W %A]
+
+set port [lindex $argv 0]
+if {$port == ""} { set port 40000 }
+if [catch {
+    socket -server connect $port
+} msg ] {
+    return -code error "$msg (port $port)"
+}
+
+label .info -text "Accepting connections on port $port"
+button .exit -text "Exit" -command exit
+pack .info .exit -expand yes -fill x
