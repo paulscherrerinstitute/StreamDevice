@@ -39,7 +39,4 @@ include $(TOP)/config/RULES.Host
 
 # create stream.dbd from all RECORDS
 stream.dbd: ../CONFIG_STREAM
-	@for r in $(RECORDS_3_13); \
-	do echo "device($$r,INST_IO,dev$${r}Stream,\"stream\")"; \
-	done > $@
-	@echo "driver(stream)" >> $@
+	$(PERL) ../makedbd.pl -3.13 $(RECORDS_3_13) > $@
