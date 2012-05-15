@@ -7,6 +7,11 @@ source streamtestlib.tcl
 # Send commands to the ioc shell with ioccmd
 
 set records {
+    record (bo, "DZ:percent")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto percent device")
+    }
     record (ao, "DZ:ao")
     {
         field (DTYP, "stream")
@@ -34,6 +39,7 @@ set records {
 
 set protocol {
     Terminator = LF;
+    percent {out "\%\x25\37\045" 0x25 37 045;}
     ao {out "%.2f %.2e %.2E %.2g %.2G %i %d %u %o %04x %#.2f %#.2e %#.2E %#.2g %#.2G %#i %#d %#u %#o %#06x";}
     lo {out "%d %(VAL)d %06d %x %06X %b %06b %.6b %B.! %06B.!";}
     bcd {out "%D %6D %.2D %.4D %.6D %.8D %#D %#6D %#.2D %#.4D %#.6D";}
@@ -58,6 +64,8 @@ startioc
 # This is normal. E.g. -1 HAS a different number of 1 bits.
 # Specify the width field in the format if this is a problem.
 
+ioccmd {dbpf DZ:percent 1}
+assure "%%%%%%%\n"
 ioccmd {dbpf DZ:ao 0}
 assure "0.00 0.00e+00 0.00E+00 0 0 32767 32767 32767 77777 7fff 0.00 0.00e+00 0.00E+00 0.0 0.0 32767 32767 32767 077777 0x7fff\n"
 ioccmd {dbpf DZ:ao 10}
