@@ -130,9 +130,10 @@ scanLong(const StreamFormat& format, const char* input, long& value)
     int width = format.width;
     if (width == 0) width = -1;
     int length = 0;
-    while (isspace(input[length])) length++; // skip whitespaces
     char zero = format.info[0];
     char one = format.info[1];
+    if (!isspace(zero) && !isspace(one))
+        while (isspace(input[length])) length++; // skip whitespaces
     if (input[length] != zero && input[length] != one) return -1;
     if (format.flags & alt_flag)
     {
