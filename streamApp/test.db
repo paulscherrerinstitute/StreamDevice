@@ -2,17 +2,20 @@ record (stringout, "$(P):cmd")
 {
     field (DTYP, "stream")
     field (OUT,  "@test.proto command terminal")
+    field (PRIO, "HIGH")
     field (VAL, "")
 }
 record (stringout, "$(P):info")
 {
     field (DTYP, "stream")
     field (OUT,  "@test.proto info terminal")
+    field (PRIO, "HIGH")
 }
 record (stringout, "$(P):request")
 {
     field (DTYP, "stream")
     field (OUT,  "@test.proto request($(P):reply.VAL) terminal")
+    field (PRIO, "HIGH")
 }
 record (stringin, "$(P):reply")
 {
