@@ -754,6 +754,8 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
         ioAction = Read;
         queueTimeout = replyTimeout;
     }
+    debug("AsynDriverInterface::readRequest %s:  queueRequest(..., priority=%d, queueTimeout=%f)\n",
+        clientName(), priority(), queueTimeout);
     status = pasynManager->queueRequest(pasynUser,
         priority(), queueTimeout);
     if (status != asynSuccess && !async)
@@ -863,16 +865,18 @@ readHandler()
         received = 0;
         eomReason = 0;
         
+        debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
+            "read(..., bytesToRead=%ld, ...) "
+            "[timeout=%f seconds]\n",
+            clientName(), ioActionStr[ioAction],
+            bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
-        if (ioAction == Read || status != asynTimeout)
-        {
-            debug("AsynDriverInterface::readHandler(%s): "
-                "read(..., bytesToRead=%ld, received=%ld...) "
-                "[timeout=%f seconds] = %s\n",
-                clientName(), bytesToRead, (long)received,
-                pasynUser->timeout, asynStatusStr[status]);
-        }
+        debug("AsynDriverInterface::readHandler(%s): "
+            "read returned %s: ioAction=%s received=%ld, eomReason=%s, buffer=\"%s\"\n",
+            clientName(), asynStatusStr[status], ioActionStr[ioAction],
+            (long)received,eomReasonStr[eomReason&0x7],
+            StreamBuffer(buffer, received).expand()());
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
             "device is %sconnected\n",
@@ -910,6 +914,7 @@ readHandler()
 #endif
                     // ignore what we got from here.
                     // input was already handeled by asynReadHandler()
+
                     // read until no more input is available
                     readMore = -1;
                     break;
