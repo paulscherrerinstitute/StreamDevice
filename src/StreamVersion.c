@@ -23,6 +23,7 @@
 #define STR2(x) #x
 #define STR(x) STR2(x)
 const char StreamVersion [] =
-    "StreamDevice " STR(STREAM_MAJOR) "." STR(STREAM_MINOR)
+    "StreamDevice " STR(STREAM_MAJOR)
+    "." STR(STREAM_MINOR)
+    "." STR(STREAM_PATCHLEVEL)
     " built " __DATE__ " " __TIME__;
-
