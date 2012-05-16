@@ -1211,8 +1211,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                     c=*source;
             }
             source+=n;
-            if (formatType != NoFormat &&
-                (c < last_function_code || c == esc || c == '%'))
+            if (formatType != NoFormat)
             {
                 buffer.append(esc);
             }
@@ -1284,8 +1283,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                     "Value %s does not fit in byte\n", source);
                 return false;
             }
-            if (formatType != NoFormat &&
-                (c < last_function_code || c == esc || c == '%'))
+            if (formatType != NoFormat)
             {
                 buffer.append(esc);
             }
@@ -1349,8 +1347,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                         source);
                     return false;
                 }
-                if (formatType != NoFormat &&
-                    (c < last_function_code || c == esc))
+                if (formatType != NoFormat)
                 {
                     buffer.append(esc);
                 }
