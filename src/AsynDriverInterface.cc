@@ -877,17 +877,14 @@ readHandler()
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
             (long)received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
+
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
-            "device is %sconnected\n",
-            clientName(),connected?"":"dis");
-        if (!connected) {
-            error("%s: connection closed in read\n",
-                clientName());
-            readCallback(StreamIoFault);
-            return;
-        }
-        // pasynOctet->read() has already cut off terminator.
+            "device is now %sconnected\n",
+            clientName(),connected?"":"dis");        
+        // asyn 4.16 sets reason to ASYN_EOM_END when device disconnects.
+        // What about earlier versions?
+        if (!connected) eomReason |= ASYN_EOM_END;
         
         if (status == asynTimeout &&
             pasynUser->timeout == 0.0 &&
