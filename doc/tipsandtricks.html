@@ -103,7 +103,7 @@ an array: (3.14, 17.30, -12.34)
 <h3>B) We have up to 12 numeric values</h3>
 <p>
 Use a <a href="calcout.html">calcout</a> record and
-<a href="formats.html#types">field references</a> in the format.
+<a href="formats.html#redirection">redirection to fields</a>.
 </p>
 <p>
 <code>
@@ -128,7 +128,7 @@ record (calcout, "$(RECORD)") {<br>
 </p>
 <h3>C) Values are in other records on the same IOC</h3>
 <p>
-Use <a href="formats.html#types">record references</a> in the format.
+Use <a href="formats.html#redirection">redirection to records</a>.
 </p>
 <p>
 <code>
@@ -216,7 +216,7 @@ Any non-matching input is ignored by record B.
 </p>
 <h3>C) Values should be stored in other records on the same IOC</h3>
 <p>
-Use <a href="formats.html#types">record references</a> in the format.
+Use <a href="formats.html#redirection">redirection to records</a>.
 To avoid record names in protocol files, use
 <a href="protocol.html#argvar">protocol arguments</a>.
 </p>
@@ -244,11 +244,11 @@ processes record B.
 </p>
 
 <a name="mixed"></a>
-<h2>I have a device that sends mixed data types: numbers and strings</h2>
+<h2>I have a device that sends mixed data types: numbers or strings</h2>
 <p>
 Use a <code>@mismatch</code>
 <a href="protocol.html#except">exception handler</a> and
-<a href="formats.html#types">record references</a> in the format.
+<a href="formats.html#redirection">redirection to records</a>.
 To avoid record names in protocol files, use
 <a href="protocol.html#argvar">protocol arguments</a>.
 </p>
@@ -289,9 +289,124 @@ record (stringout, "$(DEVICE):clean_2") {<br>
 &nbsp;&nbsp;field (VAL, "OK")<br>
 &nbsp;&nbsp;field (OUT,  "$(DEVICE):message PP")<br>
 }<br>
-
 </code>
+<a name="web"></a>
+<h2>I need to read a web page</h2>
+<p>
+First you have to send a correctly formatted HTML request.
+Note that this request must contain the full URL like
+"http://server/page" and must be terminated with <u>two</u> newlines.
+The server should be the same as in the
+<a href="setup.html#sta"><code>drvAsynIPPortConfigure</code></a>
+command (if not using a http proxy).
+
+The web page you get often contains much more information than you need.
+<a href="formats.html#regex">Regular expressions</a> are great
+to find what you are looking for.
+</p>
+<h3>Example 1</h3>
+<p>
+Read the title of a web page.
+</p>
+<p>
+<code>
+get_title {<br>
+&nbsp;&nbsp;extrainput = ignore;<br>
+&nbsp;&nbsp;replyTimeout = 1000;<br>
+&nbsp;&nbsp;out "GET http://\$1\n\n";<br>
+&nbsp;&nbsp;in "%+.1/(?im)&lt;title&gt(.*)&lt\/title&gt;/";<br>
+}
+</code>
+</p>
+<p>
+Terminate the request with two newlines, either explicit like here
+<u>or</u> using an 
+<a href="protocol.html#sysvar"><code>outTerminator</code></a>.
+The URI (without http:// but including the web server host name)
+is passed as <a href="protocol.html#argvar">argument</a> 1 to <code>\$1</code>.
+Note that web servers may be slow, so allow some
+<a href="protocol.html#argvar"><code>replyTimeout</code></a>.
+</p>
+<p>
+If you don't use an <code>inTerminator</code> then the whole page is
+read as one "line" to the <code>in</code> command and can be parsed easily
+with a regular expression.
+We want to see the string between <code>&lt;title&gt</code> and
+<code>&lt;/title&gt;</code>, so we put it into a subexpression in
+<code>()</code> and request the first subexpression with <code>.1</code>.
+Note that the <code>/</code> in the closing tag has be be escaped
+to avoid a misinterpretation as the closing <code>/</code> of the regular
+expression.
+</p>
+<p>
+The tags may be upper or lower case like <code>&lt;TITLE&gt;</code> or
+<code>&lt;Title&gt;</code>, so we ask for case insensitive matching with
+<code>(?i)</code>.
+</p>
+<p>
+The string should be terminated with the first closing
+<code>&lt;/title&gt;</code>, not the last one in the file.
+(There should not be more than one title but you never know.)
+Thus we ask not to be greedy with <code>(?m)</code>.
+<code>(?i)</code> and <code>(?m)</code> can be combined to <code>(?im)</code>.
+See the PCRE documentation for more regexp syntax.
+</p>
+<p>
+The regular expression matcher ignores and discards any content before the
+matching section.
+Content after the match is discarded with <code>extrainput = ignore</code>
+so that it does not trigger errors reporting "surplus input".
+</p>
+<p>
+Finally, the title may be too long for the record.
+The <code>+</code> tells the format matcher not to fail in this case
+but to truncate the string instead.
+You can read the string with a stringin record or for longer strings with
+a waveform record with data type CHAR.
+</p>
+<p>
+<code>
+record (stringin, "$(DEVICE):title") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP,  "@$(DEVICETYPE).proto get_title($(PAGE)) $(BUS)")<br>
+}<br>
+record (waveform, "$(DEVICE):longtitle") {<br>
+&nbsp;&nbsp;field (DTYP, "stream")<br>
+&nbsp;&nbsp;field (INP,  "@$(DEVICETYPE).proto get_title($(PAGE)) $(BUS)")<br>
+&nbsp;&nbsp;field (FTVL, "CHAR")<br>
+&nbsp;&nbsp;field (NELM, "100")<br>
+}<br>
+</code>
+</p>
+
+<h3>Example 2</h3>
+<p>
+Read a number from a web page. First we have to locate the number.
+For that we match against any known string right before the number
+(and <a href="formats.html#syntax">discard the match</a> with <code>*</code>).
+Then we read the number.
+</p>
+<code>
+get_title {<br>
+&nbsp;&nbsp;extrainput = ignore;<br>
+&nbsp;&nbsp;replyTimeout = 1000;<br>
+&nbsp;&nbsp;out "GET http://\$1\n\n";<br>
+&nbsp;&nbsp;in "%*/Interesting value:/%f more text";<br>
+}
+</code>
+<p>
+When using <code>extrainput = ignore;</code>, it is always a good idea to
+match a few bytes after the value, too.
+This catches errors where loading of the page is interrupted in the middle
+of the number. (You don't want to miss the exponent from something like 1.23E-14).
+</p>
+<p>
+You can read more than one value from a file with successive regular expressions
+and <a href="formats.html#redirection">redirections</a>.
+But this only works if the order of the values is predictible.
+<i>StreamDevice</i> is not an XML parser! It always reads sequentially.
+</p>
 <hr>
-<p><small>Dirk Zimoch, 2007</small></p>
+<p><small>Dirk Zimoch, 2012</small></p>
 </body>
 </html>
