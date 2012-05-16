@@ -110,7 +110,7 @@ scanString(const StreamFormat& fmt, const char* input,
     len = ovector[subexpr*2+1] - ovector[subexpr*2];
     if (len >= maxlen) {
         if (!(fmt.flags & sign_flag)) {
-            debug("Matching string \"%s\" too long (%d>%d bytes)\n",
+            error("Regexp: Matching string \"%s\" too long (%d>%d bytes). You may want to try the + flag: \"%%+/.../\"\n",
                 StreamBuffer(input+ovector[subexpr*2], len).expand()(),
                 (int)len, (int)maxlen-1);
             return -1;
