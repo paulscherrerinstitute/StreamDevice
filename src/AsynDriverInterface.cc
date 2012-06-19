@@ -126,7 +126,7 @@ static const char* ioActionStr[] = {
 };
 
 static const char* asynStatusStr[] = {
-    "asynSuccess", "asynTimeout", "asynOverflow", "asynError"
+    "asynSuccess", "asynTimeout", "asynOverflow", "asynError", "asynDisconnected", "asynDisabled"
 };
 
 static const char* eomReasonStr[] = {
@@ -212,7 +212,9 @@ class AsynDriverInterface : StreamBusInterface
     }
     void startTimer(double timeout) {
 #ifdef EPICS_3_14
-        timer->start(*this, timeout);
+        timer->start(*this, timeout
+            +epicsThreadSleepQuantum()*0.5
+        );
 #else
         callbackSetPriority(priority(), &timeoutCallback);
         wdStart(timer, (int)((timeout+1)*sysClkRateGet())-1,
@@ -516,7 +518,7 @@ connectToAsynPort()
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, 0, &received, &eomReason);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
-            "read(..., 0, ...) [timeout=%f seconds] = %s\n",
+            "read(..., 0, ...) [timeout=%g sec] = %s\n",
             clientName(), pasynUser->timeout,
             asynStatusStr[status]);
         pasynManager->isConnected(pasynUser, &connected);
@@ -648,7 +650,7 @@ writeHandler()
         outputBuffer, outputSize, &written);
     debug("AsynDriverInterface::writeHandler(%s): "
         "write(..., outputSize=%ld, written=%ld) "
-        "[timeout=%f seconds] = %s\n",
+        "[timeout=%g sec] = %s\n",
         clientName(), (long)outputSize,  (long)written,
         pasynUser->timeout, asynStatusStr[status]);
 
@@ -754,12 +756,22 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
         ioAction = Read;
         queueTimeout = replyTimeout;
     }
-    debug("AsynDriverInterface::readRequest %s:  queueRequest(..., priority=%d, queueTimeout=%f)\n",
-        clientName(), priority(), queueTimeout);
     status = pasynManager->queueRequest(pasynUser,
         priority(), queueTimeout);
-    if (status != asynSuccess && !async)
+    debug("AsynDriverInterface::readRequest %s: "
+        "queueRequest(..., priority=%d, queueTimeout=%g sec) = %s [async=%s] %s\n",
+        clientName(), priority(), queueTimeout,
+        asynStatusStr[status], async? "true" : "false",
+        status!=asynSuccess ? pasynUser->errorMessage : "");
+    if (status != asynSuccess)
     {
+        // Not queued for some reason (e.g. disconnected / already queued)
+        if (async)
+        {
+            // silently try again later
+            startTimer(replyTimeout);
+            return true;
+        }
         error("%s readRequest: pasynManager->queueRequest() failed: %s\n",
             clientName(), pasynUser->errorMessage);
         return false;
@@ -867,7 +879,7 @@ readHandler()
         
         debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
             "read(..., bytesToRead=%ld, ...) "
-            "[timeout=%f seconds]\n",
+            "[timeout=%g sec]\n",
             clientName(), ioActionStr[ioAction],
             bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
@@ -977,7 +989,7 @@ readHandler()
                 // read timeout
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
-                        "ioAction=%s, timeout [%f seconds] "
+                        "ioAction=%s, timeout [%g sec] "
                         "after %ld of %ld bytes \"%s\"\n",
                     clientName(), ioActionStr[ioAction], pasynUser->timeout,
                     (long)received, bytesToRead,
@@ -1256,6 +1268,8 @@ timerExpired()
             // queueRequest might fail if another request was just queued
             pasynManager->isAutoConnect(pasynUser, &autoconnect);
             pasynManager->isConnected(pasynUser, &connected);
+            debug("%s: polling for I/O Intr: autoconnected: %d, connect: %d\n",
+                clientName(), autoconnect, connected);
             if (autoconnect && !connected)
             {
                 // has explicitely been disconnected
@@ -1266,8 +1280,14 @@ timerExpired()
             else
             {
                 // queue for read poll (no timeout)
-                pasynManager->queueRequest(pasynUser,
+                asynStatus status = pasynManager->queueRequest(pasynUser,
                     asynQueuePriorityLow, -1.0);
+                // if this fails, we are already queued by another thread
+                debug("AsynDriverInterface::timerExpired %s: "
+                    "queueRequest(..., priority=Low, queueTimeout=-1) = %s %s\n",
+                    clientName(), asynStatusStr[status],
+                    status!=asynSuccess ? pasynUser->errorMessage : "");
+                if (status != asynSuccess) startTimer(replyTimeout);
                 // continues with:
                 //    handleRequest() -> readHandler() -> readCallback()
             }
@@ -1392,6 +1412,7 @@ void handleRequest(asynUser* pasynUser)
 {
     AsynDriverInterface* interface =
         static_cast<AsynDriverInterface*>(pasynUser->userPvt);
+    interface->cancelTimer();
     debug("AsynDriverInterface::handleRequest(%s) %s\n",
         interface->clientName(), ioActionStr[interface->ioAction]);
     switch (interface->ioAction)
