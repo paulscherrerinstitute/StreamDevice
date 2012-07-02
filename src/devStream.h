@@ -70,23 +70,20 @@ typedef const struct format_s {
 extern "C" {
 #endif
 
-#ifdef _WIN32
-__declspec(dllimport)
-#endif
-extern FILE* StreamDebugFile;
+epicsShareExtern FILE* StreamDebugFile;
 
 extern const char StreamVersion [];
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
-long streamInit(int after);
-long streamInitRecord(dbCommon *record, struct link *ioLink,
+epicsShareExtern long streamInit(int after);
+epicsShareExtern long streamInitRecord(dbCommon *record, struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData);
-long streamReport(int interest);
-long streamReadWrite(dbCommon *record);
-long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt);
-long streamPrintf(dbCommon *record, format_t *format, ...);
-long streamScanfN(dbCommon *record, format_t *format,
+epicsShareExtern long streamReport(int interest);
+epicsShareExtern long streamReadWrite(dbCommon *record);
+epicsShareExtern long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt);
+epicsShareExtern long streamPrintf(dbCommon *record, format_t *format, ...);
+epicsShareExtern long streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
 
 /* backward compatibility stuff */

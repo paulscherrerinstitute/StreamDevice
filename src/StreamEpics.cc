@@ -18,9 +18,14 @@
 *                                                              *
 ***************************************************************/
 
+#include "devStream.h"
 #include "StreamCore.h"
 #include "StreamError.h"
-#include "devStream.h"
+
+#include <epicsVersion.h>
+#if (EPICS_VERSION == 3 && EPICS_REVISION == 14)
+#define EPICS_3_14
+#endif
 
 #ifndef EPICS_3_14
 extern "C" {

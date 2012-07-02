@@ -22,6 +22,11 @@
 #include "StreamError.h"
 #include "StreamBuffer.h"
 
+#include <epicsVersion.h>
+#if (EPICS_VERSION == 3 && EPICS_REVISION == 14)
+#define EPICS_3_14
+#endif
+
 #ifdef EPICS_3_14
 #include <epicsAssert.h>
 #include <epicsTime.h>
