@@ -1,5 +1,5 @@
-terminator = CR LF;
-readtimeout = 1000;
+terminator = LF;
+readtimeout = 10;
 pollperiod = 10;
 replytimeout = 1000;
 command {

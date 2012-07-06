@@ -18,7 +18,7 @@ proc createTerm {sock} {
 }
 
 proc connect {sock addr port} {
-    fconfigure $sock -blocking 0 -buffering none
+    fconfigure $sock -blocking 0 -buffering none -translation binary
     createTerm $sock
     fileevent $sock readable "receiveHandler $sock"
 }
@@ -136,14 +136,6 @@ proc sendAsync {wait message} {
     after $wait sendAsync $wait [list $message]
 }
 
-proc sendAsyncX {wait} {
-    if {$::counter < 0} return
-    foreach term [array names ::socket] {
-        sendReply $::socket($term) "\u00101\u0004~\u0005~\u00100\u0002|0062|2|1|0|1216|0|0.1087E+0 \u0003\u0012"
-    }
-    after $wait sendAsyncX $wait
-}
-
 if {[info proc tkTextInsert] != ""} {
     set insert tkTextInsert
     set paste tkTextPaste
@@ -196,7 +188,7 @@ for {set ascii 0x61} {$ascii <= 0x7a} {incr ascii} {
     bind Text <Control-[format %c $ascii]> ""
 }
 #remove bindings on symbolic tags
-foreach tag {Clear Paste Copy Cut } {
+foreach tag {Clear Paste Copy Cut} {
     bind Text <<$tag>> ""
 }
 
