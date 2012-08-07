@@ -35,6 +35,7 @@ SOURCES += $(BUSSES:%=src/%Interface.cc)
 SOURCES += $(wildcard src/Stream*.cc)
 SOURCES += src/StreamVersion.c
 
+HEADERS += devStream.h
 HEADERS += StreamFormat.h
 HEADERS += StreamFormatConverter.h
 HEADERS += StreamBuffer.h
