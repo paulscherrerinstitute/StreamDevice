@@ -52,42 +52,62 @@ public:
     protected:
         StreamBusInterface* businterface;
         bool busSupportsEvent() {
-            return businterface->supportsEvent();
+            if (businterface)
+                return businterface->supportsEvent();
+            else return false;
         }
         bool busSupportsAsyncRead() {
-            return businterface->supportsAsyncRead();
+            if (businterface)
+                return businterface->supportsAsyncRead();
+            else return false;
         }
         bool busAcceptEvent(unsigned long mask,
             unsigned long replytimeout_ms) {
-            return businterface->acceptEvent(mask, replytimeout_ms);
+            if (businterface)
+                return businterface->acceptEvent(mask, replytimeout_ms);
+            else return false;
         }
         void busRelease() {
-            businterface->release();
+            if (businterface)
+                businterface->release();
         }
         bool busLockRequest(unsigned long timeout_ms) {
-            return businterface->lockRequest(timeout_ms);
+            if (businterface)
+                return businterface->lockRequest(timeout_ms);
+            else return false;
         }
         bool busUnlock() {
-            return businterface->unlock();
+            if (businterface)
+                return businterface->unlock();
+            else return false;
         }
         bool busWriteRequest(const void* output, size_t size,
             unsigned long timeout_ms) {
-            return businterface->writeRequest(output, size, timeout_ms);
+            if (businterface)
+                return businterface->writeRequest(output, size, timeout_ms);
+            else return false;
         }
         bool busReadRequest(unsigned long replytimeout_ms,
             unsigned long readtimeout_ms, long expectedLength,
             bool async) {
-            return businterface->readRequest(replytimeout_ms,
-                readtimeout_ms, expectedLength, async);
+            if (businterface)
+                return businterface->readRequest(replytimeout_ms,
+                    readtimeout_ms, expectedLength, async);
+            else return false;
         }
         void busFinish() {
-            businterface->finish();
+            if (businterface)
+                businterface->finish();
         }
         bool busConnectRequest(unsigned long timeout_ms) {
-            return businterface->connectRequest(timeout_ms);
+            if (businterface)
+                return businterface->connectRequest(timeout_ms);
+            else return false;
         }
         bool busDisconnect() {
-            return businterface->disconnectRequest();
+            if (businterface)
+                return businterface->disconnectRequest();
+            else return false;
         }
     };
 
