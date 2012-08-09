@@ -77,11 +77,13 @@ extern const char StreamVersion [];
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
 epicsShareExtern long streamInit(int after);
-epicsShareExtern long streamInitRecord(dbCommon *record, struct link *ioLink,
+epicsShareExtern long streamInitRecord(dbCommon *record,
+    const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData);
 epicsShareExtern long streamReport(int interest);
 epicsShareExtern long streamReadWrite(dbCommon *record);
-epicsShareExtern long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt);
+epicsShareExtern long streamGetIointInfo(int cmd,
+    dbCommon *record, IOSCANPVT *ppvt);
 epicsShareExtern long streamPrintf(dbCommon *record, format_t *format, ...);
 epicsShareExtern long streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
