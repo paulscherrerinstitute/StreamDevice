@@ -98,7 +98,7 @@ class Stream : protected StreamCore
 #endif
 {
     dbCommon* record;
-    struct link *ioLink;
+    const struct link *ioLink;
     streamIoFunction readData;
     streamIoFunction writeData;
 #ifdef EPICS_3_14
@@ -145,16 +145,19 @@ class Stream : protected StreamCore
     friend void streamRecordProcessCallback(CALLBACK *pcallback);
 
 // Stream Epics methods
-    long initRecord();
-    Stream(dbCommon* record, struct link *ioLink,
+    Stream(dbCommon* record, const struct link *ioLink,
         streamIoFunction readData, streamIoFunction writeData);
     ~Stream();
+    long parseLink(const struct link *ioLink, char* filename, char* protocol,
+        char* busname, int* addr, char* busparam);
+    long initRecord(const char* filename, const char* protocol,
+        const char* busname, int addr, const char* busparam);
     bool print(format_t *format, va_list ap);
     bool scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
 
 // device support functions
-    friend long streamInitRecord(dbCommon *record, struct link *ioLink,
+    friend long streamInitRecord(dbCommon *record, const struct link *ioLink,
         streamIoFunction readData, streamIoFunction writeData);
     friend long streamReadWrite(dbCommon *record);
     friend long streamGetIointInfo(int cmd, dbCommon *record,
@@ -399,9 +402,16 @@ long streamInit(int after)
     return OK;
 }
 
-long streamInitRecord(dbCommon* record, struct link *ioLink,
+long streamInitRecord(dbCommon* record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 {
+    char filename[80];
+    char protocol[80];
+    char busname[80];
+    int addr = -1;
+    char busparam[80];
+    memset(busparam, 0 ,sizeof(busparam));
+
     debug("streamInitRecord(%s): SEVR=%d\n", record->name, record->sevr);
     Stream* pstream = (Stream*)record->dpvt;
     if (!pstream)
@@ -413,8 +423,12 @@ long streamInitRecord(dbCommon* record, struct link *ioLink,
         // stop any running protocol
         pstream->finishProtocol(Stream::Abort);
     }
+    // scan the i/o link
+    pstream->parseLink(ioLink, filename, protocol,
+        busname, &addr, busparam);
     // (re)initialize bus and protocol
-    long status = pstream->initRecord();
+    long status = pstream->initRecord(filename, protocol,
+        busname, addr, busparam);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
@@ -442,7 +456,8 @@ long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt)
 {
     Stream* pstream = (Stream*)record->dpvt;
     debug("streamGetIointInfo(%s,cmd=%d): pstream=%p, ioscanpvt=%p\n",
-        record->name, cmd, (void*)pstream, pstream ? pstream->ioscanpvt : NULL);
+        record->name, cmd,
+        (void*)pstream, pstream ? pstream->ioscanpvt : NULL);
     if (!pstream)
     {
         error("streamGetIointInfo called without stream instance\n");
@@ -501,7 +516,7 @@ long streamScanfN(dbCommon* record, format_t *format,
 // Stream methods ////////////////////////////////////////////////////////
 
 Stream::
-Stream(dbCommon* _record, struct link *ioLink,
+Stream(dbCommon* _record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 :record(_record), ioLink(ioLink), readData(readData), writeData(writeData)
 {
@@ -551,44 +566,44 @@ Stream::
 }
 
 long Stream::
-initRecord()
+parseLink(const struct link *ioLink, char* filename,
+    char* protocol, char* busname, int* addr, char* busparam)
 {
-    // scan link parameters: filename protocol busname addr busparam
-    // It is safe to call this function again with different
-    // link text or different protocol file.
-
-    char filename[80];
-    char protocol[80];
-    char busname[80];
-    int addr = -1;
-    char busparam[80];
+    // parse link parameters: filename protocol busname addr busparam
     int n;
-
     if (ioLink->type != INST_IO)
     {
-        error("%s: Wrong link type %s\n", name(),
+        error("%s: Wrong I/O link type %s\n", name(),
             pamaplinkType[ioLink->type].strvalue);
         return S_dev_badInitRet;
     }
-    int items = sscanf(ioLink->value.instio.string, "%79s%79s%79s%n%i%n",
-        filename, protocol, busname, &n, &addr, &n);
+    int items = sscanf(ioLink->value.instio.string, "%s%s%s%n%i%n",
+        filename, protocol, busname, &n, addr, &n);
     if (items <= 0)
     {
-        error("%s: Empty link. Forgot the leading '@' or confused INP with OUT ?\n",
+        error("%s: Empty I/O link. "
+            "Forgot the leading '@' or confused INP with OUT ?\n",
             name());
         return S_dev_badInitRet;
     }
     if (items < 3)
     {
-        error("%s: Wrong link format\n"
+        error("%s: Wrong I/O link format\n"
             "  expect \"@file protocol bus addr params\"\n"
             "  in \"@%s\"\n", name(),
             ioLink->value.instio.string);
         return S_dev_badInitRet;
     }
-    memset(busparam, 0 ,sizeof(busparam));
-    for (n = 0; isspace((unsigned char)ioLink->value.instio.string[n]); n++);
-    strncpy (busparam, ioLink->value.constantStr+n, sizeof(busparam)-1);
+    while (isspace((unsigned char)ioLink->value.instio.string[n])) n++;
+    strcpy (busparam, ioLink->value.constantStr+n);
+    return OK;
+}
+
+long Stream::
+initRecord(const char* filename, const char* protocol,
+    const char* busname, int addr, const char* busparam)
+{
+    // It is safe to call this function again with different arguments
 
     // attach to bus interface
     if (!attachBus(busname, addr, busparam))
@@ -616,7 +631,8 @@ initRecord()
             name());
         if (record->scan == SCAN_IO_EVENT)
         {
-            debug("Stream::initRecord %s: restarting \"I/O Intr\" after reload\n",
+            debug("Stream::initRecord %s: "
+                "restarting \"I/O Intr\" after reload\n",
                 name());
             if (!startProtocol(StartAsync))
             {
@@ -753,7 +769,8 @@ scan(format_t *format, void* value, size_t maxStringSize)
             break;
         case DBF_STRING:
             sptr = (char*)value;
-            currentValueLength  = scanValue(*format->priv, sptr, maxStringSize);
+            currentValueLength  = scanValue(*format->priv, sptr,
+                maxStringSize);
             break;
         default:
             error("INTERNAL ERROR (%s): Illegal format type\n", name());
@@ -966,7 +983,8 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
             
             if (format.type != double_format)
             {
-                error ("%s: can only read double values from TIME field\n", name());
+                error ("%s: can only read double values from TIME field\n",
+                    name());
                 return false;
             }
             if (pdbaddr->precord == record)
@@ -974,8 +992,10 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                 /* if getting time from own record, update timestamp first */
                 recGblGetTimeStamp(record);
             }
-            time = pdbaddr->precord->time.secPastEpoch + 631152000u + pdbaddr->precord->time.nsec * 1e-9;
-            debug("Stream::formatValue(%s): read %f from TIME field\n", name(), time);
+            time = pdbaddr->precord->time.secPastEpoch +
+                631152000u + pdbaddr->precord->time.nsec * 1e-9;
+            debug("Stream::formatValue(%s): read %f from TIME field\n",
+                name(), time);
             return printValue(format, time);
         }
 
@@ -1013,7 +1033,8 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                         return false;
                     break;
                 case pseudo_format:
-                    error("%s: %%(FIELD) syntax not allowed with pseudo formats\n",
+                    error("%s: %%(FIELD) syntax not allowed "
+                        "with pseudo formats\n",
                         name());
                 default:
                     error("INTERNAL ERROR %s: Illegal format.type=%d\n",
@@ -1063,7 +1084,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         buffer = fieldBuffer.clear().reserve(size);
         for (nord = 0; nord < nelem; nord++)
         {
-            debug("Stream::matchValue(%s): buffer before: %s\n", name(), fieldBuffer.expand()());
+            debug("Stream::matchValue(%s): buffer before: %s\n",
+                name(), fieldBuffer.expand()());
             switch (format.type)
             {
                 case long_format:
@@ -1077,7 +1099,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 case enum_format:
                 {
                     consumed = scanValue(format, lval);
-                    if (consumed >= 0) ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
+                    if (consumed >= 0)
+                        ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
                     debug("Stream::matchValue(%s): %s[%li] = %li\n",
                             name(), pdbaddr->precord->name, nord, lval);
                     break;
@@ -1085,10 +1108,13 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 case double_format:
                 {
                     consumed = scanValue(format, dval);
-                    // Direct assignment to buffer fails fith gcc 3.4.3 for xscale_be
+                    // Direct assignment to buffer fails with
+                    // gcc 3.4.3 for xscale_be
                     // Optimization bug?
                     epicsFloat64 f64=dval;
-                    if (consumed >= 0) memcpy(((epicsFloat64*)buffer)+nord, &f64, sizeof(f64));
+                    if (consumed >= 0)
+                        memcpy(((epicsFloat64*)buffer)+nord,
+                            &f64, sizeof(f64));
                     debug("Stream::matchValue(%s): %s[%li] = %#g %#g\n",
                             name(), pdbaddr->precord->name, nord, dval,
                             ((epicsFloat64*)buffer)[nord]);
@@ -1099,7 +1125,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     consumed = scanValue(format,
                         buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
                     debug("Stream::matchValue(%s): %s[%li] = \"%.*s\"\n",
-                            name(), pdbaddr->precord->name, nord, MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
+                            name(), pdbaddr->precord->name, nord,
+                            MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
                     break;
                 }
                 default:
@@ -1107,7 +1134,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                         "Illegal format type\n", name());
                     return false;
             }
-            debug("Stream::matchValue(%s): buffer after: %s\n", name(), fieldBuffer.expand()());
+            debug("Stream::matchValue(%s): buffer after: %s\n",
+                name(), fieldBuffer.expand()());
             if (consumed < 0) break;
             consumedInput += consumed;
         }
@@ -1116,7 +1144,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             // scan error: set other record to alarm status
             if (pdbaddr->precord != record)
             {
-                (void) recGblSetSevr(pdbaddr->precord, CALC_ALARM, INVALID_ALARM);
+                (void) recGblSetSevr(pdbaddr->precord,
+                    CALC_ALARM, INVALID_ALARM);
                 if (!INIT_RUN)
                 {
                     // process other record to send alarm monitor
@@ -1130,19 +1159,24 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
 #ifdef epicsTimeEventDeviceTime
             if (format.type != double_format)
             {
-                error ("%s: can only write double values to TIME field\n", name());
+                error ("%s: can only write double values to TIME field\n",
+                    name());
                 return false;
             }
             dval = dval-631152000u;
             pdbaddr->precord->time.secPastEpoch = (long)dval;
-            /* rouding: we don't have 9 digits precision in a double of today's number of seconds */
+            // rouding: we don't have 9 digits precision
+            // in a double of today's number of seconds
             pdbaddr->precord->time.nsec = (long)((dval-(long)dval)*1e6)*1000;
-            debug("Stream::matchValue(%s): writing %i.%i to TIME field\n", name(),
-                pdbaddr->precord->time.secPastEpoch, pdbaddr->precord->time.nsec);
+            debug("Stream::matchValue(%s): writing %i.%i to TIME field\n",
+                name(),
+                pdbaddr->precord->time.secPastEpoch,
+                pdbaddr->precord->time.nsec);
             pdbaddr->precord->tse = epicsTimeEventDeviceTime;
             return true;
 #else
-            error ("%s: writing TIME field is not supported in this EPICS version\n", name());
+            error ("%s: writing TIME field is not supported "
+                "in this EPICS version\n", name());
             return false;
 #endif
         }
@@ -1175,7 +1209,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 ((dbFldDes*)pdbaddr->pfldDes)->name,
                 fieldBuffer.expand()());
             putfunc = "dbPutField";
-            status = dbPutField(pdbaddr, dbfMapping[format.type], buffer, nord);
+            status = dbPutField(pdbaddr, dbfMapping[format.type],
+                buffer, nord);
         }
         if (status != 0)
         {
