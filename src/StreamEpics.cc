@@ -39,6 +39,7 @@ extern "C" {
 #include <recSup.h>
 #include <recGbl.h>
 #include <devLib.h>
+#define epicsAlarmGLOBAL
 #include <alarm.h>
 #include <callback.h>
 
@@ -279,7 +280,7 @@ void streamEpicsPrintTimestamp(char* buffer, int size)
 {
     int tlen;
     epicsTime tm = epicsTime::getCurrent();
-    tlen = tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%03f");
+    tlen = tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%06f");
     sprintf(buffer+tlen, " %.*s", size-tlen-2, epicsThreadGetNameSelf());
 }
 #else
@@ -585,9 +586,9 @@ initRecord()
             ioLink->value.instio.string);
         return S_dev_badInitRet;
     }
-    memset(busparam, 0 ,80);
+    memset(busparam, 0 ,sizeof(busparam));
     for (n = 0; isspace((unsigned char)ioLink->value.instio.string[n]); n++);
-    strncpy (busparam, ioLink->value.constantStr+n, 79);
+    strncpy (busparam, ioLink->value.constantStr+n, sizeof(busparam)-1);
 
     // attach to bus interface
     if (!attachBus(busname, addr, busparam))
@@ -669,8 +670,11 @@ process()
     {
         if (status != NO_ALARM)
         {
-            debug("Stream::process(%s) error status=%d\n",
-                name(), status);
+            debug("Stream::process(%s) error status=%s (%d)\n",
+                name(),
+                status >= 0 && status < ALARM_NSTATUS ? 
+                    epicsAlarmConditionStrings[status] : "ERROR",
+                status);
             (void) recGblSetSevr(record, status, INVALID_ALARM);
             return false;
         }
