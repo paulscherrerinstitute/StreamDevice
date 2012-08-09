@@ -617,19 +617,26 @@ writeHandler()
         clientName());
     asynStatus status;
     size_t written = 0;
-    pasynUser->timeout = writeTimeout;
 
-    // discard any early input or early events
-    status = pasynOctet->flush(pvtOctet, pasynUser);
+    // discard any early input, but forward it to potential async records
+    // thus do not use pasynOctet->flush()
+    pasynUser->timeout = 0;
+    do {
+        char buffer [256];
+        size_t received = sizeof(buffer);
+        int eomReason = 0;
+        status = pasynOctet->read(pvtOctet, pasynUser,
+            buffer, received, &received, &eomReason);
+#ifndef NO_TEMPORARY
+        if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %d bytes: \"%s\"\n",
+            clientName(), received, StreamBuffer(buffer, received).expand()());
+#endif
+    } while (status != asynTimeout);
+        
+    // discard any early events
     receivedEvent = 0;
-
-    if (status != asynSuccess)
-    {
-        error("%s: pasynOctet->flush() failed: %s\n",
-                clientName(), pasynUser->errorMessage);
-        writeCallback(StreamIoFault);
-        return;
-    }
+    
+    pasynUser->timeout = writeTimeout;
     
     // has stream already added a terminator or should
     // asyn do so?
@@ -739,7 +746,7 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
     long _expectedLength, bool async)
 {
     debug("AsynDriverInterface::readRequest(%s, %ld msec reply, "
-        "%ld msec read, expect %ld bytes, asyn=%s)\n",
+        "%ld msec read, expect %ld bytes, async=%s)\n",
         clientName(), replyTimeout_ms, readTimeout_ms,
         _expectedLength, async?"yes":"no");
         
@@ -978,6 +985,9 @@ readHandler()
                     // reply timeout
                     if (ioAction == AsyncRead)
                     {
+                        debug("AsynDriverInterface::readHandler(%s): "
+                            "no async input, retry in in %g seconds\n",
+                            clientName(), replyTimeout);
                         // start next poll after timer expires
                         if (replyTimeout != 0.0) startTimer(replyTimeout);
                         // continues with:
@@ -1255,6 +1265,9 @@ timerExpired()
     int autoconnect, connected;
     switch (ioAction)
     {
+        case None:
+            // Timeout of async poll crossed with parasitic input
+            return;
         case ReceiveEvent:
             // timeout while waiting for event
             ioAction = None;
