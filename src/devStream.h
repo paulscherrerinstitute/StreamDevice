@@ -41,11 +41,11 @@
 #define INIT_RUN (!interruptAccept)
 
 #include <epicsVersion.h>
-#if (EPICS_VERSION == 3 && EPICS_REVISION == 14)
-#define EPICS_3_14
+#ifdef BASE_RELEASE
+#define EPICS_3_13
 #endif
 
-#if defined(__cplusplus) && !defined(EPICS_3_14)
+#if defined(__cplusplus) && defined(EPICS_3_13)
 extern "C" {
 #endif
 
@@ -56,7 +56,7 @@ extern "C" {
 /* #include <dbFldTypes.h> */
 #include <dbAccess.h>
 
-#if defined(__cplusplus) && !defined(EPICS_3_14)
+#if defined(__cplusplus) && defined(EPICS_3_13)
 }
 #endif
 

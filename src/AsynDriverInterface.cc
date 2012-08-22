@@ -23,18 +23,18 @@
 #include "StreamBuffer.h"
 
 #include <epicsVersion.h>
-#if (EPICS_VERSION == 3 && EPICS_REVISION == 14)
-#define EPICS_3_14
+#ifdef BASE_VERSION
+#define EPICS_3_13
 #endif
 
-#ifdef EPICS_3_14
-#include <epicsAssert.h>
-#include <epicsTime.h>
-#include <epicsTimer.h>
-#else
+#ifdef EPICS_3_13
 #include <assert.h>
 #include <wdLib.h>
 #include <sysLib.h>
+#else
+#include <epicsAssert.h>
+#include <epicsTime.h>
+#include <epicsTimer.h>
 extern "C" {
 #include <callback.h>
 }
@@ -139,7 +139,7 @@ static const char* eomReasonStr[] = {
 };
 
 class AsynDriverInterface : StreamBusInterface
-#ifdef EPICS_3_14
+#ifndef EPICS_3_13
  , epicsTimerNotify
 #endif
 {
@@ -169,12 +169,12 @@ class AsynDriverInterface : StreamBusInterface
     const char* outputBuffer;
     size_t outputSize;
     int peeksize;
-#ifdef EPICS_3_14
-    epicsTimerQueueActive* timerQueue;
-    epicsTimer* timer;
-#else
+#ifdef EPICS_3_13
     WDOG_ID timer;
     CALLBACK timeoutCallback;
+#else
+    epicsTimerQueueActive* timerQueue;
+    epicsTimer* timer;
 #endif
 
     AsynDriverInterface(Client* client);
@@ -194,11 +194,11 @@ class AsynDriverInterface : StreamBusInterface
     bool disconnectRequest();
     void finish();
 
-#ifdef EPICS_3_14
+#ifdef EPICS_3_13
+    static void expire(CALLBACK *pcallback);
+#else
     // epicsTimerNotify methods
     epicsTimerNotify::expireStatus expire(const epicsTime &);
-#else
-    static void expire(CALLBACK *pcallback);
 #endif
 
     // local methods
@@ -216,22 +216,22 @@ class AsynDriverInterface : StreamBusInterface
             (StreamBusInterface::priority());
     }
     void startTimer(double timeout) {
-#ifdef EPICS_3_14
-        timer->start(*this, timeout
-            +epicsThreadSleepQuantum()*0.5
-        );
-#else
+#ifdef EPICS_3_13
         callbackSetPriority(priority(), &timeoutCallback);
         wdStart(timer, (int)((timeout+1)*sysClkRateGet())-1,
             reinterpret_cast<FUNCPTR>(callbackRequest),
             reinterpret_cast<int>(&timeoutCallback));
+#else
+        timer->start(*this, timeout
+            +epicsThreadSleepQuantum()*0.5
+        );
 #endif
     }
     void cancelTimer() {
-#ifdef EPICS_3_14
-        timer->cancel();
-#else
+#ifdef EPICS_3_13
         wdCancel(timer);
+#else
+        timer->cancel();
 #endif
     }
 
@@ -270,15 +270,15 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
         handleTimeout);
     assert(pasynUser);
     pasynUser->userPvt = this;
-#ifdef EPICS_3_14
+#ifdef EPICS_3_13
+    timer = wdCreate();
+    callbackSetCallback(expire, &timeoutCallback);
+    callbackSetUser(this, &timeoutCallback);
+#else
     timerQueue = &epicsTimerQueueActive::allocate(true);
     assert(timerQueue);
     timer = &timerQueue->createTimer();
     assert(timer);
-#else
-    timer = wdCreate();
-    callbackSetCallback(expire, &timeoutCallback);
-    callbackSetUser(this, &timeoutCallback);
 #endif
 }
 
@@ -313,11 +313,11 @@ AsynDriverInterface::
     }
     // Now, no handler is running any more and none will start.
 
-#ifdef EPICS_3_14
+#ifdef EPICS_3_13
+    wdDelete(timer);
+#else
     timer->destroy();
     timerQueue->release();
-#else
-    wdDelete(timer);
 #endif
     pasynManager->disconnect(pasynUser);
     pasynManager->freeAsynUser(pasynUser);
@@ -1317,20 +1317,20 @@ timerExpired()
     }
 }
 
-#ifdef EPICS_3_14
-epicsTimerNotify::expireStatus AsynDriverInterface::
-expire(const epicsTime &)
-{
-    timerExpired();
-    return noRestart;
-}
-#else
+#ifdef EPICS_3_13
 void AsynDriverInterface::
 expire(CALLBACK *pcallback)
 {
     AsynDriverInterface* interface =
         static_cast<AsynDriverInterface*>(pcallback->user);
     interface->timerExpired();
+}
+#else
+epicsTimerNotify::expireStatus AsynDriverInterface::
+expire(const epicsTime &)
+{
+    timerExpired();
+    return noRestart;
 }
 #endif
 
