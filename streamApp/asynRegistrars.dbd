@@ -1,0 +1,9 @@
+registrar(asynRegister)
+registrar(asynInterposeFlushRegister)
+registrar(asynInterposeEosRegister)
+
+# asynDriver up to version 4-16 does not support serial port for Windows!
+registrar(drvAsynSerialPortRegisterCommands)
+registrar(drvAsynIPPortRegisterCommands)
+registrar(drvAsynIPServerPortRegisterCommands)
+registrar(vxi11RegisterCommands)
