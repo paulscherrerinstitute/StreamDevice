@@ -79,12 +79,11 @@ include $(TOP)/configure/RULES
 
 # Update version string (contains __DATE__ and __TIME__)
 # each time make runs.
-StreamVersion$(OBJ): FORCE
-FORCE:
+StreamVersion$(OBJ): ../*.c ../*.h ../*.cc ../CONFIG_STREAM ../Makefile
 
 # Add references to all registrars to main file to avoid
 # missing initialization.
-StreamCore$(OBJ): streamReferences
+StreamCore$(OBJ) StreamCore$(DEP): streamReferences
 
 streamReferences: ../CONFIG_STREAM
 	$(PERL) ../makeref.pl Interface $(BUSSES) > $@
@@ -93,5 +92,8 @@ streamReferences: ../CONFIG_STREAM
 # create stream.dbd from all RECORDS
 $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(RECORDS) > $@
+
+$(LIBRARY_DEFAULT).dbd$(DEP): ../CONFIG_STREAM
+	echo $(LIBRARY_DEFAULT).dbd: $< > $@
 
 endif
