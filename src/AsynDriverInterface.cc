@@ -628,8 +628,8 @@ writeHandler()
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, received, &received, &eomReason);
 #ifndef NO_TEMPORARY
-        if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %d bytes: \"%s\"\n",
-            clientName(), received, StreamBuffer(buffer, received).expand()());
+        if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %ld bytes: \"%s\"\n",
+            clientName(), (long)received, StreamBuffer(buffer, received).expand()());
 #endif
     } while (status != asynTimeout);
         
