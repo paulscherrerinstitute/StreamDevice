@@ -1037,7 +1037,7 @@ compileNumber(unsigned long& number, const char*& source, unsigned long max)
             "Garbage after numeric value: %s\n", buffer());
         return false;
     }
-    if (n < 0 || n > max)
+    if (n > max)
     {
         debug("StreamProtocolParser::Protocol::compileNumber: %s\n",
             buffer.expand()());

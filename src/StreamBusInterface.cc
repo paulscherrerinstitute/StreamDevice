@@ -66,7 +66,7 @@ find(Client* client, const char* busname, int addr, const char* param)
 {
     StreamBusInterfaceRegistrarBase* r;
     StreamBusInterface* bus;
-    for (r = r->first; r; r = r->next)
+    for (r = StreamBusInterfaceRegistrarBase::first; r; r = r->next)
     {
         bus = r->find(client, busname, addr, param);
         if (bus) return bus;
