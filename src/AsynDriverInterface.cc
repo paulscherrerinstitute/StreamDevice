@@ -618,9 +618,12 @@ writeHandler()
     asynStatus status;
     size_t written = 0;
 
+    pasynUser->timeout = 0;
+    if (pasynGpib)
+         pasynOctet->flush(pvtOctet, pasynUser);
+    else
     // discard any early input, but forward it to potential async records
     // thus do not use pasynOctet->flush()
-    pasynUser->timeout = 0;
     do {
         char buffer [256];
         size_t received = sizeof(buffer);
