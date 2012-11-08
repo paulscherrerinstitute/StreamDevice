@@ -31,8 +31,8 @@ PROD_LIBS = stream
 ifdef ASYN
 # edit asynRegistrars.dbd if necessary
 streamApp_DBD += asynRegistrars.dbd
-# add asyn.dbd if you want to have asyn Record and asyn device supports
-# streamApp_DBD += asyn.dbd
+# add asynRecord.dbd if you like
+streamApp_DBD += asynRecord.dbd
 PROD_LIBS += asyn
 endif
 
@@ -66,7 +66,7 @@ CPPFLAGS += -DDEBUGFILE=StreamDebug.log
 
 include $(TOP)/configure/RULES
 
-ifeq ($(EPICS_REVISION),14)
+ifeq ($(BASE_3_14), YES)
 clean:: myclean
 else
 clean: myclean
