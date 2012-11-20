@@ -41,7 +41,7 @@
 #define INIT_RUN (!interruptAccept)
 
 #include <epicsVersion.h>
-#ifdef BASE_RELEASE
+#ifdef BASE_VERSION
 #define EPICS_3_13
 #endif
 

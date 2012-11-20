@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#define epicsAlarmGLOBAL
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -39,7 +40,6 @@ extern "C" {
 #include <recSup.h>
 #include <recGbl.h>
 #include <devLib.h>
-#define epicsAlarmGLOBAL
 #include <alarm.h>
 #include <callback.h>
 
