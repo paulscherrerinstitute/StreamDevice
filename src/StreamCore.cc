@@ -341,6 +341,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
                 return false;
             }
             args++;
+            while (isspace(*args)) args++;
         }
         buffer.append(&eventmask, sizeof(eventmask));
         if (*args)
