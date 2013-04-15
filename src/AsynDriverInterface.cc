@@ -347,7 +347,64 @@ getBusInterface(Client* client,
 bool AsynDriverInterface::
 supportsEvent()
 {
-    return (pasynInt32 != NULL) || (pasynUInt32 != NULL);
+    if (intrPvtInt32 || intrPvtInt32) return true;
+
+    // look for interfaces for events
+    asynInterface* pasynInterface;
+
+    connectToAsynPort();
+    
+    pasynInterface = pasynManager->findInterface(pasynUser,
+        asynInt32Type, true);
+    if(pasynInterface)
+    {
+        pasynInt32 = static_cast<asynInt32*>(pasynInterface->pinterface);
+        pvtInt32 = pasynInterface->drvPvt;
+        pasynUser->reason = ASYN_REASON_SIGNAL; // required for GPIB
+        if (pasynInt32->registerInterruptUser(pvtInt32, pasynUser,
+            intrCallbackInt32, this, &intrPvtInt32) == asynSuccess)
+        {
+            printf ("%s: AsynDriverInterface::supportsEvent: "
+                "pasynInt32->registerInterruptUser(%p, %p, %p, %p, %p)\n",
+                clientName(), pvtInt32, pasynUser,
+                intrCallbackInt32, this, &intrPvtInt32);
+            return true;
+        }
+        error("%s: bus does not allow to register for "
+            "Int32 interrupts: %s\n",
+            clientName(), pasynUser->errorMessage);
+        pasynInt32 = NULL;
+        intrPvtInt32 = NULL;
+    }
+
+    // no asynInt32 available, thus try asynUInt32
+    pasynInterface = pasynManager->findInterface(pasynUser,
+        asynUInt32DigitalType, true);
+    if(pasynInterface)
+    {
+        pasynUInt32 =
+            static_cast<asynUInt32Digital*>(pasynInterface->pinterface);
+        pvtUInt32 = pasynInterface->drvPvt;
+        pasynUser->reason = ASYN_REASON_SIGNAL;
+        if (pasynUInt32->registerInterruptUser(pvtUInt32,
+            pasynUser, intrCallbackUInt32, this, 0xFFFFFFFF,
+            &intrPvtUInt32) == asynSuccess)
+        {
+            printf ("%s: AsynDriverInterface::supportsEvent: "
+                "pasynUInt32->registerInterruptUser(%p, %p, %p, %p, %#X, %p)\n",
+                clientName(), pvtUInt32, pasynUser,
+                intrCallbackUInt32, this, 0xFFFFFFFF, &intrPvtInt32);
+            return true;
+        }
+        error("%s: bus does not allow to register for "
+            "UInt32 interrupts: %s\n",
+            clientName(), pasynUser->errorMessage);
+        pasynUInt32 = NULL;
+        intrPvtUInt32 = NULL;
+    }
+
+    // no event interface available
+    return false;
 }
 
 bool AsynDriverInterface::
@@ -369,8 +426,12 @@ supportsAsyncRead()
 bool AsynDriverInterface::
 connectToBus(const char* busname, int addr)
 {
-    if (pasynManager->connectDevice(pasynUser, busname, addr) !=
-        asynSuccess)
+    asynStatus status = pasynManager->connectDevice(pasynUser, busname, addr);
+    printf ("%s: AsynDriverInterface::connectToBus(%s, %d): "
+        "pasynManager->connectDevice(%p, %s, %d) = %s\n",
+        clientName(), busname, addr,  pasynUser,busname, addr,
+            asynStatusStr[status]);    
+    if (status != asynSuccess)
     {
         // asynDriver does not know this busname/address
         return false;
@@ -413,50 +474,6 @@ connectToBus(const char* busname, int addr)
         // (read only one byte first).
         peeksize = inputBuffer.capacity();
     }
-
-    // look for interfaces for events
-    pasynInterface = pasynManager->findInterface(pasynUser,
-        asynInt32Type, true);
-    if(pasynInterface)
-    {
-        pasynInt32 = static_cast<asynInt32*>(pasynInterface->pinterface);
-        pvtInt32 = pasynInterface->drvPvt;
-        pasynUser->reason = ASYN_REASON_SIGNAL; // required for GPIB
-        if (pasynInt32->registerInterruptUser(pvtInt32, pasynUser,
-            intrCallbackInt32, this, &intrPvtInt32) == asynSuccess)
-        {
-            return true;
-        }
-        error("%s: bus %s does not allow to register for "
-            "Int32 interrupts: %s\n",
-            clientName(), busname, pasynUser->errorMessage);
-        pasynInt32 = NULL;
-        intrPvtInt32 = NULL;
-    }
-
-    // no asynInt32 available, thus try asynUInt32
-    pasynInterface = pasynManager->findInterface(pasynUser,
-        asynUInt32DigitalType, true);
-    if(pasynInterface)
-    {
-        pasynUInt32 =
-            static_cast<asynUInt32Digital*>(pasynInterface->pinterface);
-        pvtUInt32 = pasynInterface->drvPvt;
-        pasynUser->reason = ASYN_REASON_SIGNAL;
-        if (pasynUInt32->registerInterruptUser(pvtUInt32,
-            pasynUser, intrCallbackUInt32, this, 0xFFFFFFFF,
-            &intrPvtUInt32) == asynSuccess)
-        {
-            return true;
-        }
-        error("%s: bus %s does not allow to register for "
-            "UInt32 interrupts: %s\n",
-            clientName(), busname, pasynUser->errorMessage);
-        pasynUInt32 = NULL;
-        intrPvtUInt32 = NULL;
-    }
-
-    // no event interface available, never mind
     return true;
 }
 
@@ -503,6 +520,10 @@ connectToAsynPort()
     debug("AsynDriverInterface::connectToAsynPort(%s)\n",
         clientName());
     status = pasynManager->isConnected(pasynUser, &connected);
+    printf ("%s: AsynDriverInterface::connectToAsynPort: "
+        "pasynManager->isConnected(%p, %p) = %s => %s\n",
+        clientName(), pasynUser, &connected, asynStatusStr[status],
+            connected ? "yes" : "no");
     if (status != asynSuccess)
     {
         error("%s: pasynManager->isConnected() failed: %s\n",
@@ -537,7 +558,13 @@ connectToAsynPort()
         clientName(), connected ? "already" : "not yet");
     if (!connected)
     {
+        printf ("%s: AsynDriverInterface::connectToAsynPort: "
+            "pasynCommon->connect(%p, %p)\n",
+            clientName(), pvtCommon, pasynUser);
         status = pasynCommon->connect(pvtCommon, pasynUser);
+        printf ("%s: AsynDriverInterface::connectToAsynPort: "
+            "pasynCommon->connect(%p, %p) = %s\n",
+            clientName(), pvtCommon, pasynUser, asynStatusStr[status]);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
                 "status=%s\n",
             clientName(), asynStatusStr[status]);
@@ -634,7 +661,7 @@ writeHandler()
         if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %ld bytes: \"%s\"\n",
             clientName(), (long)received, StreamBuffer(buffer, received).expand()());
 #endif
-    } while (status != asynTimeout);
+    } while (status == asynSuccess && received > 0);
         
     // discard any early events
     receivedEvent = 0;
@@ -1219,7 +1246,7 @@ acceptEvent(unsigned long mask, unsigned long replytimeout_ms)
     }
     eventMask = mask;
     ioAction = ReceiveEvent;
-    startTimer(replytimeout_ms*0.001);
+    if (replytimeout_ms) startTimer(replytimeout_ms*0.001);
     return true;
 }
 
