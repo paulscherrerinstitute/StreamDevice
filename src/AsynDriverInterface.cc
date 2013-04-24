@@ -657,11 +657,12 @@ writeHandler()
         int eomReason = 0;
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, received, &received, &eomReason);
+        if (received == 0) break;
 #ifndef NO_TEMPORARY
         if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %ld bytes: \"%s\"\n",
             clientName(), (long)received, StreamBuffer(buffer, received).expand()());
 #endif
-    } while (status == asynSuccess && received > 0);
+    } while (status == asynSuccess);
         
     // discard any early events
     receivedEvent = 0;
