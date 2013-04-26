@@ -30,8 +30,10 @@
 #define vsnprintf epicsVsnprintf
 #endif
 
+#define S PRINTF_SIZE_T_PREFIX
+
 void StreamBuffer::
-init(const void* s, long minsize)
+init(const void* s, size_t minsize)
 {
     len = 0;
     offs = 0;
@@ -62,11 +64,11 @@ init(const void* s, long minsize)
 
 
 void StreamBuffer::
-grow(long minsize)
+grow(size_t minsize)
 {
     // make space for minsize + 1 (for termination) bytes
     char* newbuffer;
-    long newcap;
+    size_t newcap;
 #ifdef EXPLODE
     if (minsize > 1000000)
     {
@@ -117,12 +119,12 @@ grow(long minsize)
 }
 
 StreamBuffer& StreamBuffer::
-append(const void* s, long size)
+append(const void* s, ssize_t size)
 {
     if (size <= 0)
     {
         // append negative number of bytes? let's delete some
-        if (size < -len) size = -len;
+        if ((size_t)-size > len) size = -len;
         memset (buffer+offs+len+size, 0, -size);
     }
     else
@@ -135,7 +137,7 @@ append(const void* s, long size)
 }
 
 long int StreamBuffer::
-find(const void* m, long size, long start) const
+find(const void* m, size_t size, ssize_t start) const
 {
     if (start < 0)
     {
@@ -147,7 +149,7 @@ find(const void* m, long size, long start) const
     const char* s = static_cast<const char*>(m);
     char* b = buffer+offs;
     char* p = b+start;
-    long i;
+    size_t i;
     while ((p = static_cast<char*>(memchr(p, s[0], b-p+len-size+1))))
     {
         for (i = 1; i < size; i++)
@@ -161,7 +163,7 @@ next:   p++;
 }
 
 StreamBuffer& StreamBuffer::
-replace(long remstart, long remlen, const void* ins, long inslen)
+replace(ssize_t remstart, ssize_t remlen, const void* ins, ssize_t inslen)
 {
     if (remstart < 0)
     {
@@ -187,12 +189,12 @@ replace(long remstart, long remlen, const void* ins, long inslen)
         remlen += remstart;
         remstart = 0;
     }
-    if (remstart > len)
+    if ((size_t)remstart > len)
     {
         // remove begins after bufferend
         remstart = len;
     }
-    if (remlen >= len-remstart)
+    if ((size_t)remlen >= len-remstart)
     {
         // truncate remove after bufferend
         remlen = len-remstart;
@@ -205,12 +207,12 @@ replace(long remstart, long remlen, const void* ins, long inslen)
         return *this;
     }
     if (inslen < 0) inslen = 0;
-    long remend = remstart+remlen;
-    long newlen = len+inslen-remlen;
+    size_t remend = remstart+remlen;
+    size_t newlen = len+inslen-remlen;
     if (cap <= newlen)
     {
         // buffer too short
-        long newcap;
+        size_t newcap;
         for (newcap = sizeof(local)*2; newcap <= newlen; newcap *= 2);
         char* newbuffer = new char[newcap];
         memcpy(newbuffer, buffer+offs, remstart);
@@ -251,13 +253,13 @@ StreamBuffer& StreamBuffer::
 print(const char* fmt, ...)
 {
     va_list va;
-    int printed;
+    ssize_t printed;
     while (1)
     {
         va_start(va, fmt);
         printed = vsnprintf(buffer+offs+len, cap-offs-len, fmt, va);
         va_end(va);
-        if (printed > -1 && printed < (int)(cap-offs-len))
+        if (printed > -1 && printed < (ssize_t)(cap-offs-len))
         {
             len += printed;
             return *this;
@@ -267,9 +269,9 @@ print(const char* fmt, ...)
     }
 }
 
-StreamBuffer StreamBuffer::expand(long start, long length) const
+StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
 {
-    long end;
+    size_t end;
     if (start < 0)
     {
         start += len;
@@ -289,7 +291,7 @@ StreamBuffer StreamBuffer::expand(long start, long length) const
     StreamBuffer result((end-start)*2);
     start += offs;
     end += offs;
-    long i;
+    size_t i;
     char c;
     for (i = start; i < end; i++)
     {
@@ -311,8 +313,8 @@ dump() const
 {
     StreamBuffer result(256+cap*5);
     result.append("\033[0m");
-    long i;
-    result.print("%ld,%ld,%ld:\033[37m", offs, len, cap);
+    size_t i;
+    result.print("%"S"d,%"S"d,%"S"d:\033[37m", offs, len, cap);
     for (i = 0; i < cap; i++)
     {
         if (i == offs) result.append("\033[34m[\033[0m");
