@@ -1185,6 +1185,7 @@ normal_format:
                 int consumed;
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
+                formatstring.clear();
                 commandIndex = StreamProtocolParser::printString(formatstring, commandIndex);
                 
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
