@@ -1,0 +1,33 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record (stringout, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1 device")
+    }
+}
+
+set protocol {
+    Terminator="\r\n";
+    test1 {
+        out ":%s%01<-hexsum8>";
+    }
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+ioccmd {dbpf DZ:test1 "010304010001"}
+assure ":010304010001F6\r\n"
+                
+finish
