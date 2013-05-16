@@ -44,10 +44,10 @@ public:
         virtual void connectCallback(StreamIoStatus status);
         virtual void disconnectCallback(StreamIoStatus status);
         virtual long priority();
-        virtual const char* name() = 0;
         virtual const char* getInTerminator(size_t& length) = 0;
         virtual const char* getOutTerminator(size_t& length) = 0;
     public:
+        virtual const char* name() = 0;
         virtual ~Client();
     protected:
         StreamBusInterface* businterface;
