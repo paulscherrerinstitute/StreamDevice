@@ -40,11 +40,13 @@ proc escape {string} {
 }
 
 proc sendReply {sock text} {
-    .$sock.t mark set insert end
-    .$sock.t insert end $text
-    .$sock.t see end
-    puts -nonewline $sock $text
-#    puts "sending \"[escape $text]\"\n" 
+    catch {
+        # ignore that socket may already be closed
+        .$sock.t mark set insert end
+        .$sock.t insert end $text
+        .$sock.t see end
+        puts -nonewline $sock $text
+    }
 }
 
 proc checkNum {n} {

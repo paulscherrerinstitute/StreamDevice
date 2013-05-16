@@ -23,7 +23,7 @@
 
 #define STREAM_MAJOR 2
 #define STREAM_MINOR 6
-#define STREAM_PATCHLEVEL 0
+#define STREAM_PATCHLEVEL 3
 
 #if defined(__vxworks) || defined(vxWorks)
 #include <vxWorks.h>

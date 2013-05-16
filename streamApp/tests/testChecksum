@@ -7,7 +7,7 @@ source streamtestlib.tcl
 # Send commands to the ioc shell with ioccmd
 
 set records {
-    record (ao, "DZ:test1")
+    record (stringout, "DZ:test1")
     {
         field (DTYP, "stream")
         field (OUT,  "@test.proto test1 device")
@@ -15,7 +15,225 @@ set records {
 }
 
 set protocol {
-    test1 {out 0x55 0x40 0x04 0x00 0x00 'z;' "%<sum>";}
+    Terminator="\n";
+    test1 {
+        out "sum      %s %9.1<sum>";         in "sum      %=s %9.1<sum>";
+        out "sum8     %s %9.1<sum8>";        in "sum8     %=s %9.1<sum8>";
+        out "sum16    %s %9.1<sum16>";       in "sum16    %=s %9.1<sum16>";
+        out "sum32    %s %9.1<sum32>";       in "sum32    %=s %9.1<sum32>";
+        out "nsum     %s %9.1<nsum>";        in "nsum     %=s %9.1<nsum>";
+        out "negsum   %s %9.1<negsum>";      in "negsum   %=s %9.1<negsum>";
+        out "-sum     %s %9.1<-sum>";        in "-sum     %=s %9.1<-sum>";
+        out "nsum8    %s %9.1<nsum8>";       in "nsum8    %=s %9.1<nsum8>";
+        out "negsum8  %s %9.1<negsum8>";     in "negsum8  %=s %9.1<negsum8>";
+        out "-sum8    %s %9.1<-sum8>";       in "-sum8    %=s %9.1<-sum8>";
+        out "nsum16   %s %9.1<nsum16>";      in "nsum16   %=s %9.1<nsum16>";
+        out "negsum16 %s %9.1<negsum1>";     in "negsum16 %=s %9.1<negsum1>";
+        out "-sum16   %s %9.1<-sum16>";      in "-sum16   %=s %9.1<-sum16>";
+        out "nsum32   %s %9.1<nsum32>";      in "nsum32   %=s %9.1<nsum32>";
+        out "negsum32 %s %9.1<negsum3>";     in "negsum32 %=s %9.1<negsum3>";
+        out "-sum32   %s %9.1<-sum32>";      in "-sum32   %=s %9.1<-sum32>";
+        out "notsum   %s %9.1<notsum>";      in "notsum   %=s %9.1<notsum>";
+        out "~sum     %s %9.1<~sum>";        in "~sum     %=s %9.1<~sum>";
+        out "xor      %s %9.1<xor>";         in "xor      %=s %9.1<xor>";
+        out "xor8     %s %9.1<xor8>";        in "xor8     %=s %9.1<xor8>";
+        out "xor7     %s %9.1<xor7>";        in "xor7     %=s %9.1<xor7>";
+        out "crc8     %s %9.1<crc8>";        in "crc8     %=s %9.1<crc8>";
+        out "ccitt8   %s %9.1<ccitt8>";      in "ccitt8   %=s %9.1<ccitt8>";
+        out "crc16    %s %9.1<crc16>";       in "crc16    %=s %9.1<crc16>";
+        out "crc16r   %s %9.1<crc16r>";      in "crc16r   %=s %9.1<crc16r>";
+        out "ccitt16  %s %9.1<ccitt16>";     in "ccitt16  %=s %9.1<ccitt16>";
+        out "ccitt16a %s %9.1<ccitt16a>";    in "ccitt16a %=s %9.1<ccitt16a>";
+        out "ccitt16x %s %9.1<ccitt16x>";    in "ccitt16x %=s %9.1<ccitt16x>";
+        out "crc16c   %s %9.1<crc16c>";      in "crc16c   %=s %9.1<crc16c>";
+        out "xmodem   %s %9.1<xmodem>";      in "xmodem   %=s %9.1<xmodem>";
+        out "crc32    %s %9.1<crc32>";       in "crc32    %=s %9.1<crc32>";
+        out "crc32r   %s %9.1<crc32r>";      in "crc32r   %=s %9.1<crc32r>";
+        out "jamcrc   %s %9.1<jamcrc>";      in "jamcrc   %=s %9.1<jamcrc>";
+        out "adler32  %s %9.1<adler32>";     in "adler32  %=s %9.1<adler32>";
+        out "hexsum8  %s %9.1<hexsum8>";     in "hexsum8  %=s %9.1<hexsum8>";
+        
+        out "sum      %s %09.1<sum>";        in "sum      %=s %09.1<sum>";
+        out "sum8     %s %09.1<sum8>";       in "sum8     %=s %09.1<sum8>";
+        out "sum16    %s %09.1<sum16>";      in "sum16    %=s %09.1<sum16>";
+        out "sum32    %s %09.1<sum32>";      in "sum32    %=s %09.1<sum32>";
+        out "nsum     %s %09.1<nsum>";       in "nsum     %=s %09.1<nsum>";
+        out "negsum   %s %09.1<negsum>";     in "negsum   %=s %09.1<negsum>";
+        out "-sum     %s %09.1<-sum>";       in "-sum     %=s %09.1<-sum>";
+        out "nsum8    %s %09.1<nsum8>";      in "nsum8    %=s %09.1<nsum8>";
+        out "negsum8  %s %09.1<negsum8>";    in "negsum8  %=s %09.1<negsum8>";
+        out "-sum8    %s %09.1<-sum8>";      in "-sum8    %=s %09.1<-sum8>";
+        out "nsum16   %s %09.1<nsum16>";     in "nsum16   %=s %09.1<nsum16>";
+        out "negsum16 %s %09.1<negsum1>";    in "negsum16 %=s %09.1<negsum1>";
+        out "-sum16   %s %09.1<-sum16>";     in "-sum16   %=s %09.1<-sum16>";
+        out "nsum32   %s %09.1<nsum32>";     in "nsum32   %=s %09.1<nsum32>";
+        out "negsum32 %s %09.1<negsum3>";    in "negsum32 %=s %09.1<negsum3>";
+        out "-sum32   %s %09.1<-sum32>";     in "-sum32   %=s %09.1<-sum32>";
+        out "notsum   %s %09.1<notsum>";     in "notsum   %=s %09.1<notsum>";
+        out "~sum     %s %09.1<~sum>";       in "~sum     %=s %09.1<~sum>";
+        out "xor      %s %09.1<xor>";        in "xor      %=s %09.1<xor>";
+        out "xor8     %s %09.1<xor8>";       in "xor8     %=s %09.1<xor8>";
+        out "xor7     %s %09.1<xor7>";       in "xor7     %=s %09.1<xor7>";
+        out "crc8     %s %09.1<crc8>";       in "crc8     %=s %09.1<crc8>";
+        out "ccitt8   %s %09.1<ccitt8>";     in "ccitt8   %=s %09.1<ccitt8>";
+        out "crc16    %s %09.1<crc16>";      in "crc16    %=s %09.1<crc16>";
+        out "crc16r   %s %09.1<crc16r>";     in "crc16r   %=s %09.1<crc16r>";
+        out "ccitt16  %s %09.1<ccitt16>";    in "ccitt16  %=s %09.1<ccitt16>";
+        out "ccitt16a %s %09.1<ccitt16a>";   in "ccitt16a %=s %09.1<ccitt16a>";
+        out "ccitt16x %s %09.1<ccitt16x>";   in "ccitt16x %=s %09.1<ccitt16x>";
+        out "crc16c   %s %09.1<crc16c>";     in "crc16c   %=s %09.1<crc16c>";
+        out "xmodem   %s %09.1<xmodem>";     in "xmodem   %=s %09.1<xmodem>";
+        out "crc32    %s %09.1<crc32>";      in "crc32    %=s %09.1<crc32>";
+        out "crc32r   %s %09.1<crc32r>";     in "crc32r   %=s %09.1<crc32r>";
+        out "jamcrc   %s %09.1<jamcrc>";     in "jamcrc   %=s %09.1<jamcrc>";
+        out "adler32  %s %09.1<adler32>";    in "adler32  %=s %09.1<adler32>";
+        out "hexsum8  %s %09.1<hexsum8>";    in "hexsum8  %=s %09.1<hexsum8>";
+
+        out "sum      %s %-9.1<sum>";        in "sum      %=s %-9.1<sum>";
+        out "sum8     %s %-9.1<sum8>";       in "sum8     %=s %-9.1<sum8>";
+        out "sum16    %s %-9.1<sum16>";      in "sum16    %=s %-9.1<sum16>";
+        out "sum32    %s %-9.1<sum32>";      in "sum32    %=s %-9.1<sum32>";
+        out "nsum     %s %-9.1<nsum>";       in "nsum     %=s %-9.1<nsum>";
+        out "negsum   %s %-9.1<negsum>";     in "negsum   %=s %-9.1<negsum>";
+        out "-sum     %s %-9.1<-sum>";       in "-sum     %=s %-9.1<-sum>";
+        out "nsum8    %s %-9.1<nsum8>";      in "nsum8    %=s %-9.1<nsum8>";
+        out "negsum8  %s %-9.1<negsum8>";    in "negsum8  %=s %-9.1<negsum8>";
+        out "-sum8    %s %-9.1<-sum8>";      in "-sum8    %=s %-9.1<-sum8>";
+        out "nsum16   %s %-9.1<nsum16>";     in "nsum16   %=s %-9.1<nsum16>";
+        out "negsum16 %s %-9.1<negsum1>";    in "negsum16 %=s %-9.1<negsum1>";
+        out "-sum16   %s %-9.1<-sum16>";     in "-sum16   %=s %-9.1<-sum16>";
+        out "nsum32   %s %-9.1<nsum32>";     in "nsum32   %=s %-9.1<nsum32>";
+        out "negsum32 %s %-9.1<negsum3>";    in "negsum32 %=s %-9.1<negsum3>";
+        out "-sum32   %s %-9.1<-sum32>";     in "-sum32   %=s %-9.1<-sum32>";
+        out "notsum   %s %-9.1<notsum>";     in "notsum   %=s %-9.1<notsum>";
+        out "~sum     %s %-9.1<~sum>";       in "~sum     %=s %-9.1<~sum>";
+        out "xor      %s %-9.1<xor>";        in "xor      %=s %-9.1<xor>";
+        out "xor8     %s %-9.1<xor8>";       in "xor8     %=s %-9.1<xor8>";
+        out "xor7     %s %-9.1<xor7>";       in "xor7     %=s %-9.1<xor7>";
+        out "crc8     %s %-9.1<crc8>";       in "crc8     %=s %-9.1<crc8>";
+        out "ccitt8   %s %-9.1<ccitt8>";     in "ccitt8   %=s %-9.1<ccitt8>";
+        out "crc16    %s %-9.1<crc16>";      in "crc16    %=s %-9.1<crc16>";
+        out "crc16r   %s %-9.1<crc16r>";     in "crc16r   %=s %-9.1<crc16r>";
+        out "ccitt16  %s %-9.1<ccitt16>";    in "ccitt16  %=s %-9.1<ccitt16>";
+        out "ccitt16a %s %-9.1<ccitt16a>";   in "ccitt16a %=s %-9.1<ccitt16a>";
+        out "ccitt16x %s %-9.1<ccitt16x>";   in "ccitt16x %=s %-9.1<ccitt16x>";
+        out "crc16c   %s %-9.1<crc16c>";     in "crc16c   %=s %-9.1<crc16c>";
+        out "xmodem   %s %-9.1<xmodem>";     in "xmodem   %=s %-9.1<xmodem>";
+        out "crc32    %s %-9.1<crc32>";      in "crc32    %=s %-9.1<crc32>";
+        out "crc32r   %s %-9.1<crc32r>";     in "crc32r   %=s %-9.1<crc32r>";
+        out "jamcrc   %s %-9.1<jamcrc>";     in "jamcrc   %=s %-9.1<jamcrc>";
+        out "adler32  %s %-9.1<adler32>";    in "adler32  %=s %-9.1<adler32>";
+        out "hexsum8  %s %-9.1<hexsum8>";    in "hexsum8  %=s %-9.1<hexsum8>";
+
+        out "sum      %s %#9.1<sum>";        in "sum      %=s %#9.1<sum>";
+        out "sum8     %s %#9.1<sum8>";       in "sum8     %=s %#9.1<sum8>";
+        out "sum16    %s %#9.1<sum16>";      in "sum16    %=s %#9.1<sum16>";
+        out "sum32    %s %#9.1<sum32>";      in "sum32    %=s %#9.1<sum32>";
+        out "nsum     %s %#9.1<nsum>";       in "nsum     %=s %#9.1<nsum>";
+        out "negsum   %s %#9.1<negsum>";     in "negsum   %=s %#9.1<negsum>";
+        out "-sum     %s %#9.1<-sum>";       in "-sum     %=s %#9.1<-sum>";
+        out "nsum8    %s %#9.1<nsum8>";      in "nsum8    %=s %#9.1<nsum8>";
+        out "negsum8  %s %#9.1<negsum8>";    in "negsum8  %=s %#9.1<negsum8>";
+        out "-sum8    %s %#9.1<-sum8>";      in "-sum8    %=s %#9.1<-sum8>";
+        out "nsum16   %s %#9.1<nsum16>";     in "nsum16   %=s %#9.1<nsum16>";
+        out "negsum16 %s %#9.1<negsum1>";    in "negsum16 %=s %#9.1<negsum1>";
+        out "-sum16   %s %#9.1<-sum16>";     in "-sum16   %=s %#9.1<-sum16>";
+        out "nsum32   %s %#9.1<nsum32>";     in "nsum32   %=s %#9.1<nsum32>";
+        out "negsum32 %s %#9.1<negsum3>";    in "negsum32 %=s %#9.1<negsum3>";
+        out "-sum32   %s %#9.1<-sum32>";     in "-sum32   %=s %#9.1<-sum32>";
+        out "notsum   %s %#9.1<notsum>";     in "notsum   %=s %#9.1<notsum>";
+        out "~sum     %s %#9.1<~sum>";       in "~sum     %=s %#9.1<~sum>";
+        out "xor      %s %#9.1<xor>";        in "xor      %=s %#9.1<xor>";
+        out "xor8     %s %#9.1<xor8>";       in "xor8     %=s %#9.1<xor8>";
+        out "xor7     %s %#9.1<xor7>";       in "xor7     %=s %#9.1<xor7>";
+        out "crc8     %s %#9.1<crc8>";       in "crc8     %=s %#9.1<crc8>";
+        out "ccitt8   %s %#9.1<ccitt8>";     in "ccitt8   %=s %#9.1<ccitt8>";
+        out "crc16    %s %#9.1<crc16>";      in "crc16    %=s %#9.1<crc16>";
+        out "crc16r   %s %#9.1<crc16r>";     in "crc16r   %=s %#9.1<crc16r>";
+        out "ccitt16  %s %#9.1<ccitt16>";    in "ccitt16  %=s %#9.1<ccitt16>";
+        out "ccitt16a %s %#9.1<ccitt16a>";   in "ccitt16a %=s %#9.1<ccitt16a>";
+        out "ccitt16x %s %#9.1<ccitt16x>";   in "ccitt16x %=s %#9.1<ccitt16x>";
+        out "crc16c   %s %#9.1<crc16c>";     in "crc16c   %=s %#9.1<crc16c>";
+        out "xmodem   %s %#9.1<xmodem>";     in "xmodem   %=s %#9.1<xmodem>";
+        out "crc32    %s %#9.1<crc32>";      in "crc32    %=s %#9.1<crc32>";
+        out "crc32r   %s %#9.1<crc32r>";     in "crc32r   %=s %#9.1<crc32r>";
+        out "jamcrc   %s %#9.1<jamcrc>";     in "jamcrc   %=s %#9.1<jamcrc>";
+        out "adler32  %s %#9.1<adler32>";    in "adler32  %=s %#9.1<adler32>";
+        out "hexsum8  %s %#9.1<hexsum8>";    in "hexsum8  %=s %#9.1<hexsum8>";
+        
+        out "sum      %s %#09.1<sum>";       in "sum      %=s %#09.1<sum>";
+        out "sum8     %s %#09.1<sum8>";      in "sum8     %=s %#09.1<sum8>";
+        out "sum16    %s %#09.1<sum16>";     in "sum16    %=s %#09.1<sum16>";
+        out "sum32    %s %#09.1<sum32>";     in "sum32    %=s %#09.1<sum32>";
+        out "nsum     %s %#09.1<nsum>";      in "nsum     %=s %#09.1<nsum>";
+        out "negsum   %s %#09.1<negsum>";    in "negsum   %=s %#09.1<negsum>";
+        out "-sum     %s %#09.1<-sum>";      in "-sum     %=s %#09.1<-sum>";
+        out "nsum8    %s %#09.1<nsum8>";     in "nsum8    %=s %#09.1<nsum8>";
+        out "negsum8  %s %#09.1<negsum8>";   in "negsum8  %=s %#09.1<negsum8>";
+        out "-sum8    %s %#09.1<-sum8>";     in "-sum8    %=s %#09.1<-sum8>";
+        out "nsum16   %s %#09.1<nsum16>";    in "nsum16   %=s %#09.1<nsum16>";
+        out "negsum16 %s %#09.1<negsum1>";   in "negsum16 %=s %#09.1<negsum1>";
+        out "-sum16   %s %#09.1<-sum16>";    in "-sum16   %=s %#09.1<-sum16>";
+        out "nsum32   %s %#09.1<nsum32>";    in "nsum32   %=s %#09.1<nsum32>";
+        out "negsum32 %s %#09.1<negsum3>";   in "negsum32 %=s %#09.1<negsum3>";
+        out "-sum32   %s %#09.1<-sum32>";    in "-sum32   %=s %#09.1<-sum32>";
+        out "notsum   %s %#09.1<notsum>";    in "notsum   %=s %#09.1<notsum>";
+        out "~sum     %s %#09.1<~sum>";      in "~sum     %=s %#09.1<~sum>";
+        out "xor      %s %#09.1<xor>";       in "xor      %=s %#09.1<xor>";
+        out "xor8     %s %#09.1<xor8>";      in "xor8     %=s %#09.1<xor8>";
+        out "xor7     %s %#09.1<xor7>";      in "xor7     %=s %#09.1<xor7>";
+        out "crc8     %s %#09.1<crc8>";      in "crc8     %=s %#09.1<crc8>";
+        out "ccitt8   %s %#09.1<ccitt8>";    in "ccitt8   %=s %#09.1<ccitt8>";
+        out "crc16    %s %#09.1<crc16>";     in "crc16    %=s %#09.1<crc16>";
+        out "crc16r   %s %#09.1<crc16r>";    in "crc16r   %=s %#09.1<crc16r>";
+        out "ccitt16  %s %#09.1<ccitt16>";   in "ccitt16  %=s %#09.1<ccitt16>";
+        out "ccitt16a %s %#09.1<ccitt16a>";  in "ccitt16a %=s %#09.1<ccitt16a>";
+        out "ccitt16x %s %#09.1<ccitt16x>";  in "ccitt16x %=s %#09.1<ccitt16x>";
+        out "crc16c   %s %#09.1<crc16c>";    in "crc16c   %=s %#09.1<crc16c>";
+        out "xmodem   %s %#09.1<xmodem>";    in "xmodem   %=s %#09.1<xmodem>";
+        out "crc32    %s %#09.1<crc32>";     in "crc32    %=s %#09.1<crc32>";
+        out "crc32r   %s %#09.1<crc32r>";    in "crc32r   %=s %#09.1<crc32r>";
+        out "jamcrc   %s %#09.1<jamcrc>";    in "jamcrc   %=s %#09.1<jamcrc>";
+        out "adler32  %s %#09.1<adler32>";   in "adler32  %=s %#09.1<adler32>";
+        out "hexsum8  %s %#09.1<hexsum8>";   in "hexsum8  %=s %#09.1<hexsum8>";
+        
+        out "sum      %s %#-9.1<sum>";       in "sum      %=s %#-9.1<sum>";
+        out "sum8     %s %#-9.1<sum8>";      in "sum8     %=s %#-9.1<sum8>";
+        out "sum16    %s %#-9.1<sum16>";     in "sum16    %=s %#-9.1<sum16>";
+        out "sum32    %s %#-9.1<sum32>";     in "sum32    %=s %#-9.1<sum32>";
+        out "nsum     %s %#-9.1<nsum>";      in "nsum     %=s %#-9.1<nsum>";
+        out "negsum   %s %#-9.1<negsum>";    in "negsum   %=s %#-9.1<negsum>";
+        out "-sum     %s %#-9.1<-sum>";      in "-sum     %=s %#-9.1<-sum>";
+        out "nsum8    %s %#-9.1<nsum8>";     in "nsum8    %=s %#-9.1<nsum8>";
+        out "negsum8  %s %#-9.1<negsum8>";   in "negsum8  %=s %#-9.1<negsum8>";
+        out "-sum8    %s %#-9.1<-sum8>";     in "-sum8    %=s %#-9.1<-sum8>";
+        out "nsum16   %s %#-9.1<nsum16>";    in "nsum16   %=s %#-9.1<nsum16>";
+        out "negsum16 %s %#-9.1<negsum1>";   in "negsum16 %=s %#-9.1<negsum1>";
+        out "-sum16   %s %#-9.1<-sum16>";    in "-sum16   %=s %#-9.1<-sum16>";
+        out "nsum32   %s %#-9.1<nsum32>";    in "nsum32   %=s %#-9.1<nsum32>";
+        out "negsum32 %s %#-9.1<negsum3>";   in "negsum32 %=s %#-9.1<negsum3>";
+        out "-sum32   %s %#-9.1<-sum32>";    in "-sum32   %=s %#-9.1<-sum32>";
+        out "notsum   %s %#-9.1<notsum>";    in "notsum   %=s %#-9.1<notsum>";
+        out "~sum     %s %#-9.1<~sum>";      in "~sum     %=s %#-9.1<~sum>";
+        out "xor      %s %#-9.1<xor>";       in "xor      %=s %#-9.1<xor>";
+        out "xor8     %s %#-9.1<xor8>";      in "xor8     %=s %#-9.1<xor8>";
+        out "xor7     %s %#-9.1<xor7>";      in "xor7     %=s %#-9.1<xor7>";
+        out "crc8     %s %#-9.1<crc8>";      in "crc8     %=s %#-9.1<crc8>";
+        out "ccitt8   %s %#-9.1<ccitt8>";    in "ccitt8   %=s %#-9.1<ccitt8>";
+        out "crc16    %s %#-9.1<crc16>";     in "crc16    %=s %#-9.1<crc16>";
+        out "crc16r   %s %#-9.1<crc16r>";    in "crc16r   %=s %#-9.1<crc16r>";
+        out "ccitt16  %s %#-9.1<ccitt16>";   in "ccitt16  %=s %#-9.1<ccitt16>";
+        out "ccitt16a %s %#-9.1<ccitt16a>";  in "ccitt16a %=s %#-9.1<ccitt16a>";
+        out "ccitt16x %s %#-9.1<ccitt16x>";  in "ccitt16x %=s %#-9.1<ccitt16x>";
+        out "crc16c   %s %#-9.1<crc16c>";    in "crc16c   %=s %#-9.1<crc16c>";
+        out "xmodem   %s %#-9.1<xmodem>";    in "xmodem   %=s %#-9.1<xmodem>";
+        out "crc32    %s %#-9.1<crc32>";     in "crc32    %=s %#-9.1<crc32>";
+        out "crc32r   %s %#-9.1<crc32r>";    in "crc32r   %=s %#-9.1<crc32r>";
+        out "jamcrc   %s %#-9.1<jamcrc>";    in "jamcrc   %=s %#-9.1<jamcrc>";
+        out "adler32  %s %#-9.1<adler32>";   in "adler32  %=s %#-9.1<adler32>";
+        out "hexsum8  %s %#-9.1<hexsum8>";   in "hexsum8  %=s %#-9.1<hexsum8>";
+        out "DONE";
+    }
 }
 
 set startup {
@@ -24,7 +242,432 @@ set startup {
 set debug 0
 
 startioc
-ioccmd {dbpf DZ:test1 "1"}
-assure "\x55\x40\x04\x00\x00z;\x4e"
-
+ioccmd {dbpf DZ:test1 "123456789"}
+assure "sum      123456789 \xDD\n"
+send   "sum      123456789 \xDD\n"
+assure "sum8     123456789 \xDD\n"
+send   "sum8     123456789 \xDD\n"
+assure "sum16    123456789 \x01\xDD\n"
+send   "sum16    123456789 \x01\xDD\n"
+assure "sum32    123456789 \x00\x00\x01\xDD\n"
+send   "sum32    123456789 \x00\x00\x01\xDD\n"
+assure "nsum     123456789 \x23\n"
+send   "nsum     123456789 \x23\n"
+assure "negsum   123456789 \x23\n"
+send   "negsum   123456789 \x23\n"
+assure "-sum     123456789 \x23\n"
+send   "-sum     123456789 \x23\n"
+assure "nsum8    123456789 \x23\n"
+send   "nsum8    123456789 \x23\n"
+assure "negsum8  123456789 \x23\n"
+send   "negsum8  123456789 \x23\n"
+assure "-sum8    123456789 \x23\n"
+send   "-sum8    123456789 \x23\n"
+assure "nsum16   123456789 \xFE\x23\n"
+send   "nsum16   123456789 \xFE\x23\n"
+assure "negsum16 123456789 \xFE\x23\n"
+send   "negsum16 123456789 \xFE\x23\n"
+assure "-sum16   123456789 \xFE\x23\n"
+send   "-sum16   123456789 \xFE\x23\n"
+assure "nsum32   123456789 \xFF\xFF\xFE\x23\n"
+send   "nsum32   123456789 \xFF\xFF\xFE\x23\n"
+assure "negsum32 123456789 \xFF\xFF\xFE\x23\n"
+send   "negsum32 123456789 \xFF\xFF\xFE\x23\n"
+assure "-sum32   123456789 \xFF\xFF\xFE\x23\n"
+send   "-sum32   123456789 \xFF\xFF\xFE\x23\n"
+assure "notsum   123456789 \x22\n"
+send   "notsum   123456789 \x22\n"
+assure "~sum     123456789 \x22\n"
+send   "~sum     123456789 \x22\n"
+assure "xor      123456789 \x31\n"
+send   "xor      123456789 \x31\n"
+assure "xor8     123456789 \x31\n"
+send   "xor8     123456789 \x31\n"
+assure "xor7     123456789 \x31\n"
+send   "xor7     123456789 \x31\n"
+assure "crc8     123456789 \xF4\n"
+send   "crc8     123456789 \xF4\n"
+assure "ccitt8   123456789 \xA1\n"
+send   "ccitt8   123456789 \xA1\n"
+assure "crc16    123456789 \xFE\xE8\n"
+send   "crc16    123456789 \xFE\xE8\n"
+assure "crc16r   123456789 \xBB\x3D\n"
+send   "crc16r   123456789 \xBB\x3D\n"
+assure "ccitt16  123456789 \x29\xB1\n"
+send   "ccitt16  123456789 \x29\xB1\n"
+assure "ccitt16a 123456789 \xE5\xCC\n"
+send   "ccitt16a 123456789 \xE5\xCC\n"
+assure "ccitt16x 123456789 \x31\xC3\n"
+send   "ccitt16x 123456789 \x31\xC3\n"
+assure "crc16c   123456789 \x31\xC3\n"
+send   "crc16c   123456789 \x31\xC3\n"
+assure "xmodem   123456789 \x31\xC3\n"
+send   "xmodem   123456789 \x31\xC3\n"
+assure "crc32    123456789 \xFC\x89\x19\x18\n"
+send   "crc32    123456789 \xFC\x89\x19\x18\n"
+assure "crc32r   123456789 \xCB\xF4\x39\x26\n"
+send   "crc32r   123456789 \xCB\xF4\x39\x26\n"
+assure "jamcrc   123456789 \x34\x0B\xC6\xD9\n"
+send   "jamcrc   123456789 \x34\x0B\xC6\xD9\n"
+assure "adler32  123456789 \x09\x1E\x01\xDE\n"
+send   "adler32  123456789 \x09\x1E\x01\xDE\n"
+assure "hexsum8  123456789 \x2D\n"
+send   "hexsum8  123456789 \x2D\n"
+                
+assure "sum      123456789 DD\n"
+send   "sum      123456789 DD\n"
+assure "sum8     123456789 DD\n"
+send   "sum8     123456789 DD\n"
+assure "sum16    123456789 01DD\n"
+send   "sum16    123456789 01DD\n"
+assure "sum32    123456789 000001DD\n"
+send   "sum32    123456789 000001DD\n"
+assure "nsum     123456789 23\n"
+send   "nsum     123456789 23\n"
+assure "negsum   123456789 23\n"
+send   "negsum   123456789 23\n"
+assure "-sum     123456789 23\n"
+send   "-sum     123456789 23\n"
+assure "nsum8    123456789 23\n"
+send   "nsum8    123456789 23\n"
+assure "negsum8  123456789 23\n"
+send   "negsum8  123456789 23\n"
+assure "-sum8    123456789 23\n"
+send   "-sum8    123456789 23\n"
+assure "nsum16   123456789 FE23\n"
+send   "nsum16   123456789 FE23\n"
+assure "negsum16 123456789 FE23\n"
+send   "negsum16 123456789 FE23\n"
+assure "-sum16   123456789 FE23\n"
+send   "-sum16   123456789 FE23\n"
+assure "nsum32   123456789 FFFFFE23\n"
+send   "nsum32   123456789 FFFFFE23\n"
+assure "negsum32 123456789 FFFFFE23\n"
+send   "negsum32 123456789 FFFFFE23\n"
+assure "-sum32   123456789 FFFFFE23\n"
+send   "-sum32   123456789 FFFFFE23\n"
+assure "notsum   123456789 22\n"
+send   "notsum   123456789 22\n"
+assure "~sum     123456789 22\n"
+send   "~sum     123456789 22\n"
+assure "xor      123456789 31\n"
+send   "xor      123456789 31\n"
+assure "xor8     123456789 31\n"
+send   "xor8     123456789 31\n"
+assure "xor7     123456789 31\n"
+send   "xor7     123456789 31\n"
+assure "crc8     123456789 F4\n"
+send   "crc8     123456789 F4\n"
+assure "ccitt8   123456789 A1\n"
+send   "ccitt8   123456789 A1\n"
+assure "crc16    123456789 FEE8\n"
+send   "crc16    123456789 FEE8\n"
+assure "crc16r   123456789 BB3D\n"
+send   "crc16r   123456789 BB3D\n"
+assure "ccitt16  123456789 29B1\n"
+send   "ccitt16  123456789 29B1\n"
+assure "ccitt16a 123456789 E5CC\n"
+send   "ccitt16a 123456789 E5CC\n"
+assure "ccitt16x 123456789 31C3\n"
+send   "ccitt16x 123456789 31C3\n"
+assure "crc16c   123456789 31C3\n"
+send   "crc16c   123456789 31C3\n"
+assure "xmodem   123456789 31C3\n"
+send   "xmodem   123456789 31C3\n"
+assure "crc32    123456789 FC891918\n"
+send   "crc32    123456789 FC891918\n"
+assure "crc32r   123456789 CBF43926\n"
+send   "crc32r   123456789 CBF43926\n"
+assure "jamcrc   123456789 340BC6D9\n"
+send   "jamcrc   123456789 340BC6D9\n"
+assure "adler32  123456789 091E01DE\n"
+send   "adler32  123456789 091E01DE\n"
+assure "hexsum8  123456789 2D\n"
+send   "hexsum8  123456789 2D\n"
+                
+assure "sum      123456789 \x3D\x3D\n"
+send   "sum      123456789 \x3D\x3D\n"
+assure "sum8     123456789 \x3D\x3D\n"
+send   "sum8     123456789 \x3D\x3D\n"
+assure "sum16    123456789 \x30\x31\x3D\x3D\n"
+send   "sum16    123456789 \x30\x31\x3D\x3D\n"
+assure "sum32    123456789 \x30\x30\x30\x30\x30\x31\x3D\x3D\n"
+send   "sum32    123456789 \x30\x30\x30\x30\x30\x31\x3D\x3D\n"
+assure "nsum     123456789 \x32\x33\n"
+send   "nsum     123456789 \x32\x33\n"
+assure "negsum   123456789 \x32\x33\n"
+send   "negsum   123456789 \x32\x33\n"
+assure "-sum     123456789 \x32\x33\n"
+send   "-sum     123456789 \x32\x33\n"
+assure "nsum8    123456789 \x32\x33\n"
+send   "nsum8    123456789 \x32\x33\n"
+assure "negsum8  123456789 \x32\x33\n"
+send   "negsum8  123456789 \x32\x33\n"
+assure "-sum8    123456789 \x32\x33\n"
+send   "-sum8    123456789 \x32\x33\n"
+assure "nsum16   123456789 \x3F\x3E\x32\x33\n"
+send   "nsum16   123456789 \x3F\x3E\x32\x33\n"
+assure "negsum16 123456789 \x3F\x3E\x32\x33\n"
+send   "negsum16 123456789 \x3F\x3E\x32\x33\n"
+assure "-sum16   123456789 \x3F\x3E\x32\x33\n"
+send   "-sum16   123456789 \x3F\x3E\x32\x33\n"
+assure "nsum32   123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+send   "nsum32   123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+assure "negsum32 123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+send   "negsum32 123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+assure "-sum32   123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+send   "-sum32   123456789 \x3F\x3F\x3F\x3F\x3F\x3E\x32\x33\n"
+assure "notsum   123456789 \x32\x32\n"
+send   "notsum   123456789 \x32\x32\n"
+assure "~sum     123456789 \x32\x32\n"
+send   "~sum     123456789 \x32\x32\n"
+assure "xor      123456789 \x33\x31\n"
+send   "xor      123456789 \x33\x31\n"
+assure "xor8     123456789 \x33\x31\n"
+send   "xor8     123456789 \x33\x31\n"
+assure "xor7     123456789 \x33\x31\n"
+send   "xor7     123456789 \x33\x31\n"
+assure "crc8     123456789 \x3F\x34\n"
+send   "crc8     123456789 \x3F\x34\n"
+assure "ccitt8   123456789 \x3A\x31\n"
+send   "ccitt8   123456789 \x3A\x31\n"
+assure "crc16    123456789 \x3F\x3E\x3E\x38\n"
+send   "crc16    123456789 \x3F\x3E\x3E\x38\n"
+assure "crc16r   123456789 \x3B\x3B\x33\x3D\n"
+send   "crc16r   123456789 \x3B\x3B\x33\x3D\n"
+assure "ccitt16  123456789 \x32\x39\x3B\x31\n"
+send   "ccitt16  123456789 \x32\x39\x3B\x31\n"
+assure "ccitt16a 123456789 \x3E\x35\x3C\x3C\n"
+send   "ccitt16a 123456789 \x3E\x35\x3C\x3C\n"
+assure "ccitt16x 123456789 \x33\x31\x3C\x33\n"
+send   "ccitt16x 123456789 \x33\x31\x3C\x33\n"
+assure "crc16c   123456789 \x33\x31\x3C\x33\n"
+send   "crc16c   123456789 \x33\x31\x3C\x33\n"
+assure "xmodem   123456789 \x33\x31\x3C\x33\n"
+send   "xmodem   123456789 \x33\x31\x3C\x33\n"
+assure "crc32    123456789 \x3F\x3C\x38\x39\x31\x39\x31\x38\n"
+send   "crc32    123456789 \x3F\x3C\x38\x39\x31\x39\x31\x38\n"
+assure "crc32r   123456789 \x3C\x3B\x3F\x34\x33\x39\x32\x36\n"
+send   "crc32r   123456789 \x3C\x3B\x3F\x34\x33\x39\x32\x36\n"
+assure "jamcrc   123456789 \x33\x34\x30\x3B\x3C\x36\x3D\x39\n"
+send   "jamcrc   123456789 \x33\x34\x30\x3B\x3C\x36\x3D\x39\n"
+assure "adler32  123456789 \x30\x39\x31\x3E\x30\x31\x3D\x3E\n"
+send   "adler32  123456789 \x30\x39\x31\x3E\x30\x31\x3D\x3E\n"
+assure "hexsum8  123456789 \x32\x3D\n"
+send   "hexsum8  123456789 \x32\x3D\n"
+                
+assure "sum      123456789 \xDD\n"
+send   "sum      123456789 \xDD\n"
+assure "sum8     123456789 \xDD\n"
+send   "sum8     123456789 \xDD\n"
+assure "sum16    123456789 \xDD\x01\n"
+send   "sum16    123456789 \xDD\x01\n"
+assure "sum32    123456789 \xDD\x01\x00\x00\n"
+send   "sum32    123456789 \xDD\x01\x00\x00\n"
+assure "nsum     123456789 \x23\n"
+send   "nsum     123456789 \x23\n"
+assure "negsum   123456789 \x23\n"
+send   "negsum   123456789 \x23\n"
+assure "-sum     123456789 \x23\n"
+send   "-sum     123456789 \x23\n"
+assure "nsum8    123456789 \x23\n"
+send   "nsum8    123456789 \x23\n"
+assure "negsum8  123456789 \x23\n"
+send   "negsum8  123456789 \x23\n"
+assure "-sum8    123456789 \x23\n"
+send   "-sum8    123456789 \x23\n"
+assure "nsum16   123456789 \x23\xFE\n"
+send   "nsum16   123456789 \x23\xFE\n"
+assure "negsum16 123456789 \x23\xFE\n"
+send   "negsum16 123456789 \x23\xFE\n"
+assure "-sum16   123456789 \x23\xFE\n"
+send   "-sum16   123456789 \x23\xFE\n"
+assure "nsum32   123456789 \x23\xFE\xFF\xFF\n"
+send   "nsum32   123456789 \x23\xFE\xFF\xFF\n"
+assure "negsum32 123456789 \x23\xFE\xFF\xFF\n"
+send   "negsum32 123456789 \x23\xFE\xFF\xFF\n"
+assure "-sum32   123456789 \x23\xFE\xFF\xFF\n"
+send   "-sum32   123456789 \x23\xFE\xFF\xFF\n"
+assure "notsum   123456789 \x22\n"
+send   "notsum   123456789 \x22\n"
+assure "~sum     123456789 \x22\n"
+send   "~sum     123456789 \x22\n"
+assure "xor      123456789 \x31\n"
+send   "xor      123456789 \x31\n"
+assure "xor8     123456789 \x31\n"
+send   "xor8     123456789 \x31\n"
+assure "xor7     123456789 \x31\n"
+send   "xor7     123456789 \x31\n"
+assure "crc8     123456789 \xF4\n"
+send   "crc8     123456789 \xF4\n"
+assure "ccitt8   123456789 \xA1\n"
+send   "ccitt8   123456789 \xA1\n"
+assure "crc16    123456789 \xE8\xFE\n"
+send   "crc16    123456789 \xE8\xFE\n"
+assure "crc16r   123456789 \x3D\xBB\n"
+send   "crc16r   123456789 \x3D\xBB\n"
+assure "ccitt16  123456789 \xB1\x29\n"
+send   "ccitt16  123456789 \xB1\x29\n"
+assure "ccitt16a 123456789 \xCC\xE5\n"
+send   "ccitt16a 123456789 \xCC\xE5\n"
+assure "ccitt16x 123456789 \xC3\x31\n"
+send   "ccitt16x 123456789 \xC3\x31\n"
+assure "crc16c   123456789 \xC3\x31\n"
+send   "crc16c   123456789 \xC3\x31\n"
+assure "xmodem   123456789 \xC3\x31\n"
+send   "xmodem   123456789 \xC3\x31\n"
+assure "crc32    123456789 \x18\x19\x89\xFC\n"
+send   "crc32    123456789 \x18\x19\x89\xFC\n"
+assure "crc32r   123456789 \x26\x39\xF4\xCB\n"
+send   "crc32r   123456789 \x26\x39\xF4\xCB\n"
+assure "jamcrc   123456789 \xD9\xC6\x0B\x34\n"
+send   "jamcrc   123456789 \xD9\xC6\x0B\x34\n"
+assure "adler32  123456789 \xDE\x01\x1E\x09\n"
+send   "adler32  123456789 \xDE\x01\x1E\x09\n"
+assure "hexsum8  123456789 \x2D\n"
+send   "hexsum8  123456789 \x2D\n"
+                
+assure "sum      123456789 DD\n"
+send   "sum      123456789 DD\n"
+assure "sum8     123456789 DD\n"
+send   "sum8     123456789 DD\n"
+assure "sum16    123456789 DD01\n"
+send   "sum16    123456789 DD01\n"
+assure "sum32    123456789 DD010000\n"
+send   "sum32    123456789 DD010000\n"
+assure "nsum     123456789 23\n"
+send   "nsum     123456789 23\n"
+assure "negsum   123456789 23\n"
+send   "negsum   123456789 23\n"
+assure "-sum     123456789 23\n"
+send   "-sum     123456789 23\n"
+assure "nsum8    123456789 23\n"
+send   "nsum8    123456789 23\n"
+assure "negsum8  123456789 23\n"
+send   "negsum8  123456789 23\n"
+assure "-sum8    123456789 23\n"
+send   "-sum8    123456789 23\n"
+assure "nsum16   123456789 23FE\n"
+send   "nsum16   123456789 23FE\n"
+assure "negsum16 123456789 23FE\n"
+send   "negsum16 123456789 23FE\n"
+assure "-sum16   123456789 23FE\n"
+send   "-sum16   123456789 23FE\n"
+assure "nsum32   123456789 23FEFFFF\n"
+send   "nsum32   123456789 23FEFFFF\n"
+assure "negsum32 123456789 23FEFFFF\n"
+send   "negsum32 123456789 23FEFFFF\n"
+assure "-sum32   123456789 23FEFFFF\n"
+send   "-sum32   123456789 23FEFFFF\n"
+assure "notsum   123456789 22\n"
+send   "notsum   123456789 22\n"
+assure "~sum     123456789 22\n"
+send   "~sum     123456789 22\n"
+assure "xor      123456789 31\n"
+send   "xor      123456789 31\n"
+assure "xor8     123456789 31\n"
+send   "xor8     123456789 31\n"
+assure "xor7     123456789 31\n"
+send   "xor7     123456789 31\n"
+assure "crc8     123456789 F4\n"
+send   "crc8     123456789 F4\n"
+assure "ccitt8   123456789 A1\n"
+send   "ccitt8   123456789 A1\n"
+assure "crc16    123456789 E8FE\n"
+send   "crc16    123456789 E8FE\n"
+assure "crc16r   123456789 3DBB\n"
+send   "crc16r   123456789 3DBB\n"
+assure "ccitt16  123456789 B129\n"
+send   "ccitt16  123456789 B129\n"
+assure "ccitt16a 123456789 CCE5\n"
+send   "ccitt16a 123456789 CCE5\n"
+assure "ccitt16x 123456789 C331\n"
+send   "ccitt16x 123456789 C331\n"
+assure "crc16c   123456789 C331\n"
+send   "crc16c   123456789 C331\n"
+assure "xmodem   123456789 C331\n"
+send   "xmodem   123456789 C331\n"
+assure "crc32    123456789 181989FC\n"
+send   "crc32    123456789 181989FC\n"
+assure "crc32r   123456789 2639F4CB\n"
+send   "crc32r   123456789 2639F4CB\n"
+assure "jamcrc   123456789 D9C60B34\n"
+send   "jamcrc   123456789 D9C60B34\n"
+assure "adler32  123456789 DE011E09\n"
+send   "adler32  123456789 DE011E09\n"
+assure "hexsum8  123456789 2D\n"
+send   "hexsum8  123456789 2D\n"
+                
+assure "sum      123456789 \x3D\x3D\n"
+send   "sum      123456789 \x3D\x3D\n"
+assure "sum8     123456789 \x3D\x3D\n"
+send   "sum8     123456789 \x3D\x3D\n"
+assure "sum16    123456789 \x3D\x3D\x30\x31\n"
+send   "sum16    123456789 \x3D\x3D\x30\x31\n"
+assure "sum32    123456789 \x3D\x3D\x30\x31\x30\x30\x30\x30\n"
+send   "sum32    123456789 \x3D\x3D\x30\x31\x30\x30\x30\x30\n"
+assure "nsum     123456789 \x32\x33\n"
+send   "nsum     123456789 \x32\x33\n"
+assure "negsum   123456789 \x32\x33\n"
+send   "negsum   123456789 \x32\x33\n"
+assure "-sum     123456789 \x32\x33\n"
+send   "-sum     123456789 \x32\x33\n"
+assure "nsum8    123456789 \x32\x33\n"
+send   "nsum8    123456789 \x32\x33\n"
+assure "negsum8  123456789 \x32\x33\n"
+send   "negsum8  123456789 \x32\x33\n"
+assure "-sum8    123456789 \x32\x33\n"
+send   "-sum8    123456789 \x32\x33\n"
+assure "nsum16   123456789 \x32\x33\x3F\x3E\n"
+send   "nsum16   123456789 \x32\x33\x3F\x3E\n"
+assure "negsum16 123456789 \x32\x33\x3F\x3E\n"
+send   "negsum16 123456789 \x32\x33\x3F\x3E\n"
+assure "-sum16   123456789 \x32\x33\x3F\x3E\n"
+send   "-sum16   123456789 \x32\x33\x3F\x3E\n"
+assure "nsum32   123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+send   "nsum32   123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+assure "negsum32 123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+send   "negsum32 123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+assure "-sum32   123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+send   "-sum32   123456789 \x32\x33\x3F\x3E\x3F\x3F\x3F\x3F\n"
+assure "notsum   123456789 \x32\x32\n"
+send   "notsum   123456789 \x32\x32\n"
+assure "~sum     123456789 \x32\x32\n"
+send   "~sum     123456789 \x32\x32\n"
+assure "xor      123456789 \x33\x31\n"
+send   "xor      123456789 \x33\x31\n"
+assure "xor8     123456789 \x33\x31\n"
+send   "xor8     123456789 \x33\x31\n"
+assure "xor7     123456789 \x33\x31\n"
+send   "xor7     123456789 \x33\x31\n"
+assure "crc8     123456789 \x3F\x34\n"
+send   "crc8     123456789 \x3F\x34\n"
+assure "ccitt8   123456789 \x3A\x31\n"
+send   "ccitt8   123456789 \x3A\x31\n"
+assure "crc16    123456789 \x3E\x38\x3F\x3E\n"
+send   "crc16    123456789 \x3E\x38\x3F\x3E\n"
+assure "crc16r   123456789 \x33\x3D\x3B\x3B\n"
+send   "crc16r   123456789 \x33\x3D\x3B\x3B\n"
+assure "ccitt16  123456789 \x3B\x31\x32\x39\n"
+send   "ccitt16  123456789 \x3B\x31\x32\x39\n"
+assure "ccitt16a 123456789 \x3C\x3C\x3E\x35\n"
+send   "ccitt16a 123456789 \x3C\x3C\x3E\x35\n"
+assure "ccitt16x 123456789 \x3C\x33\x33\x31\n"
+send   "ccitt16x 123456789 \x3C\x33\x33\x31\n"
+assure "crc16c   123456789 \x3C\x33\x33\x31\n"
+send   "crc16c   123456789 \x3C\x33\x33\x31\n"
+assure "xmodem   123456789 \x3C\x33\x33\x31\n"
+send   "xmodem   123456789 \x3C\x33\x33\x31\n"
+assure "crc32    123456789 \x31\x38\x31\x39\x38\x39\x3F\x3C\n"
+send   "crc32    123456789 \x31\x38\x31\x39\x38\x39\x3F\x3C\n"
+assure "crc32r   123456789 \x32\x36\x33\x39\x3F\x34\x3C\x3B\n"
+send   "crc32r   123456789 \x32\x36\x33\x39\x3F\x34\x3C\x3B\n"
+assure "jamcrc   123456789 \x3D\x39\x3C\x36\x30\x3B\x33\x34\n"
+send   "jamcrc   123456789 \x3D\x39\x3C\x36\x30\x3B\x33\x34\n"
+assure "adler32  123456789 \x3D\x3E\x30\x31\x31\x3E\x30\x39\n"
+send   "adler32  123456789 \x3D\x3E\x30\x31\x31\x3E\x30\x39\n"
+assure "hexsum8  123456789 \x32\x3D\n"
+send   "hexsum8  123456789 \x32\x3D\n"
+assure "DONE\n"
+                
 finish

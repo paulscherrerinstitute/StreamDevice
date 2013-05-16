@@ -30,11 +30,6 @@ set records {
         field (DTYP, "stream")
         field (OUT,  "@test.proto bcd device")
     }
-    record (stringout, "DZ:chksum")
-    {
-        field (DTYP, "stream")
-        field (OUT,  "@test.proto chksum device")
-    }
 }
 
 set protocol {
@@ -43,13 +38,6 @@ set protocol {
     ao {out "%.2f %.2e %.2E %.2g %.2G %i %d %u %o %04x %#.2f %#.2e %#.2E %#.2g %#.2G %#i %#d %#u %#o %#06x";}
     lo {out "%d %(VAL)d %06d %x %06X %b %06b %.6b %B.! %06B.!";}
     bcd {out "%D %6D %.2D %.4D %.6D %.8D %#D %#6D %#.2D %#.4D %#.6D";}
-    chksum {out "%s%<xor>";
-            out "%s%0<sum>";
-            out "%s%0<crc8>";
-            out "%s%0<crc16>";
-            out "%s%0<crc32>";
-            out "%s%0<adler32>";
-     }
 }
 
 set startup {
@@ -100,11 +88,4 @@ assure "\0\0\0\0\1\2\3\4 \0\0\0\0\1\2\3\4 \4 \3\4 \2\3\4 \1\2\3\4 \4\3\2\1\0\0\0
 } else {
 assure "\1\2\3\4 \0\0\1\2\3\4 \4 \3\4 \2\3\4 \1\2\3\4 \4\3\2\1 \4\3\2\1\0\0 \4 \4\3 \4\3\2\n"
 }
-ioccmd {dbpf DZ:chksum "123456789"}
-assure "1234567891\n"
-assure "123456789DD\n"
-assure "123456789F4\n"
-assure "123456789FEE8\n"
-assure "123456789FC891918\n"
-assure "123456789091E01DE\n"
 finish
