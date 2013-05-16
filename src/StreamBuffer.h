@@ -27,6 +27,10 @@
 #define __attribute__(x)
 #endif
 
+#ifdef _WIN32
+#define ssize_t ptrdiff_t
+#endif
+
 class StreamBuffer
 {
     char local[64];
@@ -35,7 +39,7 @@ class StreamBuffer
     size_t offs;
     char* buffer;
 
-    void init(const void* s, size_t minsize);
+    void init(const void* s, ssize_t minsize);
 
     void check(size_t size)
         {if (len+offs+size >= cap) grow(len+size);}
@@ -44,7 +48,7 @@ class StreamBuffer
 
 public:
     // Hints:
-    // * Any index parameter (long) can be negative
+    // * Any index parameter (ssize_t) can be negative
     //   meaning "count from end" (-1 is the last byte)
     // * Appending negative count deletes from end
     // * Any returned char* pointer becomes invalid when
@@ -55,7 +59,7 @@ public:
     StreamBuffer()
         {init(NULL, 0);}
 
-    StreamBuffer(const void* s, size_t size)
+    StreamBuffer(const void* s, ssize_t size)
         {init(s, size);}
 
     StreamBuffer(const char* s)
@@ -64,7 +68,7 @@ public:
     StreamBuffer(const StreamBuffer& s)
         {init(s.buffer+s.offs, s.len);}
 
-    StreamBuffer(size_t size)
+    StreamBuffer(ssize_t size)
         {init(NULL, size);}
 
     ~StreamBuffer()
@@ -193,19 +197,19 @@ public:
         __attribute__ ((format(printf,2,3)));
 
     // find: get index of data in buffer or -1
-    long find(char c, ssize_t start=0) const
+    ssize_t find(char c, ssize_t start=0) const
         {char* p;
          return (p = static_cast<char*>(
             memchr(buffer+offs+(start<0?start+len:start),
                 c, start<0?-start:len-start)))?
             p-(buffer+offs) : -1;}
 
-    long find(const void* s, size_t size, ssize_t start=0) const;
+    ssize_t find(const void* s, size_t size, ssize_t start=0) const;
 
-    long find(const char* s, ssize_t start=0) const
+    ssize_t find(const char* s, ssize_t start=0) const
         {return find(s, s?strlen(s):0, start);}
 
-    long int find(const StreamBuffer& s, ssize_t start=0) const
+    ssize_t find(const StreamBuffer& s, ssize_t start=0) const
         {return find(s.buffer+s.offs, s.len, start);}
 
     // startswith: returns true if first size bytes are equal
