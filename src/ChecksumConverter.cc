@@ -27,12 +27,9 @@
 #endif
 #include <ctype.h>
 
-typedef unsigned long ulong;
-typedef unsigned char uchar;
+typedef unsigned int (*checksumFunc)(const unsigned char* data, unsigned int len,  unsigned int init);
 
-typedef ulong (*checksumFunc)(const uchar* data, ulong len, ulong init);
-
-static ulong sum(const uchar* data, ulong len, ulong sum)
+static unsigned int sum(const unsigned char* data, unsigned int len, unsigned int sum)
 {
     while (len--)
     {
@@ -41,7 +38,7 @@ static ulong sum(const uchar* data, ulong len, ulong sum)
     return sum;
 }
 
-static ulong xor8(const uchar* data, ulong len, ulong sum)
+static unsigned int xor8(const unsigned char* data, unsigned int len, unsigned int sum)
 {
     while (len--)
     {
@@ -50,15 +47,15 @@ static ulong xor8(const uchar* data, ulong len, ulong sum)
     return sum;
 }
 
-static ulong xor7(const uchar* data, ulong len, ulong sum)
+static unsigned int xor7(const unsigned char* data, unsigned int len, unsigned int sum)
 {
     return xor8(data, len, sum) & 0x7F;
 }
 
-static ulong crc_0x07(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x07(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^8 + x^2 + x^1 + x^0 (0x07)
-    const static uchar table[256] = {
+    const static unsigned char table[256] = {
         0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
         0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
         0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65,
@@ -96,10 +93,10 @@ static ulong crc_0x07(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x31(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x31(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^8 + x^5 + x^4 + x^0 (0x31)
-    const static uchar table[256] = {
+    const static unsigned char table[256] = {
         0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83,
         0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
         0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e,
@@ -137,7 +134,7 @@ static ulong crc_0x31(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x8005(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x8005(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^16 + x^15 + x^2 + x^0  (0x8005)
     const static unsigned short table[256] = {
@@ -178,7 +175,7 @@ static ulong crc_0x8005(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x8005_r(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x8005_r(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^16 + x^15 + x^2 + x^0  (0x8005)
     // reflected
@@ -220,7 +217,7 @@ static ulong crc_0x8005_r(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x1021(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x1021(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^16 + x^12 + x^5 + x^0 (0x1021)
     const static unsigned short table[256] = {
@@ -261,7 +258,7 @@ static ulong crc_0x1021(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x04C11DB7(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x04C11DB7(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
@@ -335,7 +332,7 @@ static ulong crc_0x04C11DB7(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong crc_0x04C11DB7_r(const uchar* data, ulong len, ulong crc)
+static unsigned int crc_0x04C11DB7_r(const unsigned char* data, unsigned int len, unsigned int crc)
 {
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
@@ -410,13 +407,13 @@ static ulong crc_0x04C11DB7_r(const uchar* data, ulong len, ulong crc)
     return crc;
 }
 
-static ulong adler32(const uchar* data, ulong len, ulong init)
+static unsigned int adler32(const unsigned char* data, unsigned int len, unsigned int init)
 {
-    ulong a = init & 0xFFFF;
-    ulong b = (init >> 16) & 0xFFFF;
+    unsigned int a = init & 0xFFFF;
+    unsigned int b = (init >> 16) & 0xFFFF;
 
     while (len) {
-        ulong tlen = len > 5550 ? 5550 : len;
+        unsigned int tlen = len > 5550 ? 5550 : len;
         len -= tlen;
         do {
             a += *data++;
@@ -431,10 +428,10 @@ static ulong adler32(const uchar* data, ulong len, ulong init)
    return b << 16 | a;
 }
 
-static ulong hexsum(const uchar* data, ulong len, ulong sum)
+static unsigned int hexsum(const unsigned char* data, unsigned int len, unsigned int sum)
 {
     // Add all hex digits, ignore all other bytes.
-    ulong d; 
+    unsigned int d; 
     while (len--)
     {
         d = toupper(*data++);
@@ -452,8 +449,8 @@ struct checksum
 {
     const char* name;
     checksumFunc func;
-    ulong init;
-    ulong xorout;
+    unsigned int init;
+    unsigned int xorout;
     signed char bytes;
 };
 
@@ -465,20 +462,6 @@ static checksum checksumMap[] =
     {"sum8",    sum,              0x00,       0x00,       1}, // 0xDD
     {"sum16",   sum,              0x0000,     0x0000,     2}, // 0x01DD
     {"sum32",   sum,              0x00000000, 0x00000000, 4}, // 0x000001DD
-    {"nsum",    sum,              0xFF,       0xFF,       1}, // 0x23
-    {"negsum",  sum,              0xFF,       0xFF,       1}, // 0x23
-    {"-sum",    sum,              0xFF,       0xFF,       1}, // 0x23
-    {"nsum8",   sum,              0xFF,       0xFF,       1}, // 0x23
-    {"negsum8", sum,              0xFF,       0xFF,       1}, // 0x23
-    {"-sum8",   sum,              0xFF,       0xFF,       1}, // 0x23
-    {"nsum16",  sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
-    {"negsum16",sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
-    {"-sum16",  sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
-    {"nsum32",  sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
-    {"negsum32",sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
-    {"-sum32",  sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
-    {"notsum",  sum,              0x00,       0xFF,       1}, // 0x22
-    {"~sum",    sum,              0x00,       0xFF,       1}, // 0x22
     {"xor",     xor8,             0x00,       0x00,       1}, // 0x31
     {"xor8",    xor8,             0x00,       0x00,       1}, // 0x31
     {"xor7",    xor7,             0x00,       0x00,       1}, // 0x31
@@ -498,7 +481,7 @@ static checksum checksumMap[] =
     {"hexsum8", hexsum,           0x00,       0x00,       1}  // 0x2D
 };
 
-static ulong mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
+static unsigned int mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
 
 class ChecksumConverter : public StreamFormatConverter
 {
@@ -517,39 +500,80 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
         return false;
     }
 
-    size_t fnum;
+    bool negflag=false;
+    bool notflag=false;
+    if (*source == '-')
+    {
+        source++;
+        negflag = true;
+    }
+    if (strncasecmp(source, "neg", 3) == 0)
+    {
+        source+=3;
+        negflag = true;
+    }
+    if (*source == '~')
+    {
+        source++;
+        notflag = true;
+    }
+    if (strncasecmp(source, "not", 3) == 0)
+    {
+        source+=3;
+        notflag = true;
+    }
+    unsigned  fnum;
+    int len = p-source;
+    unsigned int init, xorout;
     for (fnum = 0; fnum < sizeof(checksumMap)/sizeof(checksum); fnum++)
     {
-        if (strncasecmp(source, checksumMap[fnum].name, p-source) == 0)
+        if ((strncasecmp(source, checksumMap[fnum].name, len) == 0) ||
+            (*source == 'n' && len > 1 && strncasecmp(source+1, checksumMap[fnum].name, len-1) == 0 && (negflag = true)))
         {
+            init = checksumMap[fnum].init;
+            xorout = checksumMap[fnum].xorout;
+            if (negflag)
+            {
+                init = ~init;
+                xorout = ~xorout;
+            }
+            if (notflag)
+            {
+                xorout = ~xorout;
+            }
+            info.append(&init,  sizeof(init));
+            info.append(&xorout, sizeof(xorout));
             info.append(fnum);
             source = p+1;
             return pseudo_format;
         }
     }
 
-    error ("Unknown checksum algorithm \"%.*s\"\n",
-        static_cast<int>(p-source), source);
+    error ("Unknown checksum algorithm \"%.*s\"\n", len, source);
     return false;
 }
 
 bool ChecksumConverter::
 printPseudo(const StreamFormat& format, StreamBuffer& output)
 {
-    ulong sum;
-    int fnum = format.info[0];
+    unsigned int sum;
+    const char* info = format.info;
+    unsigned int init = extract<unsigned int>(info);
+    unsigned int xorout = extract<unsigned int>(info);
+    int fnum = extract<char>(info);
+
     int start = format.width;
     int length = output.length()-format.width;
     if (format.prec > 0) length -= format.prec;
 
     debug("ChecksumConverter %s: output to check: \"%s\"\n",
         checksumMap[fnum].name, output.expand(start,length)());
+        
+    sum = (xorout ^ checksumMap[fnum].func(
+        reinterpret_cast<unsigned char*>(output(start)), length, init))
+        & mask[checksumMap[fnum].bytes];
 
-    sum = (checksumMap[fnum].xorout ^ checksumMap[fnum].func(
-        reinterpret_cast<uchar*>(output(start)), length,
-        checksumMap[fnum].init)) & mask[checksumMap[fnum].bytes];
-
-    debug("ChecksumConverter %s: output checksum is 0x%lX\n",
+    debug("ChecksumConverter %s: output checksum is 0x%X\n",
         checksumMap[fnum].name, sum);
 
     int i;
@@ -559,8 +583,8 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     {
         // get number of decimal digits from number of bytes: ceil(xbytes*2.5)
         i = (checksumMap[fnum].bytes+1)*25/10-2;
-        output.print("%0*ld", i, sum);
-        debug("ChecksumConverter %s: decimal appending %0*ld\n",
+        output.print("%0*d", i, sum);
+        debug("ChecksumConverter %s: decimal appending %0*d\n",
             checksumMap[fnum].name, i, sum);
     }   
     else
@@ -607,10 +631,14 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
 int ChecksumConverter::
 scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
 {
-    int fnum = format.info[0];
-    ulong sum;
+    unsigned int sum;
+    const char* info = format.info;
+    unsigned int init = extract<unsigned int>(info);
+    unsigned int xorout = extract<unsigned int>(info);
     int start = format.width;
+    int fnum = extract<char>(info);
     int length = cursor-format.width;
+
     if (format.prec > 0) length -= format.prec;
     
     debug("ChecksumConverter %s: input to check: \"%s\n",
@@ -629,11 +657,11 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
         return -1;
     }
 
-    sum = (checksumMap[fnum].xorout ^ checksumMap[fnum].func(
-        reinterpret_cast<uchar*>(input(start)), length,
-        checksumMap[fnum].init)) & mask[checksumMap[fnum].bytes];
+    sum = (xorout ^ checksumMap[fnum].func(
+        reinterpret_cast<unsigned char*>(input(start)), length, init))
+        & mask[checksumMap[fnum].bytes];
 
-    debug("ChecksumConverter %s: input checksum is 0x%0*lX\n",
+    debug("ChecksumConverter %s: input checksum is 0x%0*X\n",
         checksumMap[fnum].name, 2*checksumMap[fnum].bytes, sum);
 
     int i, j;
@@ -641,7 +669,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
     
     if (format.flags & sign_flag) // decimal
     {
-        ulong sumin = 0;
+        unsigned int sumin = 0;
         for (i = 0; i < expectedLength; i++)
         {
             inchar = input[cursor+i];
@@ -650,7 +678,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
         }
         if (sumin != sum)
         {
-            debug("ChecksumConverter %s: Input %0*lu does not match checksum %0*lu\n", 
+            debug("ChecksumConverter %s: Input %0*u does not match checksum %0*u\n", 
                 checksumMap[fnum].name, i, sumin, expectedLength, sum);
             return -1;
         }
@@ -692,7 +720,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
             }
             if (inchar != ((sum >> 8*i) & 0xff))
             {
-                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*lX\n", 
+                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*X\n", 
                     checksumMap[fnum].name, inchar, 2*checksumMap[fnum].bytes, sum);
                 return -1;
             }
@@ -729,7 +757,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
             }
             if (inchar != ((sum >> 8*j) & 0xff))
             {
-                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*lX\n",
+                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*X\n",
                     checksumMap[fnum].name, inchar, 2*checksumMap[fnum].bytes, sum);
                 return -1;
             }
