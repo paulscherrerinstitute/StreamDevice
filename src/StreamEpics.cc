@@ -419,26 +419,35 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     if (!pstream)
     {
         // initialize the first time
+        debug("streamInitRecord(%s): create new Stream object\n",
+            record->name);
         pstream = new Stream(record, ioLink, readData, writeData);
         record->dpvt = pstream;
     } else {
         // stop any running protocol
+        debug("streamInitRecord(%s): stop running protocol\n",
+            record->name);
         pstream->finishProtocol(Stream::Abort);
     }
     // scan the i/o link
+    debug("streamInitRecord(%s): parse link \"%s\"\n",
+        record->name, ioLink->value.instio.string);
     pstream->parseLink(ioLink, filename, protocol,
         busname, &addr, busparam);
     // (re)initialize bus and protocol
+    debug("streamInitRecord(%s): calling initRecord\n",
+        record->name);
     long status = pstream->initRecord(filename, protocol,
         busname, addr, busparam);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
     }
-    if (!pstream->ioscanpvt)
+    else if (!pstream->ioscanpvt)
     {
         scanIoInit(&pstream->ioscanpvt);
     }
+    debug("streamInitRecord(%s) done status=%#lx\n", record->name, status);
     return status;
 }
 
@@ -608,6 +617,8 @@ initRecord(const char* filename, const char* protocol,
     // It is safe to call this function again with different arguments
 
     // attach to bus interface
+    debug("Stream::initRecord %s: attachBus(%s, %d, \"%s\")\n",
+        name(), busname, addr, busparam);
     if (!attachBus(busname, addr, busparam))
     {
         error("%s: Can't attach to bus %s %d\n",
@@ -616,6 +627,8 @@ initRecord(const char* filename, const char* protocol,
     }
 
     // parse protocol file
+    debug("Stream::initRecord %s: parse(%s, %s)\n",
+        name(), filename, protocol);
     if (!parse(filename, protocol))
     {
         error("%s: Protocol parse error\n",
