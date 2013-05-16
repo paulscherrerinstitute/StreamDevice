@@ -30,17 +30,17 @@
 #define vsnprintf epicsVsnprintf
 #endif
 
-#define S PRINTF_SIZE_T_PREFIX
+#define P PRINTF_SIZE_T_PREFIX
 
 void StreamBuffer::
-init(const void* s, size_t minsize)
+init(const void* s, ssize_t minsize)
 {
     len = 0;
     offs = 0;
     buffer = local;
     cap = sizeof(local);
     if (minsize < 0) minsize = 0;
-    if (minsize >= cap)
+    if ((size_t)minsize >= cap)
     {
         // use allocated buffer
         grow(minsize);
@@ -57,7 +57,7 @@ init(const void* s, size_t minsize)
 }
 
 // How the buffer looks like:
-// |----free-----|####used####|-------free-------|
+// |----free-----|####used####|--------00--------|
 ///|<--- offs -->|<-- len --->|<- cap-offs-len ->|
 // 0            offs      offs+len              cap
 //               |<-------------- minsize --------------->
@@ -124,7 +124,7 @@ append(const void* s, ssize_t size)
     if (size <= 0)
     {
         // append negative number of bytes? let's delete some
-        if ((size_t)-size > len) size = -len;
+        if (size < -(ssize_t)len) size = -(ssize_t)len;
         memset (buffer+offs+len+size, 0, -size);
     }
     else
@@ -136,7 +136,7 @@ append(const void* s, ssize_t size)
     return *this;
 }
 
-long int StreamBuffer::
+ssize_t StreamBuffer::
 find(const void* m, size_t size, ssize_t start) const
 {
     if (start < 0)
@@ -314,7 +314,7 @@ dump() const
     StreamBuffer result(256+cap*5);
     result.append("\033[0m");
     size_t i;
-    result.print("%"S"d,%"S"d,%"S"d:\033[37m", offs, len, cap);
+    result.print("%"P"d,%"P"d,%"P"d:\033[37m", offs, len, cap);
     for (i = 0; i < cap; i++)
     {
         if (i == offs) result.append("\033[34m[\033[0m");
