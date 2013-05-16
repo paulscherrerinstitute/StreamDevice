@@ -18,6 +18,7 @@
 ***************************************************************/
 
 #include "StreamBusInterface.h"
+#include "StreamError.h"
 
 const char* StreamIoStatusStr[] = {
     "StreamIoSuccess",
@@ -64,11 +65,17 @@ supportsAsyncRead()
 StreamBusInterface* StreamBusInterface::
 find(Client* client, const char* busname, int addr, const char* param)
 {
+    debug("StreamBusInterface::find(%s, %s, %d, \"%s\")\n",
+            client->name(), busname, addr, param);
     StreamBusInterfaceRegistrarBase* r;
     StreamBusInterface* bus;
     for (r = StreamBusInterfaceRegistrarBase::first; r; r = r->next)
     {
+    debug("StreamBusInterface::find %s check %s\n",
+            client->name(), r->name);
         bus = r->find(client, busname, addr, param);
+        debug("StreamBusInterface::find %s %s\n",
+            r->name, bus ? "matches" : "does not match");
         if (bus) return bus;
     }
     return NULL;

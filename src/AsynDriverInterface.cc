@@ -255,6 +255,7 @@ RegisterStreamBusInterface(AsynDriverInterface);
 AsynDriverInterface::
 AsynDriverInterface(Client* client) : StreamBusInterface(client)
 {
+    debug ("AsynDriverInterface(%s)\n", client->name());
     pasynCommon = NULL;
     pasynOctet = NULL;
     intrPvtOctet = NULL;
@@ -266,20 +267,25 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
     eventMask = 0;
     receivedEvent = 0;
     peeksize = 1;
+    debug ("AsynDriverInterface(%s) createAsynUser\n", client->name());
     pasynUser = pasynManager->createAsynUser(handleRequest,
         handleTimeout);
     assert(pasynUser);
     pasynUser->userPvt = this;
 #ifdef EPICS_3_13
+    debug ("AsynDriverInterface(%s) wdCreate()\n", client->name());
     timer = wdCreate();
     callbackSetCallback(expire, &timeoutCallback);
     callbackSetUser(this, &timeoutCallback);
 #else
+    debug ("AsynDriverInterface(%s) epicsTimerQueueActive::allocate(true)\n", client->name());
     timerQueue = &epicsTimerQueueActive::allocate(true);
     assert(timerQueue);
+    debug ("AsynDriverInterface(%s) timerQueue->createTimer()\n", client->name());
     timer = &timerQueue->createTimer();
     assert(timer);
 #endif
+    debug ("AsynDriverInterface(%s) done\n", client->name());
 }
 
 AsynDriverInterface::
@@ -330,6 +336,8 @@ StreamBusInterface* AsynDriverInterface::
 getBusInterface(Client* client,
     const char* busname, int addr, const char*)
 {
+    debug ("AsynDriverInterface::getBusInterface(%s, %s, %d)\n",
+        client->name(), busname, addr);
     AsynDriverInterface* interface = new AsynDriverInterface(client);
     if (interface->connectToBus(busname, addr))
     {
@@ -427,7 +435,7 @@ bool AsynDriverInterface::
 connectToBus(const char* busname, int addr)
 {
     asynStatus status = pasynManager->connectDevice(pasynUser, busname, addr);
-    printf ("%s: AsynDriverInterface::connectToBus(%s, %d): "
+    debug("%s: AsynDriverInterface::connectToBus(%s, %d): "
         "pasynManager->connectDevice(%p, %s, %d) = %s\n",
         clientName(), busname, addr,  pasynUser,busname, addr,
             asynStatusStr[status]);    
@@ -520,7 +528,7 @@ connectToAsynPort()
     debug("AsynDriverInterface::connectToAsynPort(%s)\n",
         clientName());
     status = pasynManager->isConnected(pasynUser, &connected);
-    printf ("%s: AsynDriverInterface::connectToAsynPort: "
+    debug("%s: AsynDriverInterface::connectToAsynPort: "
         "pasynManager->isConnected(%p, %p) = %s => %s\n",
         clientName(), pasynUser, &connected, asynStatusStr[status],
             connected ? "yes" : "no");
