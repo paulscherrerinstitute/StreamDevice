@@ -18,7 +18,9 @@
 *                                                              *
 ***************************************************************/
 
+#define epicsExportSharedSymbols
 #include "devStream.h"
+#undef epicsExportSharedSymbols
 #include "StreamCore.h"
 #include "StreamError.h"
 
@@ -32,6 +34,8 @@ extern "C" {
 #endif
 
 #define epicsAlarmGLOBAL
+#include <alarm.h>
+#undef epicsAlarmGLOBAL
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -40,7 +44,6 @@ extern "C" {
 #include <recSup.h>
 #include <recGbl.h>
 #include <devLib.h>
-#include <alarm.h>
 #include <callback.h>
 
 #ifdef EPICS_3_13
