@@ -832,6 +832,8 @@ lockCallback(StreamIoStatus status)
         case StreamIoSuccess:
             break;
         case StreamIoTimeout:
+            error("%s: Cannot lock device within %ld ms\n",
+                name(), lockTimeout);
             finishProtocol(LockTimeout);
             return;
         default:
