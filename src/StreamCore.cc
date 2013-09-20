@@ -165,7 +165,7 @@ attachBus(const char* busname, int addr, const char* param)
     businterface = StreamBusInterface::find(this, busname, addr, param);
     if (!businterface)
     {
-        error("Businterface '%s' not found for '%s'\n",
+        error("Cannot find a bus named '%s' for '%s'\n",
             busname, name());
         return false;
     }
