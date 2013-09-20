@@ -203,7 +203,7 @@ class AsynDriverInterface : StreamBusInterface
 
     // local methods
     void timerExpired();
-    bool connectToBus(const char* busname, int addr);
+    bool connectToBus(const char* portname, int addr);
     void lockHandler();
     void writeHandler();
     void readHandler();
@@ -247,7 +247,7 @@ class AsynDriverInterface : StreamBusInterface
 public:
     // static creator method
     static StreamBusInterface* getBusInterface(Client* client,
-        const char* busname, int addr, const char* param);
+        const char* portname, int addr, const char* param);
 };
 
 RegisterStreamBusInterface(AsynDriverInterface);
@@ -331,19 +331,19 @@ AsynDriverInterface::
 }
 
 // interface function getBusInterface():
-// do we have this bus/addr ?
+// do we have this port/addr ?
 StreamBusInterface* AsynDriverInterface::
 getBusInterface(Client* client,
-    const char* busname, int addr, const char*)
+    const char* portname, int addr, const char*)
 {
     debug ("AsynDriverInterface::getBusInterface(%s, %s, %d)\n",
-        client->name(), busname, addr);
+        client->name(), portname, addr);
     AsynDriverInterface* interface = new AsynDriverInterface(client);
-    if (interface->connectToBus(busname, addr))
+    if (interface->connectToBus(portname, addr))
     {
         debug ("AsynDriverInterface::getBusInterface(%s, %d): "
-            "new Interface allocated\n",
-            busname, addr);
+            "new interface allocated\n",
+            portname, addr);
         return interface;
     }
     delete interface;
@@ -355,16 +355,14 @@ getBusInterface(Client* client,
 bool AsynDriverInterface::
 supportsEvent()
 {
-    if (intrPvtInt32 || intrPvtInt32) return true;
+    if (intrPvtInt32 || intrPvtUInt32) return true;
 
     // look for interfaces for events
     asynInterface* pasynInterface;
 
-    connectToAsynPort();
-    
     pasynInterface = pasynManager->findInterface(pasynUser,
         asynInt32Type, true);
-    if(pasynInterface)
+    if (pasynInterface)
     {
         pasynInt32 = static_cast<asynInt32*>(pasynInterface->pinterface);
         pvtInt32 = pasynInterface->drvPvt;
@@ -378,7 +376,7 @@ supportsEvent()
                 intrCallbackInt32, this, &intrPvtInt32);
             return true;
         }
-        error("%s: bus does not allow to register for "
+        error("%s: port does not allow to register for "
             "Int32 interrupts: %s\n",
             clientName(), pasynUser->errorMessage);
         pasynInt32 = NULL;
@@ -388,7 +386,7 @@ supportsEvent()
     // no asynInt32 available, thus try asynUInt32
     pasynInterface = pasynManager->findInterface(pasynUser,
         asynUInt32DigitalType, true);
-    if(pasynInterface)
+    if (pasynInterface)
     {
         pasynUInt32 =
             static_cast<asynUInt32Digital*>(pasynInterface->pinterface);
@@ -404,7 +402,7 @@ supportsEvent()
                 intrCallbackUInt32, this, 0xFFFFFFFF, &intrPvtInt32);
             return true;
         }
-        error("%s: bus does not allow to register for "
+        error("%s: port does not allow to register for "
             "UInt32 interrupts: %s\n",
             clientName(), pasynUser->errorMessage);
         pasynUInt32 = NULL;
@@ -424,24 +422,26 @@ supportsAsyncRead()
     if (pasynOctet->registerInterruptUser(pvtOctet, pasynUser,
         intrCallbackOctet, this, &intrPvtOctet) != asynSuccess)
     {
-        error("%s: bus does not support asynchronous input: %s\n",
-            clientName(), pasynUser->errorMessage);
+        const char *portname;
+        pasynManager->getPortName(pasynUser, &portname);
+        error("%s: asyn port %s does not support asynchronous input: %s\n",
+            clientName(), portname, pasynUser->errorMessage);
         return false;
     }
     return true;
 }
 
 bool AsynDriverInterface::
-connectToBus(const char* busname, int addr)
+connectToBus(const char* portname, int addr)
 {
-    asynStatus status = pasynManager->connectDevice(pasynUser, busname, addr);
+    asynStatus status = pasynManager->connectDevice(pasynUser, portname, addr);
     debug("%s: AsynDriverInterface::connectToBus(%s, %d): "
         "pasynManager->connectDevice(%p, %s, %d) = %s\n",
-        clientName(), busname, addr,  pasynUser,busname, addr,
+        clientName(), portname, addr,  pasynUser,portname, addr,
             asynStatusStr[status]);    
     if (status != asynSuccess)
     {
-        // asynDriver does not know this busname/address
+        // asynDriver does not know this portname/address
         return false;
     }
 
@@ -450,10 +450,10 @@ connectToBus(const char* busname, int addr)
     // find the asynCommon interface
     pasynInterface = pasynManager->findInterface(pasynUser,
         asynCommonType, true);
-    if(!pasynInterface)
+    if (!pasynInterface)
     {
-        error("%s: bus %s does not support asynCommon interface\n",
-            clientName(), busname);
+        error("%s: asyn port %s does not support asynCommon interface\n",
+            clientName(), portname);
         return false;
     }
     pasynCommon = static_cast<asynCommon*>(pasynInterface->pinterface);
@@ -462,10 +462,10 @@ connectToBus(const char* busname, int addr)
     // find the asynOctet interface
     pasynInterface = pasynManager->findInterface(pasynUser,
         asynOctetType, true);
-    if(!pasynInterface)
+    if (!pasynInterface)
     {
-        error("%s: bus %s does not support asynOctet interface\n",
-            clientName(), busname);
+        error("%s: asyn port %s does not support asynOctet interface\n",
+            clientName(), portname);
         return false;
     }
     pasynOctet = static_cast<asynOctet*>(pasynInterface->pinterface);
@@ -474,7 +474,7 @@ connectToBus(const char* busname, int addr)
     // is it a GPIB interface ?
     pasynInterface = pasynManager->findInterface(pasynUser,
         asynGpibType, true);
-    if(pasynInterface)
+    if (pasynInterface)
     {
         pasynGpib = static_cast<asynGpib*>(pasynInterface->pinterface);
         pvtGpib = pasynInterface->drvPvt;
@@ -596,21 +596,49 @@ connectToAsynPort()
 void AsynDriverInterface::
 lockHandler()
 {
+    asynStatus status;
     int connected;
+
     debug("AsynDriverInterface::lockHandler(%s)\n",
         clientName());
-    pasynManager->blockProcessCallback(pasynUser, false);
-    connected = connectToAsynPort();
-    lockCallback(connected ? StreamIoSuccess : StreamIoFault);
+
+    status = pasynManager->isConnected(pasynUser, &connected);
+    if (status != asynSuccess)
+    {
+        error("%s: pasynManager->isConnected() failed: %s\n",
+            clientName(), pasynUser->errorMessage);
+        lockCallback(StreamIoFault);
+        return;
+    }
+    if (!connected) lockCallback(StreamIoFault);
+    
+    status = pasynManager->blockProcessCallback(pasynUser, false);
+    if (status != asynSuccess)
+    {
+        error("%s: pasynManager->blockProcessCallback() failed: %s\n",
+            clientName(), pasynUser->errorMessage);
+        lockCallback(StreamIoFault);
+        return;
+    }
+    lockCallback(StreamIoSuccess);
 }
 
 // interface function: we don't need exclusive access any more
 bool AsynDriverInterface::
 unlock()
 {
+    asynStatus status;
+
     debug("AsynDriverInterface::unlock(%s)\n",
         clientName());
-    pasynManager->unblockProcessCallback(pasynUser, false);
+    status = pasynManager->unblockProcessCallback(pasynUser, false);
+    if (status != asynSuccess)
+    {
+        error("%s: pasynManager->unblockProcessCallback() failed: %s\n",
+            clientName(), pasynUser->errorMessage);
+        lockCallback(StreamIoFault);
+        return false;
+    }
     return true;
 }
 
@@ -661,10 +689,10 @@ writeHandler()
     // thus do not use pasynOctet->flush()
     do {
         char buffer [256];
-        size_t received = sizeof(buffer);
+        size_t received = 0;
         int eomReason = 0;
         status = pasynOctet->read(pvtOctet, pasynUser,
-            buffer, received, &received, &eomReason);
+            buffer, sizeof(buffer), &received, &eomReason);
         if (received == 0) break;
 #ifndef NO_TEMPORARY
         if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %ld bytes: \"%s\"\n",
