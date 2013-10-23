@@ -130,7 +130,7 @@ public:
     StreamBuffer& append(const StreamBuffer& s)
         {return append(s.buffer+s.offs, s.len);}
         
-    // operator += alias for set
+    // operator += alias for append
     StreamBuffer& operator+=(char c)
         {return append(c);}
 
