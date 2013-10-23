@@ -219,6 +219,7 @@ public:
     bool parse(const char* filename, const char* protocolname);
     void printProtocol();
     const char* name() { return streamname; }
+    void printStatus(StreamBuffer& buffer);
 };
 
 #endif

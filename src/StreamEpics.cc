@@ -350,6 +350,12 @@ report(int interest)
         {
             printf("    %s: %s\n", pstream->name(),
                 pstream->ioLink->value.instio.string);
+            if (interest == 3)
+            {
+                StreamBuffer buffer;
+                pstream->printStatus(buffer);
+                printf("      %s\n", buffer());
+            }
         }
     }
     return OK;
