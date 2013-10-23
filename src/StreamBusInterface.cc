@@ -20,13 +20,7 @@
 #include "StreamBusInterface.h"
 #include "StreamError.h"
 
-const char* StreamIoStatusStr[] = {
-    "StreamIoSuccess",
-    "StreamIoTimeout",
-    "StreamIoNoReply",
-    "StreamIoEnd",
-    "StreamIoFault"
-};
+StreamIoStatusStrClass StreamIoStatusStr;
 
 StreamBusInterfaceRegistrarBase* StreamBusInterfaceRegistrarBase::first;
 

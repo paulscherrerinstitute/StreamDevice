@@ -21,13 +21,26 @@
 #define StreamBusInterface_h
 
 #include <stddef.h>
+#include <StreamBuffer.h>
 
 enum StreamIoStatus {
     StreamIoSuccess, StreamIoTimeout, StreamIoNoReply,
     StreamIoEnd, StreamIoFault
 };
 
-extern const char* StreamIoStatusStr[];
+class StreamIoStatusStrClass {
+public:
+    const char* operator [] (int index) {
+        switch (index) {
+            case StreamIoSuccess: return "StreamIoSuccess";
+            case StreamIoTimeout: return "StreamIoTimeout";
+            case StreamIoNoReply: return "StreamIoNoReply";
+            case StreamIoEnd:     return "StreamIoEnd";
+            case StreamIoFault:   return "StreamIoFault";
+            default:              return "illegal status";
+        }
+    }
+} extern StreamIoStatusStr;
 
 class StreamBusInterface
 {
@@ -89,6 +102,9 @@ public:
         bool busDisconnect() {
             return businterface && businterface->disconnectRequest();
         }
+        void busPrintStatus(StreamBuffer& buffer) {
+            if (businterface) businterface->printStatus(buffer);
+        }
     };
 
 private:
@@ -137,6 +153,7 @@ protected:
     virtual bool connectRequest(unsigned long connecttimeout_ms);
     virtual bool disconnectRequest();
     virtual void finish();
+    virtual void printStatus(StreamBuffer& buffer) {};
 
 // pure virtual
     virtual bool lockRequest(unsigned long timeout_ms) = 0;
