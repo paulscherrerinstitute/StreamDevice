@@ -818,7 +818,7 @@ lockCallback(StreamIoStatus status)
 {
     MutexLock lock(this);
     debug("StreamCore::lockCallback(%s, status=%s)\n",
-        name(), status ? "Timeout" : "Success");
+        name(), StreamIoStatusStr[status]);
     if (!(flags & LockPending))
     {
         error("StreamCore::lockCallback(%s) called unexpectedly\n",
@@ -832,11 +832,21 @@ lockCallback(StreamIoStatus status)
         case StreamIoSuccess:
             break;
         case StreamIoTimeout:
-            error("%s: Cannot lock device within %ld ms\n",
+            error("%s: Cannot lock device within %ld ms, device seems to be busy\n",
                 name(), lockTimeout);
+            flags &= ~BusOwner;
+            finishProtocol(LockTimeout);
+            return;
+        case StreamIoFault:
+            error("%s: Locking failed because of a device fault\n",
+                name());
+            flags &= ~BusOwner;
             finishProtocol(LockTimeout);
             return;
         default:
+            error("StreamCore::lockCallback(%s) unexpected status %s\n",
+                name(), StreamIoStatusStr[status]);
+            flags &= ~BusOwner;
             finishProtocol(Fault);
             return;
     }
@@ -1309,8 +1319,8 @@ normal_format:
                                 inputLine.length()-consumedInput > 20 ? "..." : "",
                                 formatstring());
                         else
-                            error("%s: Format \"%%%s\" has data type %s which does not match variable \"%s\".\n",
-                                name(), formatstring(), StreamFormatTypeStr[fmt.type], fieldName);
+                            error("%s: Format \"%%%s\" has data type %s which does not match the type of \"%s\".\n",
+                                name(), formatstring(), StreamFormatTypeStr[fmt.type], fieldAddress ? fieldName : name());
                     }
                     return false;
                 }
@@ -1738,6 +1748,27 @@ disconnectCallback(StreamIoStatus status)
             finishProtocol(Fault);
             return;
     }
+}
+
+void StreamCore::
+printStatus(StreamBuffer& buffer)
+{
+    buffer.print("active command=%s ",
+        activeCommand ? commandName(*activeCommand) : "NULL");
+    buffer.print("flags=0x%04lx ", flags);
+    if (flags & IgnoreExtraInput) buffer.append("IgnoreExtraInput ");
+    if (flags & InitRun) buffer.append("InitRun ");
+    if (flags & AsyncMode) buffer.append("AsyncMode ");
+    if (flags & GotValue) buffer.append("GotValue ");
+    if (flags & BusOwner) buffer.append("BusOwner ");
+    if (flags & Separator) buffer.append("Separator ");
+    if (flags & ScanTried) buffer.append("ScanTried ");
+    if (flags & AcceptInput) buffer.append("AcceptInput ");
+    if (flags & AcceptEvent) buffer.append("AcceptEvent ");
+    if (flags & LockPending) buffer.append("LockPending ");
+    if (flags & WritePending) buffer.append("WritePending ");
+    if (flags & WaitPending) buffer.append("WaitPending ");
+    busPrintStatus(buffer);
 }
 
 #include "streamReferences"
