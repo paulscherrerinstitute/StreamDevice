@@ -22,11 +22,6 @@
 #include "StreamError.h"
 #include "StreamBuffer.h"
 
-#include <epicsVersion.h>
-#ifdef BASE_VERSION
-#define EPICS_3_13
-#endif
-
 #ifdef EPICS_3_13
 #include <assert.h>
 #include <wdLib.h>
@@ -500,13 +495,20 @@ lockRequest(unsigned long lockTimeout_ms)
     status = pasynManager->isConnected(pasynUser, &connected);
     if (status != asynSuccess)
     {
-        error("%s: pasynManager->isConnected() failed: %s\n",
+        error("%s lockRequest: pasynManager->isConnected() failed: %s\n",
             clientName(), pasynUser->errorMessage);
         return false;
     }
+    if (!connected)
+    {
+        const char *portname;
+        pasynManager->getPortName(pasynUser, &portname);
+        error("%s lockRequest: asyn port %s is not connected\n",
+            clientName(), portname);
+        return false;
+    }
     status = pasynManager->queueRequest(pasynUser,
-        connected ? priority() : asynQueuePriorityConnect,
-        lockTimeout);
+        priority(), lockTimeout);
     if (status != asynSuccess)
     {
         error("%s lockRequest: pasynManager->queueRequest() failed: %s\n",
@@ -534,7 +536,7 @@ connectToAsynPort()
             connected ? "yes" : "no");
     if (status != asynSuccess)
     {
-        error("%s: pasynManager->isConnected() failed: %s\n",
+        error("%s connectToAsynPort: pasynManager->isConnected() failed: %s\n",
             clientName(), pasynUser->errorMessage);
         return false;
     }
@@ -578,7 +580,7 @@ connectToAsynPort()
             clientName(), asynStatusStr[status]);
         if (status != asynSuccess)
         {
-            error("%s: pasynCommon->connect() failed: %s\n",
+            error("%s connectToAsynPort: pasynCommon->connect() failed: %s\n",
                 clientName(), pasynUser->errorMessage);
             return false;
         }
@@ -605,17 +607,24 @@ lockHandler()
     status = pasynManager->isConnected(pasynUser, &connected);
     if (status != asynSuccess)
     {
-        error("%s: pasynManager->isConnected() failed: %s\n",
+        error("%s lockHandler: pasynManager->isConnected() failed: %s\n",
             clientName(), pasynUser->errorMessage);
         lockCallback(StreamIoFault);
         return;
     }
-    if (!connected) lockCallback(StreamIoFault);
+    if (!connected)
+    {
+        const char *portname;
+        pasynManager->getPortName(pasynUser, &portname);
+        error("%s lockHandler: asyn port %s is not connected\n",
+            clientName(), portname);
+        lockCallback(StreamIoFault);
+    }
     
     status = pasynManager->blockProcessCallback(pasynUser, false);
     if (status != asynSuccess)
     {
-        error("%s: pasynManager->blockProcessCallback() failed: %s\n",
+        error("%s lockHandler: pasynManager->blockProcessCallback() failed: %s\n",
             clientName(), pasynUser->errorMessage);
         lockCallback(StreamIoFault);
         return;
@@ -634,9 +643,8 @@ unlock()
     status = pasynManager->unblockProcessCallback(pasynUser, false);
     if (status != asynSuccess)
     {
-        error("%s: pasynManager->unblockProcessCallback() failed: %s\n",
+        error("%s unlock: pasynManager->unblockProcessCallback() failed: %s\n",
             clientName(), pasynUser->errorMessage);
-        lockCallback(StreamIoFault);
         return false;
     }
     return true;
@@ -740,7 +748,7 @@ writeHandler()
         "device is %sconnected\n",
         clientName(),connected?"":"dis");
     if (!connected) {
-        error("%s: connection closed in write\n",
+        error("%s: write failed because connection was closed by device\n",
             clientName());
         writeCallback(StreamIoFault);
         return;
