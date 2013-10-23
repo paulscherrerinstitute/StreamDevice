@@ -91,7 +91,7 @@ proc receiveHandler {sock} {
             "start" {
                 set wait [checkNum [lindex $l 1]]
                 set ::counter 0
-                after $wait sendAsync $wait [list [lrange $l 2 end-1]]
+                after $wait [list sendAsync $wait "[string range $a [string wordend $a 7] end]"]
                 sendReply $sock "Started\n"
             }
             "stop" {
@@ -133,7 +133,7 @@ proc receiveHandler {sock} {
 proc sendAsync {wait message} {
     if {$::counter < 0} return
     foreach term [array names ::socket] {
-        sendReply $::socket($term) "Message number [incr ::counter] $message\n";
+        sendReply $::socket($term) "Message number [incr ::counter]$message";
     }
     after $wait sendAsync $wait [list $message]
 }
