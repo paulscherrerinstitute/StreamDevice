@@ -418,9 +418,15 @@ supportsAsyncRead()
         intrCallbackOctet, this, &intrPvtOctet) != asynSuccess)
     {
         const char *portname;
+        int addr;
         pasynManager->getPortName(pasynUser, &portname);
-        error("%s: asyn port %s does not support asynchronous input: %s\n",
-            clientName(), portname, pasynUser->errorMessage);
+        pasynManager->getAddr(pasynUser, &addr);
+        if (addr >= 0)
+            error("%s: asyn port %s addr %d does not support asynchronous input: %s\n",
+                clientName(), portname, addr, pasynUser->errorMessage);
+        else
+            error("%s: asyn port %s does not support asynchronous input: %s\n",
+                clientName(), portname, pasynUser->errorMessage);
         return false;
     }
     return true;
@@ -485,28 +491,12 @@ connectToBus(const char* portname, int addr)
 bool AsynDriverInterface::
 lockRequest(unsigned long lockTimeout_ms)
 {
-    int connected;
     asynStatus status;
     
     debug("AsynDriverInterface::lockRequest(%s, %ld msec)\n",
         clientName(), lockTimeout_ms);
     lockTimeout = lockTimeout_ms ? lockTimeout_ms*0.001 : -1.0;
     ioAction = Lock;
-    status = pasynManager->isConnected(pasynUser, &connected);
-    if (status != asynSuccess)
-    {
-        error("%s lockRequest: pasynManager->isConnected() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return false;
-    }
-    if (!connected)
-    {
-        const char *portname;
-        pasynManager->getPortName(pasynUser, &portname);
-        error("%s lockRequest: asyn port %s is not connected\n",
-            clientName(), portname);
-        return false;
-    }
     status = pasynManager->queueRequest(pasynUser,
         priority(), lockTimeout);
     if (status != asynSuccess)
@@ -599,28 +589,10 @@ void AsynDriverInterface::
 lockHandler()
 {
     asynStatus status;
-    int connected;
 
     debug("AsynDriverInterface::lockHandler(%s)\n",
         clientName());
 
-    status = pasynManager->isConnected(pasynUser, &connected);
-    if (status != asynSuccess)
-    {
-        error("%s lockHandler: pasynManager->isConnected() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        lockCallback(StreamIoFault);
-        return;
-    }
-    if (!connected)
-    {
-        const char *portname;
-        pasynManager->getPortName(pasynUser, &portname);
-        error("%s lockHandler: asyn port %s is not connected\n",
-            clientName(), portname);
-        lockCallback(StreamIoFault);
-    }
-    
     status = pasynManager->blockProcessCallback(pasynUser, false);
     if (status != asynSuccess)
     {
