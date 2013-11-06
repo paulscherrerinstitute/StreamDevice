@@ -662,15 +662,18 @@ writeHandler()
     size_t written = 0;
 
     pasynUser->timeout = 0;
-    if (pasynGpib)
-         pasynOctet->flush(pvtOctet, pasynUser);
-    else
+    if (!pasynGpib)
     // discard any early input, but forward it to potential async records
     // thus do not use pasynOctet->flush()
+    // unfortunately we cannot do this with GPIB because addressing a device as talker
+    // when it has nothing to say is an error. Also timeout=0 does not help here (would need
+    // a change in asynGPIB), thus use flush() for GPIB.
     do {
         char buffer [256];
         size_t received = 0;
         int eomReason = 0;
+        debug("AsynDriverInterface::writeHandler(%s): reading old input\n",
+            clientName());
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, sizeof(buffer), &received, &eomReason);
         if (received == 0) break;
@@ -679,6 +682,12 @@ writeHandler()
             clientName(), (long)received, StreamBuffer(buffer, received).expand()());
 #endif
     } while (status == asynSuccess);
+    else
+    {
+        debug("AsynDriverInterface::writeHandler(%s): flushing old input\n",
+            clientName());
+         pasynOctet->flush(pvtOctet, pasynUser);
+    }
         
     // discard any early events
     receivedEvent = 0;
@@ -713,6 +722,12 @@ writeHandler()
         clientName(), (long)outputSize,  (long)written,
         pasynUser->timeout, asynStatusStr[status]);
 
+    if (oldeoslen >= 0) // restore asyn terminator
+    {
+        pasynOctet->setOutputEos(pvtOctet, pasynUser,
+            oldeos, oldeoslen);
+    }
+    
     // Up to asyn 4.17 I can't see when the server has disconnected. Why?
     int connected;
     pasynManager->isConnected(pasynUser, &connected);
@@ -726,11 +741,6 @@ writeHandler()
         return;
     }
 
-    if (oldeoslen >= 0) // restore asyn terminator
-    {
-        pasynOctet->setOutputEos(pvtOctet, pasynUser,
-            oldeos, oldeoslen);
-    }
     switch (status)
     {
         case asynSuccess:
@@ -755,6 +765,8 @@ writeHandler()
             writeCallback(StreamIoSuccess);
             return;
         case asynTimeout:
+            error("%s: timeout (%g sec) in write: %s\n",
+                clientName(), pasynUser->timeout, pasynUser->errorMessage);
             writeCallback(StreamIoTimeout);
             return;
         case asynOverflow:
