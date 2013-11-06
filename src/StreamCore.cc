@@ -59,7 +59,7 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
                 break;
             case wait_cmd:
                 timeout = extract<unsigned long>(c);
-                buffer.print("    wait %ld;\n # ms", timeout);
+                buffer.print("    wait %ld; # ms\n", timeout);
                 break;
             case event_cmd:
                 eventnumber = extract<unsigned long>(c);
