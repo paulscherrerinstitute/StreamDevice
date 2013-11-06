@@ -371,9 +371,11 @@ supportsEvent()
                 intrCallbackInt32, this, &intrPvtInt32);
             return true;
         }
-        error("%s: port does not allow to register for "
+        const char *portname;
+        pasynManager->getPortName(pasynUser, &portname);
+        error("%s: port %s does not allow to register for "
             "Int32 interrupts: %s\n",
-            clientName(), pasynUser->errorMessage);
+            clientName(), portname, pasynUser->errorMessage);
         pasynInt32 = NULL;
         intrPvtInt32 = NULL;
     }
@@ -397,9 +399,11 @@ supportsEvent()
                 intrCallbackUInt32, this, 0xFFFFFFFF, &intrPvtInt32);
             return true;
         }
-        error("%s: port does not allow to register for "
+        const char *portname;
+        pasynManager->getPortName(pasynUser, &portname);
+        error("%s: port %s does not allow to register for "
             "UInt32 interrupts: %s\n",
-            clientName(), pasynUser->errorMessage);
+            clientName(), portname, pasynUser->errorMessage);
         pasynUInt32 = NULL;
         intrPvtUInt32 = NULL;
     }
@@ -765,34 +769,34 @@ writeHandler()
             writeCallback(StreamIoSuccess);
             return;
         case asynTimeout:
-            error("%s: timeout (%g sec) in write: %s\n",
+            error("%s: asynTimeout (%g sec) in write. Asyn says: %s\n",
                 clientName(), pasynUser->timeout, pasynUser->errorMessage);
             writeCallback(StreamIoTimeout);
             return;
         case asynOverflow:
-            error("%s: asynOverflow in write: %s\n",
+            error("%s: asynOverflow in write. Asyn driver says: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynError:
-            error("%s: asynError in write: %s\n",
+            error("%s: asynError in write. Asyn driver says: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #ifdef ASYN_VERSION // asyn >= 4.14
         case asynDisconnected:
-            error("%s: asynDisconnected in write: %s\n",
+            error("%s: asynDisconnected in write. Asyn driver says: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynDisabled:
-            error("%s: asynDisconnected in write: %s\n",
+            error("%s: asynDisconnected in write. Asyn driver says: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #endif
         default:
-            error("%s: unknown asyn error in write: %s\n",
+            error("%s: unknown asyn error in write. Asyn driver says: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
@@ -1090,29 +1094,29 @@ readHandler()
                 }
                 peeksize = inputBuffer.capacity();
                 // deliver whatever we could save
-                error("%s: asynOverflow in read: %s\n",
+                error("%s: asynOverflow in read. Asyn driver says: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
             case asynError:
-                error("%s: asynError in read: %s\n",
+                error("%s: asynError in read. Asyn driver says: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
 #ifdef ASYN_VERSION // asyn >= 4.14
             case asynDisconnected:
-                error("%s: asynDisconnected in read: %s\n",
+                error("%s: asynDisconnected in read. Asyn driver says: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
             case asynDisabled:
-                error("%s: asynDisconnected in read: %s\n",
+                error("%s: asynDisconnected in read. Asyn driver says: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
 #endif
             default:
-                error("%s: unknown asyn error in read: %s\n",
+                error("%s: unknown asyn error in read. Asyn driver says: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
