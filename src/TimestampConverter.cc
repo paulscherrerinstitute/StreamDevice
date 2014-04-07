@@ -26,6 +26,24 @@
 #include <stdlib.h>
 #include <errno.h>
 
+/* timezone in UNIX contains the seconds between UTC and local time,
+but not in Free-BSD! Here timezone() is a function delivering
+the time zone abbreviation (e.g. CET). Alternatively, the timezone
+value can also be gained from tm_gmtoff of the tm-structure. 
+                                                    HJK, 4.4.14 */
+/* The same seems to be true for other BSDs. DZ. */
+                                                    
+#if defined(__FreeBSD__) || \
+    defined(__NetBSD__) || \
+    defined(__OpenBSD__) || \
+    defined(__bsdi__ ) || \
+    defined(__DragonFly__)
+static int timezone_bsd=0;
+#define timezone timezone_bsd
+#define tzset() { struct tm tm; time_t timet; tzset(); time(&timet);	\
+                  localtime_r(&timet, &tm); timezone=tm.tm_gmtoff; }
+#endif
+
 #ifdef _WIN32
 #define tzset() _tzset()
 #define timezone _timezone
