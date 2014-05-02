@@ -5,8 +5,9 @@ a:hover   {color: #FF0000;}
 body {
     margin-right:1em;
     margin-left:15em;
-    margin-top:11ex;
-    font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    margin-top:70px;
+    padding-top:1px;
+    font-family: Helvetica, Arial, sans-serif;
     font-size:14px;
     background-color:#ffffff;
 }
@@ -30,26 +31,26 @@ dt {
 }
 
 h1 {
-    font-size:225%;
+    font-size:250%;
     margin-top:0;
     font-style:italic;
-    font-family:serif;
+    font-weight:bold;
+    font-family:"Times New Roman", serif;
     text-align:center;
     position:fixed;
     top:0;
     left:0;
     width:100%;
-    min-height:60px;
-    height: 4ex;
     line-height:190%;
     background-color:white;
-    border-top:6px solid #1b4486;
-    border-bottom:4px solid #1b4486;
+    border-width:0;
+    border-bottom:3px solid #1b4486;
     white-space:nowrap;
-    background-image:url(PSI.gif);
+    background-image:url(PSI.png);
     background-repeat:no-repeat;
-    background-position:10px 2px;
-    text-shadow: .1em .1em .1em lightgray;           
+    background-position:10px 5px;
+    text-shadow:.1em .1em .1em darkgray;
+    box-shadow:0 .3em .1em -.2em darkgray;
 }
 
 h2 {
@@ -91,7 +92,7 @@ code {
     position:fixed;
     left:0;
     top:0;
-    padding-top:9ex;
+    padding-top:70px;
     width:14em;
     height:100%;
     border-style:solid;
@@ -115,13 +116,9 @@ a[target=ex]:hover:after {
 }
 
 @media print {
-  a:link    {color: black; text-decoration:none;}
-  a:visited {color: black; text-decoration:none;}
-  a:hover   {color: black; text-decoration:none;}
-  a[target=ex] {text-decoration:underline;}
+  a:link    {text-decoration:none;}
   a[target=ex]:after {content:" [" attr(href) "]";}
-  code      {color: black; }
-  body      {margin-left:10px;}
-  h1        {position:absolute;}
+  body      {margin:0 4em;}
+  h1        {position:relative; background-position:0 0;}
   #navleft  {display:none;}
 }
