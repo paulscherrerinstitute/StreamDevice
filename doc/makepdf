@@ -1,0 +1,35 @@
+PAGES="
+index.html
+setup.html
+epics3_13.html
+protocol.html
+formats.html
+processing.html
+recordtypes.html
+aai.html
+aao.html
+ai.html
+ao.html
+bi.html
+bo.html
+mbbi.html
+mbbo.html
+mbbiDirect.html
+mbboDirect.html
+stringin.html
+stringout.html
+longin.html
+longout.html
+waveform.html
+calcout.html
+scalcout.html
+tipsandtricks.html
+recordinterface.html
+businterface.html
+formatconverter.html
+osinterface.html
+"
+
+rm -f stream.pdf
+wkhtmltopdf --print-media-type --dpi 1200 --zoom 0.85 --page-size Letter \
+$PAGES stream.pdf
