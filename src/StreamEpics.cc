@@ -270,7 +270,7 @@ epicsExportRegistrar(streamRegistrar);
 struct stream_drvsup {
     long number;
     long (*report)(int);
-    DRVSUPFUN init;
+    long (*init)();
 } stream = {
     2,
     Stream::report,
