@@ -64,6 +64,13 @@ int timezone = 0;
 } while (0)
 #endif
 
+#if defined(__MINGW32__)
+/* MinGW has no re-entrant localtime. How about other environments? */
+/* Just let's hope for the best */
+#undef localtime_r
+#define localtime_r(timet,tm) (*(tm)=*localtime(timet))
+#endif
+
 class TimestampConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
