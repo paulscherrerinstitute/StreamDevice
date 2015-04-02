@@ -763,8 +763,8 @@ printValue(const StreamFormat& fmt, long value)
             name(), value);
         return false;
     }
-    debug("StreamCore::printValue(%s, long): \"%s\"\n",
-        name(), outputLine.expand()());
+    debug("StreamCore::printValue %s %%%c long %ld (%lx): \"%s\"\n",
+        name(), fmt.conv, value, value, outputLine.expand()());
     return true;
 }
 
@@ -785,8 +785,8 @@ printValue(const StreamFormat& fmt, double value)
             name(), value);
         return false;
     }
-    debug("StreamCore::printValue(%s, double): \"%s\"\n",
-        name(), outputLine.expand()());
+    debug("StreamCore::printValue %s %%%c double %#g: \"%s\"\n",
+        name(), fmt.conv, value, outputLine.expand()());
     return true;
 }
 
@@ -808,8 +808,8 @@ printValue(const StreamFormat& fmt, char* value)
             name(), buffer.expand()());
         return false;
     }
-    debug("StreamCore::printValue(%s, char*): \"%s\"\n",
-        name(), outputLine.expand()());
+    debug("StreamCore::printValue %s %%%c char* \"%s\"): \"%s\"\n",
+        name(), fmt.conv, value, outputLine.expand()());
     return true;
 }
 
