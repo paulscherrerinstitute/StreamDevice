@@ -416,6 +416,7 @@ long streamInit(int after)
 long streamInitRecord(dbCommon* record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 {
+    long status;
     char filename[80];
     char protocol[80];
     char busname[80];
@@ -441,13 +442,14 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     // scan the i/o link
     debug("streamInitRecord(%s): parse link \"%s\"\n",
         record->name, ioLink->value.instio.string);
-    pstream->parseLink(ioLink, filename, protocol,
+    status = pstream->parseLink(ioLink, filename, protocol,
         busname, &addr, busparam);
     // (re)initialize bus and protocol
     debug("streamInitRecord(%s): calling initRecord\n",
         record->name);
-    long status = pstream->initRecord(filename, protocol,
-        busname, addr, busparam);
+    if (status == 0)
+        status = pstream->initRecord(filename, protocol,
+            busname, addr, busparam);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
@@ -996,11 +998,8 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
         // Format like "%([record.]field)..." has requested to get value
         // from field of this or other record.
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
-        long i;
-        long nelem = pdbaddr->no_elements;
-        size_t size = nelem * typeSize[format.type];
-        char* buffer = fieldBuffer.clear().reserve(size);
         
+        /* Handle time stamps special. %T converter takes double. */
         if (strcmp(((dbFldDes*)pdbaddr->pfldDes)->name, "TIME") == 0)
         {
             double time;
@@ -1016,6 +1015,8 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                 /* if getting time from own record, update timestamp first */
                 recGblGetTimeStamp(record);
             }
+            /* convert EPICS epoch (1990) to unix epoch (1970) */
+            /* we are losing about 3 digits precision here */
             time = pdbaddr->precord->time.secPastEpoch +
                 631152000u + pdbaddr->precord->time.nsec * 1e-9;
             debug("Stream::formatValue(%s): read %f from TIME field\n",
@@ -1023,7 +1024,29 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
             return printValue(format, time);
         }
 
-        if (dbGet(pdbaddr, dbfMapping[format.type], buffer,
+        /* convert type to LONG, ENUM, DOUBLE, or STRING */
+        int type = dbfMapping[format.type];
+        long nelem = pdbaddr->no_elements;
+        size_t size = nelem * typeSize[format.type];
+
+        /* print (U)CHAR arrays as string */
+        if (format.type == string_format &&
+            (pdbaddr->field_type == DBF_CHAR || pdbaddr->field_type == DBF_UCHAR))
+        {
+            debug("Stream::formatValue(%s): format %s.%s array[%ld] size %d of %s as string\n",
+                name(),
+                pdbaddr->precord->name,
+                ((dbFldDes*)pdbaddr->pfldDes)->name,
+                nelem,
+                pdbaddr->field_size,
+                pamapdbfType[pdbaddr->field_type].strvalue);
+            type = DBF_CHAR;
+            size = nelem;
+        }
+        
+        char* buffer = fieldBuffer.clear().reserve(size);
+
+        if (dbGet(pdbaddr, type, buffer,
             NULL, &nelem, NULL) != 0)
         {
             error("%s: dbGet(%s.%s, %s) failed\n",
@@ -1033,6 +1056,18 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                 pamapdbfType[dbfMapping[format.type]].strvalue);
             return false;
         }
+        debug("Stream::formatValue(%s): got %ld elements\n",
+                name(),nelem);
+
+        /* terminate CHAR array as string */
+        if (type == DBF_CHAR)
+        {
+            if (nelem >= pdbaddr->no_elements) nelem = pdbaddr->no_elements-1;
+            buffer[nelem] = 0;
+            nelem = 1; /* array is only 1 string */
+        }
+
+        long i;
         for (i = 0; i < nelem; i++)
         {
             switch (format.type)
@@ -1060,6 +1095,7 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                     error("%s: %%(FIELD) syntax not allowed "
                         "with pseudo formats\n",
                         name());
+                    return false;
                 default:
                     error("INTERNAL ERROR %s: Illegal format.type=%d\n",
                         name(), format.type);
