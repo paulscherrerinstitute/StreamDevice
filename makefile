@@ -53,6 +53,6 @@ streamReferences:
 	perl ../src/makeref.pl Converter $(FORMATS) >> $@
 
 # have to hack a bit to work with both versions of driver.makefile
-DBDS = O.$${EPICSVERSION}_$${T_A}/streamSup.dbd
+DBDFILES = O.$${EPICSVERSION}_$${T_A}/streamSup.dbd
 ../O.${EPICSVERSION}_${T_A}/streamSup.dbd:
 	perl ../src/makedbd.pl $(RECORDTYPES) > $@
