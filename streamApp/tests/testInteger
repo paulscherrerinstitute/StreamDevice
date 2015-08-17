@@ -225,7 +225,11 @@ send "-0x12345\n"
 assure "mismatch\n"
 ioccmd {dbpf DZ:test4.PROC 1}
 send "0xffffffff\n"
-assure "ffffffff\n"
+if {$tcl_platform(wordSize) == 8} {
+    assure "ffffffffffffffff\n"
+} else {
+    assure "ffffffff\n"
+}
 ioccmd {dbpf DZ:test4.PROC 1}
 send "-0xffffffff\n"
 assure "mismatch\n"
