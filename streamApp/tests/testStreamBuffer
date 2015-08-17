@@ -53,13 +53,22 @@ int main () {
 }
 EOF
 
-g++ -I ../../src ../../src/O.$EPICS_HOST_ARCH/StreamBuffer.o test.cc -o test.exe
-
-test.exe
-if [ $? != 0 ]
+if [ "$1" = "-sls" ]
 then
-    echo -e "\033[31;7mTest failed.\033[0m"
-    exit 1
+    O=../../O.*_$EPICS_HOST_ARCH/StreamBuffer.o
+else
+    O=../../src/O.$EPICS_HOST_ARCH/StreamBuffer.o
 fi
+
+for o in $O
+do
+    g++ -I ../../src $o test.cc -o test.exe
+    test.exe
+    if [ $? != 0 ]
+    then
+        echo -e "\033[31;7mTest failed.\033[0m"
+        exit 1
+    fi
+done
 rm test.*
 echo -e "\033[32mTest passed.\033[0m"
