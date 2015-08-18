@@ -40,6 +40,12 @@ written or read value.
    (=20.0/0xFFFF) maps -10.0 to 0x0000, 0.0 to 0x7FFF and 10.0 to 0xFFFF.
    Using unsigned formats with values &ge; 0x800000 gives different results
    on 64 bit machines.
+   <p class="new">
+   If <code>LINR=="NO CONVERSION"</code> (the default), <code>OVAL</code>
+   is directly converted to <code>long</code> without going through
+   <code>RVAL</code>. This allows for more bits on 64 bit machines.
+   To get the old behavior, use <code>LINR=="LINEAR"</code>.
+   </p>
   </dd>
  <dt>ENUM format (e.g. <code>%{</code>):</dt>
   <dd>

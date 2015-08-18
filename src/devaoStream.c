@@ -20,6 +20,7 @@
 
 #include "devStream.h"
 #include <aoRecord.h>
+#include <menuConvert.h>
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -42,6 +43,11 @@ static long readData (dbCommon *record, format_t *format)
             if (streamScanf (record, format, &rval)) return ERROR;
             ao->rbv = rval;
             if (INIT_RUN) ao->rval = rval;
+            if (ao->linr == menuConvertNO_CONVERSION)
+            {
+                ao->val = (double) rval;
+                return DO_NOT_CONVERT;
+            }
             return OK;
         }
     }
@@ -65,6 +71,13 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_LONG:
         {
+            if (ao->linr == menuConvertNO_CONVERSION)
+            {
+                long val;
+                if (INIT_RUN) val = (long) ao->val;
+                else val = (long) ao->oval;
+                return streamPrintf (record, format, val);
+            }
             return streamPrintf (record, format, (long) ao->rval);
         }
     }
