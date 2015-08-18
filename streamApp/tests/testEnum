@@ -50,7 +50,7 @@ set protocol {
     in  {in  "%{zero|one|two}bla"; out "%d";}
     out1 {out "%#{zero|one|two}bla";}
     in1  {in  "%#{zero|one|two}bla"; out "%d";}
-    out2 {out "%#{zero=-1|one|two=5}bla";}
+    out2 {out "%#{zero=-1|one|two=5|default=?}bla";}
     in2  {in  "%#{zero=-1|one|two=5}bla"; out "%d";}
     in3  {in  "%{\x00|\r|}bla"; out "%d";}
 }
@@ -81,6 +81,8 @@ ioccmd {dbpf DZ:testout2 0}
 assure "onebla\n"
 ioccmd {dbpf DZ:testout2 5}
 assure "twobla\n"
+ioccmd {dbpf DZ:testout2 17}
+assure "defaultbla\n"
 
 ioccmd {dbpf DZ:testin.PROC 1}
 send "zerobla\n"

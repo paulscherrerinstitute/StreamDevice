@@ -41,12 +41,10 @@ set protocol {
 set startup {
 }
 
-set debug 0
-
 startioc
 
 set inf [format %f inf]
-set nan [format %f nan]
+if [catch {set nan [format %f nan]}] {set nan nan}
 
 ioccmd {dbpf DZ:test1.PROC 1}
 send "3.14159265359\n"

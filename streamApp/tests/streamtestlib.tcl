@@ -55,7 +55,7 @@ proc startioc {} {
         if [info exists asynversion] {
             puts $fd "require asyn,$asynversion"
         }
-        puts $fd "require stream2,$streamversion"
+        puts $fd "require stream,$streamversion"
     } else {
         puts $fd "#!../O.$env(EPICS_HOST_ARCH)/streamApp"
         puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
@@ -77,7 +77,9 @@ proc startioc {} {
     }
     fconfigure $ioc -blocking yes -buffering none
     debugmsg "waiting to connect"
+    set timer [after 1000 {puts stderr "\033\[31;7mCannot start IOC.\033\[0m"; exit 1}]
     vwait sock
+    after cancel $timer
 }
 
 set lastcommand ""

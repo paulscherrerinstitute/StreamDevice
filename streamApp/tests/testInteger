@@ -10,16 +10,19 @@ set records {
     record (ai, "DZ:test1")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test1 device")
     }
     record (ai, "DZ:test2")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test2 device")
     }
     record (ai, "DZ:test3")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test3 device")
     }
     record (ai, "DZ:test4")
@@ -30,26 +33,31 @@ set records {
     record (ai, "DZ:test5")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test5 device")
     }
     record (ai, "DZ:test6")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test6 device")
     }
     record (ai, "DZ:test7")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test7 device")
     }
     record (ai, "DZ:test8")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test8 device")
     }
     record (ai, "DZ:test9")
     {
         field (DTYP, "stream")
+        field (LINR, "LINEAR")
         field (INP,  "@test.proto test9 device")
     }
     record (ai, "DZ:test10")
@@ -225,11 +233,7 @@ send "-0x12345\n"
 assure "mismatch\n"
 ioccmd {dbpf DZ:test4.PROC 1}
 send "0xffffffff\n"
-if {$tcl_platform(wordSize) == 8} {
-    assure "ffffffffffffffff\n"
-} else {
-    assure "ffffffff\n"
-}
+assure "ffffffff\n"
 ioccmd {dbpf DZ:test4.PROC 1}
 send "-0xffffffff\n"
 assure "mismatch\n"
