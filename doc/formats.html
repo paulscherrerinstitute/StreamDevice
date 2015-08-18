@@ -158,6 +158,9 @@ attribute (see
 target="ex">Record Reference Manual</a>), the record will be processed.
 It is your responsibility that the data type of the record field is
 compatible to the the data type of the converter.
+<span class="new">STRING formats are compatible with arrays of CHAR or UCHAR.<span>
+</p>
+<p>
 Note that using this syntax is by far not as efficient as using the
 default field.
 At the moment it is not possible to set <code>otherrecord</code> to an alarm
@@ -195,7 +198,7 @@ is accepted.
 </p>
 <p class="new">
 When a maximum field width is given, leading whitespace only counts to the
-field witdth when the space flag is given.
+field witdth when the space flag is used.
 </p>
 
 <a name="stdl"></a>
@@ -210,6 +213,10 @@ field witdth when the space flag is given.
 <p>
 With the <code>#</code> flag, octal values are prefixed with <code>0</code>
 and hexadecimal values with <code>0x</code> or <code>0X</code>.
+<p class="new">
+Unlike printf, <code>%x</code> and <code>%X</code> truncate the
+output to the the given width (number of least significant half bytes).
+</p>
 </p>
 <p>
 <b>Input:</b> <code>%d</code> matches signed decimal, <code>%u</code> matches
@@ -230,7 +237,7 @@ is accepted.
 </p>
 <p class="new">
 When a maximum field width is given, leading whitespace only counts to the
-field witdth when the space flag is given.
+field witdth when the space flag is used.
 </p>
 
 <a name="stds"></a>
@@ -248,7 +255,7 @@ The default <em>width</em> is infinite for <code>%s</code> and
 1 for <code>%c</code>.
 Leading whitespaces are skipped with <code>%s</code> 
 <span class="new">
-except when the space flag is given</span>
+except when the space flag is used</span>
 but not with <code>%c</code>.
 The empty string matches.
 </p>
@@ -283,23 +290,35 @@ The strings are separated by <code>|</code>.
 Example: <code>%{OFF|STANDBY|ON}</code> mapps the string <code>OFF</code>
 to the value 0, <code>STANDBY</code> to 1 and <code>ON</code> to 2.
 </p>
-<p>
+<p class="new">
 When using the <code>#</code> flag it is allowed to assign integer values
 to the strings using <code>=</code>.
+Unassigned strings increment their values by 1 as usual.
+</p>
+<p class="new">
+If one string is the initial substing of another, the substing must come
+later to ensure correct matching.
+In particular if one string is the emptry string, it must be the last one.
+Use <code>#</code> and <code>=</code> to renumber if necessary.
+</p>
+<p class="new">
+Use the assignment <code>=?</code> for the last string to make it the
+default value for output formats.
 </p>
 <p>
-Example: <code>%#{neg=-1|stop=0|pos=1|fast=10}</code>.
+Example: <code>%#{neg=-1|stop|pos|fast=10|rewind=-10}</code>.
 </p>
 <p>
 If one of the strings contains <code>|</code> or <code>}</code>
-(or <code>=</code>  if the <code>#</code> flag is used)
+<span class="new">(or <code>=</code>  if the <code>#</code> flag is used)</span>
 a <code>\</code> must be used to escape the character.
 </p>
 <p>
-In output, depending on the value, one of the strings is printed.
+<b>Output:</b> Depending on the value, one of the strings is printed,
+<span class="new">or the default if no value matches</span>.
 </p>
 <p>
-In input, if any of the strings matches the value is set accordingly.
+<b>Input:</b> If any of the strings matches, the value is set accordingly.
 </p>
 
 <a name="bin"></a>

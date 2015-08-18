@@ -36,7 +36,7 @@ class EnumConverter : public StreamFormatConverter
 
 int EnumConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
-    const char*& source, bool)
+    const char*& source, bool scanFormat)
 {
     if (fmt.flags & (left_flag|sign_flag|space_flag|zero_flag))
     {
@@ -56,7 +56,30 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         if (*source == '=' && (fmt.flags & alt_flag))
         {
             char* p;
-            index = strtol(++source, &p, 0);
+            
+            if (*++source == '?')
+            {
+                // default choice
+                if (scanFormat)
+                {
+                    error("Default value only allowed in output formats\n");
+                    return false;
+                }
+                if (*++source != '}')
+                {
+                    error("Default value must be last\n");
+                    return false;
+                }
+                source++;
+                numEnums = -(numEnums+1);
+                info.append('\0');
+                memcpy(info(n), &numEnums, sizeof(numEnums));
+                debug("EnumConverter::parse %ld choices with default: %s\n",
+                    -numEnums, info.expand()());
+                return enum_format;
+            }
+            
+            index = strtol(source, &p, 0);
             if (p == source || (*p != '|' && *p != '}'))
             {
                 error("Integer expected after '=' "
@@ -99,6 +122,9 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     const char* s = fmt.info;
     long numEnums = extract<long>(s);
     long index = extract<long>(s);
+    bool noDefault = numEnums >= 0;
+    
+    if (numEnums < 0) numEnums=-numEnums-1;    
     while (numEnums-- && (value != index))
     {
         while(*s)
@@ -109,7 +135,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         s++;
         index = extract<long>(s);
     }
-    if (numEnums == -1)
+    if (numEnums == -1 && noDefault)
     {
         error("Value %li not found in enum set\n", value);
         return false;
