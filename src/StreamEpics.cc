@@ -993,6 +993,9 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
 // --  TO DO: If SCAN is "I/O Intr" and record has not been processed,  --
 // --  do it now to get the latest value (only for output records?)     --
 
+    format_s fmt;
+    fmt.type = dbfMapping[format.type];
+    fmt.priv = &format;
     if (fieldaddress)
     {
         // Format like "%([record.]field)..." has requested to get value
@@ -1025,7 +1028,6 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
         }
 
         /* convert type to LONG, ENUM, DOUBLE, or STRING */
-        int type = dbfMapping[format.type];
         long nelem = pdbaddr->no_elements;
         size_t size = nelem * typeSize[format.type];
 
@@ -1040,13 +1042,13 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                 nelem,
                 pdbaddr->field_size,
                 pamapdbfType[pdbaddr->field_type].strvalue);
-            type = DBF_CHAR;
+            fmt.type = DBF_CHAR;
             size = nelem;
         }
         
         char* buffer = fieldBuffer.clear().reserve(size);
 
-        if (dbGet(pdbaddr, type, buffer,
+        if (dbGet(pdbaddr, fmt.type, buffer,
             NULL, &nelem, NULL) != 0)
         {
             error("%s: dbGet(%s.%s, %s) failed\n",
@@ -1060,7 +1062,7 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                 name(),nelem);
 
         /* terminate CHAR array as string */
-        if (type == DBF_CHAR)
+        if (fmt.type == DBF_CHAR)
         {
             if (nelem >= pdbaddr->no_elements) nelem = pdbaddr->no_elements-1;
             buffer[nelem] = 0;
@@ -1104,9 +1106,6 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
         }
         return true;
     }
-    format_s fmt;
-    fmt.type = dbfMapping[format.type];
-    fmt.priv = &format;
     debug("Stream::formatValue(%s) format=%%%c type=%s\n",
         name(), format.conv, pamapdbfType[fmt.type].strvalue);
     if (!writeData)
@@ -1132,7 +1131,10 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
     char* buffer;
     int status;
     const char* putfunc;
+    format_s fmt;
 
+    fmt.type = dbfMapping[format.type];
+    fmt.priv = &format;
     if (fieldaddress)
     {
         // Format like "%([record.]field)..." has requested to put value
@@ -1152,8 +1154,10 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsInt32*)buffer)[nord] = lval;
-                    debug("Stream::matchValue(%s): %s[%li] = %li\n",
-                            name(), pdbaddr->precord->name, nord, lval);
+                    debug("Stream::matchValue(%s): %s.%s[%li] = %li\n",
+                            name(), pdbaddr->precord->name,
+                            ((dbFldDes*)pdbaddr->pfldDes)->name,
+                            nord, lval);
                     break;
                 }
                 case enum_format:
@@ -1161,8 +1165,10 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     consumed = scanValue(format, lval);
                     if (consumed >= 0)
                         ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
-                    debug("Stream::matchValue(%s): %s[%li] = %li\n",
-                            name(), pdbaddr->precord->name, nord, lval);
+                    debug("Stream::matchValue(%s): %s.%s[%li] = %li\n",
+                            name(), pdbaddr->precord->name,
+                            ((dbFldDes*)pdbaddr->pfldDes)->name,
+                            nord, lval);
                     break;
                 }
                 case double_format:
@@ -1175,18 +1181,34 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     if (consumed >= 0)
                         memcpy(((epicsFloat64*)buffer)+nord,
                             &f64, sizeof(f64));
-                    debug("Stream::matchValue(%s): %s[%li] = %#g %#g\n",
-                            name(), pdbaddr->precord->name, nord, dval,
+                    debug("Stream::matchValue(%s): %s.%s[%li] = %#g %#g\n",
+                            name(), pdbaddr->precord->name,
+                            ((dbFldDes*)pdbaddr->pfldDes)->name,
+                            nord, dval,
                             ((epicsFloat64*)buffer)[nord]);
                     break;
                 }
                 case string_format:
                 {
-                    consumed = scanValue(format,
-                        buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
-                    debug("Stream::matchValue(%s): %s[%li] = \"%.*s\"\n",
-                            name(), pdbaddr->precord->name, nord,
-                            MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
+                    if (pdbaddr->field_type == DBF_CHAR)
+                    {
+                        // string to char array
+                        consumed = scanValue(format, buffer, nelem);
+                        debug("Stream::matchValue(%s): %s.%s = \"%.*s\"\n",
+                                name(), pdbaddr->precord->name,
+                                ((dbFldDes*)pdbaddr->pfldDes)->name,
+                                (int)consumed, buffer);
+                        nord = nelem;
+                    }
+                    else
+                    {
+                        consumed = scanValue(format,
+                            buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
+                        debug("Stream::matchValue(%s): %s.%s[%li] = \"%.*s\"\n",
+                                name(), pdbaddr->precord->name,
+                                ((dbFldDes*)pdbaddr->pfldDes)->name,
+                                nord, MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
+                    }
                     break;
                 }
                 default:
@@ -1223,15 +1245,17 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     name());
                 return false;
             }
+            /* convert from Unix epoch (1 Jan 1970) to EPICS epoch (1 Jan 1990) */
             dval = dval-631152000u;
             pdbaddr->precord->time.secPastEpoch = (long)dval;
             // rouding: we don't have 9 digits precision
             // in a double of today's number of seconds
             pdbaddr->precord->time.nsec = (long)((dval-(long)dval)*1e6)*1000;
-            debug("Stream::matchValue(%s): writing %i.%i to TIME field\n",
+            debug("Stream::matchValue(%s): writing %i.%i to %s.TIME field\n",
                 name(),
                 pdbaddr->precord->time.secPastEpoch,
-                pdbaddr->precord->time.nsec);
+                pdbaddr->precord->time.nsec,
+                pdbaddr->precord->name);
             pdbaddr->precord->tse = epicsTimeEventDeviceTime;
             return true;
 #else
@@ -1240,18 +1264,19 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             return false;
 #endif
         }
-        
+        if (format.type == string_format &&
+            (pdbaddr->field_type == DBF_CHAR || pdbaddr->field_type == DBF_UCHAR))
+        {
+            /* write strings to [U]CHAR arrays */
+            nord = consumed;
+            fmt.type = DBF_CHAR;
+        }
         if (pdbaddr->precord == record || INIT_RUN)
         {
             // write into own record, thus don't process it
             // in @init we must not process other record
-            debug("Stream::matchValue(%s): dbPut(%s.%s,%s)\n",
-                name(),
-                pdbaddr->precord->name,
-                ((dbFldDes*)pdbaddr->pfldDes)->name,
-                fieldBuffer.expand()());
             putfunc = "dbPut";
-            status = dbPut(pdbaddr, dbfMapping[format.type], buffer, nord);
+            status = dbPut(pdbaddr, fmt.type, buffer, nord);
             if (INIT_RUN && pdbaddr->precord != record)
             {
                 // clean error status of other record in @init
@@ -1263,41 +1288,43 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         else
         {
             // write into other record, thus process it
-            debug("Stream::matchValue(%s): dbPutField(%s.%s,%s)\n",
-                name(),
-                pdbaddr->precord->name,
-                ((dbFldDes*)pdbaddr->pfldDes)->name,
-                fieldBuffer.expand()());
             putfunc = "dbPutField";
-            status = dbPutField(pdbaddr, dbfMapping[format.type],
+            status = dbPutField(pdbaddr, fmt.type,
                 buffer, nord);
         }
+        debug("Stream::matchValue(%s): %s(%s.%s, %s, %s) status=0x%x\n",
+            name(), putfunc,
+            pdbaddr->precord->name,
+            ((dbFldDes*)pdbaddr->pfldDes)->name,
+            pamapdbfType[fmt.type].strvalue,
+            fieldBuffer.expand()(),
+            status);
         if (status != 0)
         {
             flags &= ~ScanTried;
-            switch (format.type)
+            switch (fmt.type)
             {
-                case long_format:
-                case enum_format:
+                case DBF_LONG:
+                case DBF_ENUM:
                     error("%s: %s(%s.%s, %s, %li) failed\n",
-                        putfunc, name(), pdbaddr->precord->name,
+                        name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
-                        pamapdbfType[dbfMapping[format.type]].strvalue,
+                        pamapdbfType[fmt.type].strvalue,
                         lval);
                     return false;
-                case double_format:
+                case DBF_DOUBLE:
                     error("%s: %s(%s.%s, %s, %#g) failed\n",
-                        putfunc, name(), pdbaddr->precord->name,
+                        name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
-                        pamapdbfType[dbfMapping[format.type]].strvalue,
+                        pamapdbfType[fmt.type].strvalue,
                         dval);
                     return false;
-                case string_format:
-                    error("%s: %s(%s.%s, %s, \"%s\") failed\n",
-                        putfunc, name(), pdbaddr->precord->name,
+                case DBF_STRING:
+                    error("%s: %s(%s.%s, %s, \"%.*s\") failed\n",
+                        name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
-                        pamapdbfType[dbfMapping[format.type]].strvalue,
-                        buffer);
+                        pamapdbfType[fmt.type].strvalue,
+                        (int)consumed, buffer);
                     return false;
                 default:
                     return false;
@@ -1306,9 +1333,6 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         return true;
     }
     // no fieldaddress (the "normal" case)
-    format_s fmt;
-    fmt.type = dbfMapping[format.type];
-    fmt.priv = &format;
     if (!readData)
     {
         error("%s: No readData() function provided\n", name());
