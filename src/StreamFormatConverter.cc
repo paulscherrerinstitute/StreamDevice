@@ -316,6 +316,8 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdLongConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
+    if (tolower(fmt.conv) == 'x' && fmt.width && fmt.width < 2*sizeof(long))
+        value &= ~(-1L << (fmt.width<<2));
     output.print(fmt.info, value);
     return true;
 }
