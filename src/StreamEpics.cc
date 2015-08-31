@@ -751,21 +751,16 @@ process()
 bool Stream::
 print(format_t *format, va_list ap)
 {
-    long lval;
-    double dval;
-    char* sval;
     switch (format->type)
     {
-        case DBF_ENUM:
+        case DBF_ULONG:
         case DBF_LONG:
-            lval = va_arg(ap, long);
-            return printValue(*format->priv, lval);
+        case DBF_ENUM:
+            return printValue(*format->priv, va_arg(ap, long));
         case DBF_DOUBLE:
-            dval = va_arg(ap, double);
-            return printValue(*format->priv, dval);
+            return printValue(*format->priv, va_arg(ap, double));
         case DBF_STRING:
-            sval = va_arg(ap, char*);
-            return printValue(*format->priv, sval);
+            return printValue(*format->priv, va_arg(ap, char*));
     }
     error("INTERNAL ERROR (%s): Illegal format type\n", name());
     return false;
@@ -775,27 +770,22 @@ bool Stream::
 scan(format_t *format, void* value, size_t maxStringSize)
 {
     // called by streamScanfN
-    long* lptr;
-    double* dptr;
-    char* sptr;
 
     // first remove old value from inputLine (if we are scanning arrays)
     consumedInput += currentValueLength;
     currentValueLength = 0;
     switch (format->type)
     {
+        case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
-            lptr = (long*)value;
-            currentValueLength = scanValue(*format->priv, *lptr);
+            currentValueLength = scanValue(*format->priv, *(long*)value);
             break;
         case DBF_DOUBLE:
-            dptr = (double*)value;
-            currentValueLength = scanValue(*format->priv, *dptr);
+            currentValueLength = scanValue(*format->priv, *(double*)value);
             break;
         case DBF_STRING:
-            sptr = (char*)value;
-            currentValueLength  = scanValue(*format->priv, sptr,
+            currentValueLength  = scanValue(*format->priv, (char*)value,
                 maxStringSize);
             break;
         default:
@@ -979,9 +969,9 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
 }
 
 static const unsigned char dbfMapping[] =
-    {0, DBF_LONG, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
+    {0, DBF_ULONG, DBF_LONG, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
 static const short typeSize[] =
-    {0, sizeof(epicsInt32), sizeof(epicsUInt16),
+    {0, sizeof(epicsUInt32), sizeof(epicsInt32), sizeof(epicsUInt16),
         sizeof(epicsFloat64), MAX_STRING_SIZE};
 
 bool Stream::
@@ -1079,7 +1069,12 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
                         (long)((epicsUInt16*)buffer)[i]))
                         return false;
                     break;
-                case long_format:
+                case unsigned_format:
+                    if (!printValue(format,
+                        (long)((epicsUInt32*)buffer)[i]))
+                        return false;
+                    break;
+                case signed_format:
                     if (!printValue(format,
                         (long)((epicsInt32*)buffer)[i]))
                         return false;
@@ -1150,7 +1145,17 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 name(), fieldBuffer.expand()());
             switch (format.type)
             {
-                case long_format:
+                case unsigned_format:
+                {
+                    consumed = scanValue(format, lval);
+                    if (consumed >= 0) ((epicsUInt32*)buffer)[nord] = lval;
+                    debug("Stream::matchValue(%s): %s.%s[%li] = %lu\n",
+                            name(), pdbaddr->precord->name,
+                            ((dbFldDes*)pdbaddr->pfldDes)->name,
+                            nord, lval);
+                    break;
+                }
+                case signed_format:
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsInt32*)buffer)[nord] = lval;
@@ -1304,6 +1309,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             flags &= ~ScanTried;
             switch (fmt.type)
             {
+                case DBF_ULONG:
                 case DBF_LONG:
                 case DBF_ENUM:
                     error("%s: %s(%s.%s, %s, %li) failed\n",

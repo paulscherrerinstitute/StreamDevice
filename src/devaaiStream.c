@@ -20,9 +20,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "devStream.h"
-#include <aaiRecord.h>
 #include <errlog.h>
+#include <aaiRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -57,6 +57,7 @@ static long readData (dbCommon *record, format_t *format)
                 }
                 break;
             }
+            case DBF_ULONG:
             case DBF_LONG:
             case DBF_ENUM:
             {
@@ -191,6 +192,7 @@ static long writeData (dbCommon *record, format_t *format)
                     return ERROR;
                 break;
             }
+            case DBF_ULONG:
             case DBF_LONG:
             case DBF_ENUM:
             {

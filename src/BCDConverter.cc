@@ -31,9 +31,9 @@ class BCDConverter : public StreamFormatConverter
 };
 
 int BCDConverter::
-parse(const StreamFormat&, StreamBuffer&, const char*&, bool)
+parse(const StreamFormat& fmt, StreamBuffer&, const char*&, bool)
 {
-    return long_format;
+    return (fmt.flags & sign_flag) ? signed_format : unsigned_format;
 }
 
 bool BCDConverter::

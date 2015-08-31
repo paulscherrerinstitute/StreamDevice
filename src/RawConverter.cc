@@ -31,23 +31,23 @@ class RawConverter : public StreamFormatConverter
 };
 
 int RawConverter::
-parse(const StreamFormat&, StreamBuffer&,
+parse(const StreamFormat& fmt, StreamBuffer&,
     const char*&, bool)
 {
-    return long_format;
+    return (fmt.flags & (sign_flag|zero_flag)) ? signed_format : unsigned_format;
 }
 
 bool RawConverter::
-printLong(const StreamFormat& format, StreamBuffer& output, long value)
+printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    int prec = format.prec;      // number of bytes from value
+    int prec = fmt.prec;      // number of bytes from value
     if (prec == -1) prec = 1;    // default: 1 byte
     int width = prec;            // number of bytes in output
     if (prec > (int)sizeof(long)) prec=sizeof(long);
-    if (format.width > width) width = format.width;
+    if (fmt.width > width) width = fmt.width;
     
     char byte = 0;
-    if (format.flags & alt_flag) // little endian (lsb first)
+    if (fmt.flags & alt_flag) // little endian (lsb first)
     {
         while (prec--)
         {
@@ -56,7 +56,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
             value >>= 8;
             width--;
         }
-        if (format.flags & zero_flag)
+        if (fmt.flags & zero_flag)
         {
             // fill with zero
             byte = 0;
@@ -73,7 +73,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     }
     else // big endian (msb first)
     {
-        if (format.flags & zero_flag)
+        if (fmt.flags & zero_flag)
         {
             // fill with zero
             byte = 0;
@@ -97,17 +97,17 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
 }
 
 int RawConverter::
-scanLong(const StreamFormat& format, const char* input, long& value)
+scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     long length = 0;
     long val = 0;
-    int width = format.width;
+    int width = fmt.width;
     if (width == 0) width = 1; // default: 1 byte
-    if (format.flags & skip_flag)
+    if (fmt.flags & skip_flag)
     {
         return width; // just skip input
     }
-    if (format.flags & alt_flag)
+    if (fmt.flags & alt_flag)
     {
         // little endian (lsb first)
         unsigned int shift = 0;
@@ -118,7 +118,7 @@ scanLong(const StreamFormat& format, const char* input, long& value)
         }
         if (width == 0)
         {
-            if (format.flags & zero_flag)
+            if (fmt.flags & zero_flag)
             {
                 // fill with zero
                 val |= ((unsigned char) input[length++]) << shift;
@@ -134,7 +134,7 @@ scanLong(const StreamFormat& format, const char* input, long& value)
     else
     {
         // big endian  (msb first)
-        if (format.flags & zero_flag)
+        if (fmt.flags & zero_flag)
         {
             // fill with zero
             val = (unsigned char) input[length++];

@@ -18,10 +18,10 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
-#include <waveformRecord.h>
 #include <string.h>
 #include <errlog.h>
+#include <waveformRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -57,6 +57,7 @@ static long readData (dbCommon *record, format_t *format)
                 }
                 break;
             }
+            case DBF_ULONG:
             case DBF_LONG:
             case DBF_ENUM:
             {

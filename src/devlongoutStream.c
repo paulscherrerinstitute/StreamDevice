@@ -19,20 +19,25 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
 #include <longoutRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {
     longoutRecord *lo = (longoutRecord *) record;
 
-    if (format->type == DBF_LONG || format->type == DBF_ENUM)
+    switch (format->type)
     {
-        long val;
-        if (streamScanf (record, format, &val)) return ERROR;
-        lo->val = val;
-        return OK;
+        case DBF_ULONG:
+        case DBF_LONG:
+        case DBF_ENUM:
+        {       
+            long val;
+            if (streamScanf (record, format, &val)) return ERROR;
+            lo->val = val;
+            return OK;
+        }
     }
     return ERROR;
 }
@@ -41,9 +46,13 @@ static long writeData (dbCommon *record, format_t *format)
 {
     longoutRecord *lo = (longoutRecord *) record;
 
-    if (format->type == DBF_LONG || format->type == DBF_ENUM)
+    switch (format->type)
     {
-        return streamPrintf (record, format, (long) lo->val);
+        case DBF_ULONG:
+        case DBF_ENUM:
+            return streamPrintf (record, format, (unsigned long)lo->val);
+        case DBF_LONG:
+            return streamPrintf (record, format, (long)lo->val);
     }
     return ERROR;
 }

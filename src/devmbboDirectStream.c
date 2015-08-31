@@ -19,16 +19,16 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
 #include <mbboDirectRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {
     mbboDirectRecord *mbboD = (mbboDirectRecord *) record;
-    long val;
+    unsigned long val;
 
-    if (format->type == DBF_LONG)
+    if (format->type == DBF_ULONG || format->type == DBF_LONG)
     {
         if (streamScanf (record, format, &val)) return ERROR;
         if (mbboD->mask)
@@ -53,7 +53,7 @@ static long writeData (dbCommon *record, format_t *format)
     mbboDirectRecord *mbboD = (mbboDirectRecord *) record;
     long val;
 
-    if (format->type == DBF_LONG)
+    if (format->type == DBF_ULONG || format->type == DBF_LONG)
     {
         if (mbboD->mask) val = mbboD->rval & mbboD->mask;
         else val = mbboD->val;

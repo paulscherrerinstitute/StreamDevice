@@ -19,6 +19,7 @@
 ***************************************************************/
 
 #include <ctype.h>
+#include <limits.h>
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 
@@ -32,51 +33,59 @@ class BinaryConverter : public StreamFormatConverter
 };
 
 int BinaryConverter::
-parse(const StreamFormat& format, StreamBuffer& info,
+parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool)
 {
-    if (format.conv == 'B')
+    if (fmt.conv == 'b')
     {
-        // user defined characters for %B (next 2 in source)
+        // default characters 0 and 1 for %b
+        info.append("01");
+        return unsigned_format;
+    }
+    
+    // user defined characters for %B (next 2 in source)
+    if (*source)
+    {
+        if (*source == esc) source++;
+        info.append(*source++);
         if (*source)
         {
             if (*source == esc) source++;
             info.append(*source++);
-            if (*source)
-            {
-                if (*source == esc) source++;
-                info.append(*source++);
-                return long_format;
-            }
+            return unsigned_format;
         }
-        error("Missing characters after %%B format conversion\n");
-        return false;
     }
-    // default characters for %b
-    info.append("01");
-    return long_format;
+    error("Missing characters after %%B format conversion\n");
+    return false;
 }
 
 bool BinaryConverter::
-printLong(const StreamFormat& format, StreamBuffer& output, long value)
+printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    int prec = format.prec;
+    int prec = fmt.prec;
     if (prec == -1)
     {
-        // find number of significant bits
-        prec = sizeof (value) * 8;
-        while (prec && (value & (1L << (prec - 1))) == 0) prec--;
+        // Find number of significant bits is nothing is specified.
+        unsigned long x = (unsigned long) value;
+        prec = 32;
+#if (LONG_BIT > 32)
+        if (x > 0xFFFFFFFF)  { prec = 64;  x >>=32; }
+#endif 
+        if (x <= 0x0000FFFF) { prec -= 16; x <<=16; }
+        if (x <= 0x00FFFFFF) { prec -= 8; x <<=8; }
+        if (x <= 0x0FFFFFFF) { prec -= 4; x <<=4; }
+        if (x <= 0x3FFFFFFF) { prec -= 2; x <<=2; }
+        if (x <= 0x7FFFFFFF) { prec -= 1; }
     }
-    if (prec == 0) prec++; // print at least one bit
     int width = prec;
-    if (format.width > width) width = format.width;
-    char zero = format.info[0];
-    char one = format.info[1];
-    char fill = (format.flags & zero_flag) ? zero : ' ';
-    if (format.flags & alt_flag)
+    if (fmt.width > width) width = fmt.width;
+    char zero = fmt.info[0];
+    char one = fmt.info[1];
+    char fill = (fmt.flags & zero_flag) ? zero : ' ';
+    if (fmt.flags & alt_flag)
     {
         // little endian (least significant bit first)
-        if (!(format.flags & left_flag))
+        if (!(fmt.flags & left_flag))
         {
             // pad left
             while (width > prec)
@@ -100,7 +109,7 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
     else
     {
         // big endian (most significant bit first)
-        if (!(format.flags & left_flag))
+        if (!(fmt.flags & left_flag))
         {
             // pad left
             while (width > prec)
@@ -124,18 +133,18 @@ printLong(const StreamFormat& format, StreamBuffer& output, long value)
 }
 
 int BinaryConverter::
-scanLong(const StreamFormat& format, const char* input, long& value)
+scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     long val = 0;
-    int width = format.width;
+    int width = fmt.width;
     if (width == 0) width = -1;
     int length = 0;
-    char zero = format.info[0];
-    char one = format.info[1];
+    char zero = fmt.info[0];
+    char one = fmt.info[1];
     if (!isspace(zero) && !isspace(one))
         while (isspace(input[length])) length++; // skip whitespaces
     if (input[length] != zero && input[length] != one) return -1;
-    if (format.flags & alt_flag)
+    if (fmt.flags & alt_flag)
     {
         // little endian (least significan bit first)
         long mask = 1;

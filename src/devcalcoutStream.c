@@ -17,9 +17,9 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
 #include <postfix.h>
 #include <calcoutRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -32,13 +32,17 @@ static long readData (dbCommon *record, format_t *format)
         {
             return streamScanf (record, format, &co->val);
         }
+        case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
         {
             long lval;
 
             if (streamScanf (record, format, &lval)) return ERROR;
-            co->val = lval;
+            if (format->type == DBF_LONG)
+                co->val = lval;
+            else
+                co->val = (unsigned long)lval;
             return OK;
         }
     }
@@ -55,8 +59,12 @@ static long writeData (dbCommon *record, format_t *format)
         {
             return streamPrintf (record, format, co->oval);
         }
-        case DBF_LONG:
+        case DBF_ULONG:
         case DBF_ENUM:
+        {
+            return streamPrintf (record, format, (unsigned long)co->oval);
+        }
+        case DBF_LONG:
         {
             return streamPrintf (record, format, (long)co->oval);
         }

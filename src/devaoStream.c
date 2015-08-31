@@ -18,9 +18,9 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
-#include <aoRecord.h>
 #include <menuConvert.h>
+#include <aoRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -33,19 +33,24 @@ static long readData (dbCommon *record, format_t *format)
         {
             double val;
             if (streamScanf (record, format, &val)) return ERROR;
-            if (ao->aslo != 0) val *= ao->aslo;
+            if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
             ao->val = val + ao->aoff;
             return DO_NOT_CONVERT;
         }
+        case DBF_ULONG:
         case DBF_LONG:
         {
             long rval;
             if (streamScanf (record, format, &rval)) return ERROR;
             ao->rbv = rval;
-            if (INIT_RUN) ao->rval = rval;
+            ao->rval = rval;
             if (ao->linr == menuConvertNO_CONVERSION)
             {
-                ao->val = (double) rval;
+                /* allow more bits than 32 */
+                if (format->type == DBF_ULONG)
+                    ao->val = (unsigned long)rval;
+                else    
+                    ao->val = rval;
                 return DO_NOT_CONVERT;
             }
             return OK;
@@ -62,23 +67,27 @@ static long writeData (dbCommon *record, format_t *format)
     {
         case DBF_DOUBLE:
         {
-            double val;
-            if (INIT_RUN) val = ao->val;
-            else val = ao->oval;
-            val -= ao->aoff;
-            if (ao->aslo != 0) val /= ao->aslo;
+            double val = (INIT_RUN ? ao->val : ao->oval) - ao->aoff;
+            if (ao->aslo != 0.0 && ao->aslo != 1.0) val /= ao->aslo;
             return streamPrintf (record, format, val);
+        }
+        case DBF_ULONG:
+        {
+            if (ao->linr == menuConvertNO_CONVERSION)
+            {
+                /* allow more bits than 32 */
+                return streamPrintf (record, format, (unsigned long)(INIT_RUN ? ao->val : ao->oval));
+            }
+            return streamPrintf (record, format, (unsigned long)ao->rval);
         }
         case DBF_LONG:
         {
             if (ao->linr == menuConvertNO_CONVERSION)
             {
-                long val;
-                if (INIT_RUN) val = (long) ao->val;
-                else val = (long) ao->oval;
-                return streamPrintf (record, format, val);
+                /* allow more bits than 32 */
+                return streamPrintf (record, format, (long)(INIT_RUN ? ao->val : ao->oval));
             }
-            return streamPrintf (record, format, (long) ao->rval);
+            return streamPrintf (record, format, (long)ao->rval);
         }
     }
     return ERROR;

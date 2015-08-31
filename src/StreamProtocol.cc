@@ -26,7 +26,8 @@
 #include "StreamError.h"
 
 const char* StreamFormatTypeStr[] = {
-    "none", "long", "enum", "double", "string", "pseudo"
+    // must match the order in StreamFormat.h
+    "none", "unsigned", "signed", "enum", "double", "string", "pseudo"
 };
 
 class StreamProtocolParser::Protocol::Variable
@@ -1438,7 +1439,7 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
         // parsing failed
         return false;
     }
-    if (type < long_format && type > pseudo_format)
+    if (type < 1 && type > pseudo_format)
     {
         error(line, filename(),
             "Illegal format type %d returned from '%%%c' converter\n",

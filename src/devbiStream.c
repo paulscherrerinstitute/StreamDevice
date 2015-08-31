@@ -18,9 +18,9 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
-#include <biRecord.h>
 #include <string.h>
+#include <biRecord.h>
+#include "devStream.h"
 #include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
@@ -30,6 +30,7 @@ static long readData (dbCommon *record, format_t *format)
 
     switch (format->type)
     {
+        case DBF_ULONG:
         case DBF_LONG:
         {
             if (streamScanf (record, format, &val)) return ERROR;
@@ -69,13 +70,14 @@ static long writeData (dbCommon *record, format_t *format)
 
     switch (format->type)
     {
+        case DBF_ULONG:
         case DBF_LONG:
         {
             return streamPrintf (record, format, bi->rval);
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long) bi->val);
+            return streamPrintf (record, format, (long)bi->val);
         }
         case DBF_STRING:
         {

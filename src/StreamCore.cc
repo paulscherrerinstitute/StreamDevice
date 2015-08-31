@@ -749,7 +749,7 @@ printSeparator()
 bool StreamCore::
 printValue(const StreamFormat& fmt, long value)
 {
-    if (fmt.type != long_format && fmt.type != enum_format)
+    if (fmt.type != unsigned_format && fmt.type != signed_format && fmt.type != enum_format)
     {
         error("%s: printValue(long) called with %%%c format\n",
             name(), fmt.conv);
@@ -1216,7 +1216,8 @@ normal_format:
                     double ddummy;
                     switch (fmt.type)
                     {
-                        case long_format:
+                        case unsigned_format:
+                        case signed_format:
                         case enum_format:
                             consumed = StreamFormatConverter::find(fmt.conv)->
                                 scanLong(fmt, inputLine(consumedInput), ldummy);
@@ -1457,7 +1458,7 @@ matchSeparator()
 long StreamCore::
 scanValue(const StreamFormat& fmt, long& value)
 {
-    if (fmt.type != long_format && fmt.type != enum_format)
+    if (fmt.type != unsigned_format && fmt.type != signed_format && fmt.type != enum_format)
     {
         error("%s: scanValue(long&) called with %%%c format\n",
             name(), fmt.conv);
