@@ -281,7 +281,7 @@ With some more records, you can clean the message record if SEVR is not INVALID.
 <code>
 record (calcout, "$(DEVICE):clean_1") {<br>
 &nbsp;&nbsp;field (INPA, "$(DEVICE):readcurrent.SEVR CP")<br>
-&nbsp;&nbsp;field (CALC, "A!=2")<br>
+&nbsp;&nbsp;field (CALC, "A#3")<br>
 &nbsp;&nbsp;field (OOPT, "When Non-zero")<br>
 &nbsp;&nbsp;field (OUT,  "$(DEVICE):clean_2.PROC")<br>
 }<br>
