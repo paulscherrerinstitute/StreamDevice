@@ -466,158 +466,62 @@ In input, the next byte or bytes must match the checksum.
 <h3>Implemented checksum functions</h3>
 <dl>
  <dt><code>%&lt;sum&gt;</code> or <code>%&lt;sum8&gt;</code></dt>
-  <dd>
-   The sum of all characters modulo 2<sup>8</sup>.
-   <br>
-   One byte. <code>123456789%&lt;sum&gt;</code> = 0xdd
-  </dd>
+  <dd>One byte. The sum of all characters modulo 2<sup>8</sup>.</dd>
  <dt><code>%&lt;sum16&gt;</code></dt>
-  <dd>
-   The sum of all characters modulo 2<sup>16</sup>.
-   <br>
-   Two bytes. <code>123456789%&lt;sum16&gt;</code> = 0x01dd
-  </dd>
+  <dd>Two bytes. The sum of all characters modulo 2<sup>16</sup>.</dd>
  <dt><code>%&lt;sum32&gt;</code></dt>
-  <dd>
-   The sum of all characters modulo 2<sup>32</sup>.
-   <br>
-   Four bytes. <code>123456789%&lt;sum32&gt;</code> = 0x000001dd
-  </dd>
+  <dd>Four bytes. The sum of all characters modulo 2<sup>32</sup>.</dd>
  <dt><code>%&lt;negsum&gt;</code>, <code>%&lt;nsum&gt;</code>, <code>%&lt;-sum&gt;</code>, <code>%&lt;negsum8&gt;</code>, <code>%&lt;nsum8&gt;</code>, or <code>%&lt;-sum8&gt;</code></dt>
-  <dd>
-   The negative of the sum of all characters modulo 2<sup>8</sup>.
-   <br>
-   One byte. <code>123456789%&lt;-sum8&gt;</code> = 0x23
-  </dd>
+  <dd>One byte. The negative of the sum of all characters modulo 2<sup>8</sup>.</dd>
  <dt><code>%&lt;negsum16&gt;</code>, <code>%&lt;nsum16&gt;</code>, or <code>%&lt;-sum16&gt;</code></dt>
-  <dd>
-   The negative of the sum of all characters modulo 2<sup>16</sup>.
-   <br>
-   Two bytes. <code>123456789%&lt;-sum16&gt;</code> = 0xfe23
-  </dd>
+  <dd>Two bytes. The negative of the sum of all characters modulo 2<sup>16</sup>.</dd>
  <dt><code>%&lt;negsum32&gt;</code>, <code>%&lt;nsum32&gt;</code>, or <code>%&lt;-sum32&gt;</code></dt>
-  <dd>
-   The negative of the sum of all characters modulo 2<sup>32</sup>.
-   <br>
-   Four bytes. <code>123456789%&lt;-sum32&gt;</code> = 0xfffffe23
-  </dd>
+  <dd>Four bytes. The negative of the sum of all characters modulo 2<sup>32</sup>.</dd>
  <dt><code>%&lt;notsum&gt;</code> or <code>%&lt;~sum&gt;</code></dt>
-  <dd>
-   The bitwise inverse of the sum of all characters modulo 2<sup>8</sup>.
-   <br>
-   One byte. <code>123456789%&lt;~sum8&gt;</code> = 0x22
-  </dd>
- <dt><code>%&lt;notsum16&gt;</code> or <code>%&lt;~sum16&gt;</code></dt>
-  <dd>
-   The bitwise inverse of the sum of all characters modulo 2<sup>16</sup>.
-   <br>
-   Two bytes. <code>123456789%&lt;~sum16&gt;</code> = 0xfe22
-  </dd>
- <dt><code>%&lt;notsum32&gt;</code> or <code>%&lt;~sum32&gt;</code></dt>
-  <dd>
-   The bitwise inverse of the sum of all characters modulo 2<sup>32</sup>.
-   <br>
-   Four bytes. <code>123456789%&lt;~sum32&gt;</code> = 0xfffffe22
-  </dd>
- <dt><code>%&lt;hexsum8&gt;</code></dt>
-  <dd>
-   The sum of all hexadecimal digits. (Other characters are ignored.)
-   <br>
-   One byte. <code>123456789%&lt;hexsum8&gt;</code> = 0x2d
-  </dd>
+  <dd>One byte. The bitwise inverse of the sum of all characters modulo 2<sup>8</sup>.</dd>
  <dt><code>%&lt;xor&gt;</code></dt>
-  <dd>
-   All characters xor'ed.
-   <br>
-   One byte. <code>123456789%&lt;xor&gt;</code> = 0x31
-  </dd>
+  <dd>One byte. All characters xor'ed.</dd>
  <dt><code>%&lt;xor7&gt;</code></dt>
-  <dd>
-   All characters xor'ed modulo 2<sup>7</sup>.
-   <br>
-   One byte. <code>123456789%&lt;xor7&gt;</code> = 0x31
-  </dd>
+  <dd>One byte. All characters xor'ed &amp; 0x7F.</dd>
  <dt><code>%&lt;crc8&gt;</code></dt>
-  <dd>
-   An often used 8 bit crc checksum
-   (poly=0x07, init=0x00, xorout=0x00).
-   <br>
-   One byte. <code>123456789%&lt;crc8&gt;</code> = 0x31
-  </dd>
+  <dd>One byte. An often used 8 bit crc checksum
+  (poly=0x07, init=0x00, xorout=0x00).</dd>
  <dt><code>%&lt;ccitt8&gt;</code></dt>
-  <dd>
-   The CCITT standard 8 bit crc checksum
-   (poly=0x31, init=0x00, xorout=0x00).
-   <br>
-   One byte. <code>123456789%&lt;ccitt8&gt;</code> = 0xf4
-  </dd>
+  <dd>One byte. The CCITT standard 8 bit crc checksum
+  (poly=0x31, init=0x00, xorout=0x00).</dd>
  <dt><code>%&lt;crc16&gt;</code></dt>
-  <dd>
-   An often used 16 bit crc checksum
-   (poly=0x8005, init=0x0000, xorout=0x0000).
-   <br>
-   Two bytes. <code>123456789%&lt;crc16&gt;</code> = 0xfee8
-  </dd>
+  <dd>Two bytes. An often used 16 bit crc checksum
+  (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
  <dt><code>%&lt;crc16r&gt;</code></dt>
-  <dd>
-   An often used reflected 16 bit crc checksum
-   (poly=0x8005, init=0x0000, xorout=0x0000).
-   <br>
-   Two bytes. <code>123456789%&lt;crc16r&gt;</code> = 0xbb3d
-  </dd>
+  <dd>Two bytes. An often used reflected 16 bit crc checksum
+  (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
  <dt><code>%&lt;ccitt16&gt;</code></dt>
-  <dd>
-   The usual (but <a target="ex"
-   href="http://srecord.sourceforge.net/crc16-ccitt.html">wrong?</a>)
+  <dd>Two bytes. The usual (but <a target="ex"
+   href="http://www.joegeluso.com/software/articles/ccitt.htm">wrong?</a>)
    implementation of the CCITT standard 16 bit crc checksum
-   (poly=0x1021, init=0xFFFF, xorout=0x0000).
-   <br>
-   Two bytes. <code>123456789%&lt;ccitt16&gt;</code> = 0x29b1
-  </dd>
+   (poly=0x1021, init=0xFFFF, xorout=0x0000).</dd>
  <dt><code>%&lt;ccitt16a&gt;</code></dt>
-  <dd>
-   The unusual (but <a target="ex"
-   href="http://srecord.sourceforge.net/crc16-ccitt.html">correct?</a>)
+  <dd>Two bytes. The unusual (but <a target="ex"
+   href="http://www.joegeluso.com/software/articles/ccitt.htm">correct?</a>)
    implementation of the CCITT standard 16 bit crc checksum with augment.
-   (poly=0x1021, init=0x1D0F, xorout=0x0000).
-   <br>
-   Two bytes. <code>123456789%&lt;ccitt16a&gt;</code> = 0xe5cc
-  </dd>
+   (poly=0x1021, init=0x1D0F, xorout=0x0000).</dd>
  <dt><code>%&lt;ccitt16x&gt;</code> or <code>%&lt;crc16c&gt;</code> or <code>%&lt;xmodem&gt;</code></dt>
-  <dd>
-   The XMODEM checksum.
-   (poly=0x1021, init=0x0000, xorout=0x0000).
-   <br>
-   Two bytes. <code>123456789%&lt;xmodem&gt;</code> = 0x31c3
-  </dd>
+  <dd>Two bytes. The XMODEM checksum.
+   (poly=0x1021, init=0x0000, xorout=0x0000).</dd>
  <dt><code>%&lt;crc32&gt;</code></dt>
-  <dd>
-   The standard 32 bit crc checksum.
-   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).
-   <br>
-   Four bytes. <code>123456789%&lt;crc32&gt;</code> = 0xfc891918
-  </dd>
+  <dd>Four bytes. The standard 32 bit crc checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
  <dt><code>%&lt;crc32r&gt;</code></dt>
-  <dd>
-   The standard reflected 32 bit crc checksum.
-   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).
-   <br>
-   Four bytes. <code>123456789%&lt;crc32r&gt;</code> = 0xcbf43926
-  </dd>
+  <dd>Four bytes. The standard reflected 32 bit crc checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
  <dt><code>%&lt;jamcrc&gt;</code></dt>
-  <dd>
-   Another reflected 32 bit crc checksum.
-   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000).
-   <br>
-   Four bytes. <code>123456789%&lt;jamcrc&gt;</code> = 0x340bc6d9
-  </dd>
+  <dd>Four bytes. Another reflected 32 bit crc checksum.
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000).</dd>
  <dt><code>%&lt;adler32&gt;</code></dt>
-  <dd>
-   The Adler32 checksum according to <a target="ex"
-   href="http://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.
-   <br>
-   Four bytes. <code>123456789%&lt;adler32&gt;</code> = 0x091e01de
-  </dd>
+  <dd>Four bytes. The Adler32 checksum according to <a target="ex"
+   href="http://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.</dd>
+ <dt><code>%&lt;hexsum8&gt;</code></dt>
+  <dd>One byte. The sum of all hex digits. (Other characters are ignored.)</dd>
 </dl>
 
 <a name="regex"></a>
@@ -737,6 +641,6 @@ ignored anyway).
 </p>
 <hr>
 <p align="right"><a href="processing.html">Next: Record Processing</a></p>
-<p><small>Dirk Zimoch, 2011</small></p>
+<p><small>Dirk Zimoch, 2015</small></p>
 </body>
 </html>
