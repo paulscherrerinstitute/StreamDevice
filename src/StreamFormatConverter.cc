@@ -38,7 +38,7 @@ parseFormat(const char*& source, FormatType formatType, StreamFormat& streamForm
 {
 /*
     source := [flags] [width] ['.' prec] conv [extra]
-    flags := '-' | '+' | ' ' | '#' | '0' | '*' | '?' | '='
+    flags := '-' | '+' | ' ' | '#' | '0' | '*' | '?' | '=' | '!'
     width := integer
     prec :=  integer
     conv := character
@@ -84,6 +84,15 @@ parseFormat(const char*& source, FormatType formatType, StreamFormat& streamForm
                     return false;
                 }
                 streamFormat.flags |= default_flag;
+                break;
+            case '!':
+                if (formatType != ScanFormat)
+                {
+                    error("Use of fixed width modifier '!' "
+                          "only allowed in input formats\n");
+                    return false;
+                }
+                streamFormat.flags |= fix_width_flag;
                 break;
             case '=':
                 if (formatType != ScanFormat)

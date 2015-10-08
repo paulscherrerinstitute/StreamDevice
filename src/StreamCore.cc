@@ -1479,6 +1479,7 @@ scanValue(const StreamFormat& fmt, long& value)
         }
         else return -1;
     }
+    if (fmt.flags & fix_width_flag && consumed != fmt.width) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %li\n",
         name(), value);
@@ -1510,6 +1511,7 @@ scanValue(const StreamFormat& fmt, double& value)
         }
         else return -1;
     }
+    if (fmt.flags & fix_width_flag && (consumed != (fmt.width + fmt.prec + 1))) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %#g\n",
         name(), value);
@@ -1542,6 +1544,7 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
         }
         else return -1;
     }
+    if (fmt.flags & fix_width_flag && consumed != fmt.width) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",

@@ -30,7 +30,8 @@ typedef enum {
     zero_flag    = 0x10,
     skip_flag    = 0x20,
     default_flag = 0x40,
-    compare_flag = 0x80
+    compare_flag = 0x80,
+    fix_width_flag = 0x100,
 } StreamFormatFlag;
 
 typedef enum {
@@ -48,7 +49,7 @@ typedef struct StreamFormat
 {
     char conv;
     StreamFormatType type;
-    unsigned char flags;
+    unsigned short flags;
     short prec;
     unsigned short width;
     unsigned short infolen;
