@@ -488,13 +488,16 @@ In input, the next byte or bytes must match the checksum.
   (poly=0x07, init=0x00, xorout=0x00).</dd>
  <dt><code>%&lt;ccitt8&gt;</code></dt>
   <dd>One byte. The CCITT standard 8 bit crc checksum
-  (poly=0x31, init=0x00, xorout=0x00).</dd>
+  (poly=0x31, init=0x00, xorout=0x00, reflected).</dd>
  <dt><code>%&lt;crc16&gt;</code></dt>
   <dd>Two bytes. An often used 16 bit crc checksum
   (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
  <dt><code>%&lt;crc16r&gt;</code></dt>
   <dd>Two bytes. An often used reflected 16 bit crc checksum
-  (poly=0x8005, init=0x0000, xorout=0x0000).</dd>
+  (poly=0x8005, init=0x0000, xorout=0x0000, reflected).</dd>
+ <dt><code>%&lt;modbus&gt;</code></dt>
+  <dd>Two bytes. The modbus 16 bit crc checksum
+  (poly=0x8005, init=0xffff, xorout=0x0000, reflected)</dd>
  <dt><code>%&lt;ccitt16&gt;</code></dt>
   <dd>Two bytes. The usual (but <a target="ex"
    href="http://srecord.sourceforge.net/crc16-ccitt.html">wrong?</a>)
@@ -513,10 +516,10 @@ In input, the next byte or bytes must match the checksum.
    (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
  <dt><code>%&lt;crc32r&gt;</code></dt>
   <dd>Four bytes. The standard reflected 32 bit crc checksum.
-   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF).</dd>
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0xFFFFFFFF, reflected).</dd>
  <dt><code>%&lt;jamcrc&gt;</code></dt>
   <dd>Four bytes. Another reflected 32 bit crc checksum.
-   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000).</dd>
+   (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000, reflected).</dd>
  <dt><code>%&lt;adler32&gt;</code></dt>
   <dd>Four bytes. The Adler32 checksum according to <a target="ex"
    href="http://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.</dd>
