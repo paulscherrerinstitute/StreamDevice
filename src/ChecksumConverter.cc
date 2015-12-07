@@ -22,8 +22,20 @@
 #include "StreamError.h"
 #if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no strncasecmp
+#include <epicsVersion.h>
+#ifdef BASE_VERSION
+// 3.13
+#include <ctype.h>
+static int strncasecmp(const char *s1, const char *s2, size_t n)
+{
+    int r=0;
+    while (n && (r = toupper(*s1)-toupper(*s2)) == 0) { n--; s1++; s2++; };
+    return r;
+}
+#else
 #include <epicsString.h>
 #define strncasecmp epicsStrnCaseCmp
+#endif
 #endif
 #include <ctype.h>
 
