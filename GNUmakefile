@@ -1,3 +1,4 @@
+# Remove this file if not using the PSI build system
 include /ioc/tools/driver.makefile
 EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream
@@ -39,10 +40,7 @@ HEADERS += StreamFormatConverter.h
 HEADERS += StreamBuffer.h
 HEADERS += StreamError.h
 
-ifeq (${EPICS_BASETYPE},3.13)
-# old gcc needs full path for -include
-CXXFLAGS += -include $(foreach d,${INCLUDES:-I%=%},$(wildcard $d/compat3_13.h))
-else
+ifneq (${EPICS_BASETYPE},3.13)
 RECORDTYPES += calcout
 endif
 
@@ -52,7 +50,7 @@ streamReferences:
 	perl ../src/makeref.pl Interface $(BUSSES) > $@
 	perl ../src/makeref.pl Converter $(FORMATS) >> $@
 
-# have to hack a bit to work with both versions of driver.makefile
-DBDFILES = O.$${EPICSVERSION}_$${T_A}/streamSup.dbd
-../O.${EPICSVERSION}_${T_A}/streamSup.dbd:
+export DBDFILES = streamSup.dbd
+streamSup.dbd:
+	@echo Creating $@
 	perl ../src/makedbd.pl $(RECORDTYPES) > $@
