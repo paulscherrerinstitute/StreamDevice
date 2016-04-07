@@ -115,7 +115,6 @@ class Stream : protected StreamCore
     epicsMutex mutex;
     epicsEvent initDone;
 #endif
-    StreamBuffer fieldBuffer;
     int status;
     int convert;
     long currentValueLength;
@@ -990,6 +989,7 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
     {
         // Format like "%([record.]field)..." has requested to get value
         // from field of this or other record.
+        StreamBuffer fieldBuffer;
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
         
         /* Handle time stamps special. %T converter takes double. */
@@ -1134,6 +1134,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
     {
         // Format like "%([record.]field)..." has requested to put value
         // to field of this or other record.
+        StreamBuffer fieldBuffer;
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
         long nord;
         long nelem = pdbaddr->no_elements;
