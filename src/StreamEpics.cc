@@ -603,7 +603,7 @@ parseLink(const struct link *ioLink, char* filename,
     if (items <= 0)
     {
         error("%s: Empty I/O link. "
-            "Forgot the leading '@' or confused INP with OUT ?\n",
+            "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
             name());
         return S_dev_badInitRet;
     }
