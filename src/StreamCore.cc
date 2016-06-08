@@ -991,7 +991,7 @@ readCallback(StreamIoStatus status,
                 evalIn();
                 return 0;
             }
-            error("%s: No reply from device within %ld ms\n",
+            debug("StreamCore::readCallback(%s): No reply from device within %ld ms\n",
                 name(), replyTimeout);
             inputBuffer.clear();
             finishProtocol(ReplyTimeout);
