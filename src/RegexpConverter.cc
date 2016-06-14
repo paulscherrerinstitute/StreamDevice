@@ -205,7 +205,7 @@ static void regsubst(pcre* code, StreamBuffer& buffer, long start, long length, 
                     r += rl - 1;
                 }
                 else if (ch == '\\' || ch == '&')
-                    s.remove(r++, 1);
+                    s.remove(r, 1);
             }
             else if (s[r] == '&')
             {
