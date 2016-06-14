@@ -528,7 +528,7 @@ In input, the next byte or bytes must match the checksum.
 </dl>
 
 <a name="regex"></a>
-<h2>12. Regular Expresion STRING Converter (<code>%/<em>regex</em>/</code>)</h2>
+<h2>13. Regular Expresion STRING Converter (<code>%/<em>regex</em>/</code>)</h2>
 <p>
 This input-only format matches <a target="ex"
 href="http://www.pcre.org/" >Perl compatible regular expressions (PCRE)</a>.
@@ -570,8 +570,59 @@ the title of an HTML page, skipps anything before the
 <code>&lt;title&gt</code> tag and leaves anything after the
 <code>&lt;/title&gt;</code> tag in the input buffer.
 </p>
+<a name="regsub"></a>
+<h2>14. Regular Expresion Substitution Pseudo-Converter (<code>%#/<em>regex</em>/<em>subst</em>/</code>)</h2>
+<p>
+This is a variant of the previous converter (note the <code>#</code>)
+but instead of returning the matching string,
+it can be used as a pre-processor for input or
+as a post-processor for output.
+</p>
+<p>
+Any match of the <em>regex</em> is replaced by the string <em>subst</em> with any
+<code>&</code> or <code>\0</code> in <em>subst</em> replaced with the match itself and any
+<code>\1</code> through <code>\9</code> with the corresponding sub-expressions.
+To get a literal <code>&</code> or <code>\</code> in the substitution write
+<code>\&</code> or <code>\\</code>.
+</p>
+<p>
+If <em>width</em> is specified, it limits the number of characters processed.
+If the <code>-</code> flag is used (i.e. <em>width</em> looks like a negative number)
+only the last <em>width</em> caracters are processed, else the first.
+Without <em>width</em> all available characters are processed.
+</p>
+<p>
+If <em>prec</em> is specified, it limits the number of times the substitution is applied.
+Without <em>prec</em>, the substitution is applied as often as possible.
+</p>
+<p>
+In input this converter pre-processes data received from the device before
+other converters after this one read it.
+Converters before this one will see unmodified input.
+Thus place this converter before those whose input should be pre-processed.
+</p>
+<p>
+In output it post-processes data already formatted by other converters before this one
+before sending it to the device.
+Converters after this one will send their output unmodified.
+Thus place this converter after those whose output should be post-processed.
+</p>
+<p>
+Examples:<br>
+<code>%#-10.2/ab/X/</code> replaces the string <code>ab</code> with <code>X</code>
+maximal 2 times in the last 10 characters.
+(<code>abcabcabcabc</code> becomes <code>abcXcXcabc</code>)<br>
+<code>%#/..\B/&:/</code> writes <code>:</code> after every second character
+which is not at the end of a word.
+(<code>0b19353134</code> becomes <code>0b:19:35:31:34</code>)<br>
+<code>%#/://</code> removes all <code>:</code>.
+(<code>0b:19:35:31:34</code> becomes <code>0b19353134</code>)<br>
+<code>%#/([^+-])*([+-])/\2\1/</code> moves a postfix sign to the front.
+(<code>1.23-</code> becomes <code>-1.23</code>)<br>
+
+</p>
 <a name="mantexp"></a>
-<h2>13. MantissaExponent DOUBLE converter (<code>%m</code>)</h2>
+<h2>15. MantissaExponent DOUBLE converter (<code>%m</code>)</h2>
 <p>
 This exotic and experimental format matches numbers in the format
 <i>[sign] mantissa sign exponent</i>, e.g <code>+123-4</code> meaning
@@ -591,7 +642,7 @@ the usual way (always sign, left justified, space instead of + sign).
 Flags <code>#</code> and <code>0</code> are unsupported.
 </p>
 <a name="timestamp"></a>
-<h2>14. Timestamp DOUBLE converter (<code>%T(<em>timeformat</em>)</code>)</h2>
+<h2>16. Timestamp DOUBLE converter (<code>%T(<em>timeformat</em>)</code>)</h2>
 <p>
 This format reads or writes timestamps and converts them to a double number.
 The value represents the number of seconds since 1970 (the UNIX epoch).
