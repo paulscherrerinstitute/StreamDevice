@@ -88,6 +88,16 @@ code {
     text-align:left;
 }
 
+.box {
+    margin-left:1ex;
+    margin-right:1ex;
+    margin-top:0.5ex;
+    padding: 0 1ex;
+    border: 1px solid black;
+    text-align:left;
+    background-color:#f0f0f0;
+}
+
 #navleft {
     position:fixed;
     left:0;

@@ -367,7 +367,7 @@ endian</em>, i.e. least significant byte first.
 With the <code>0</code> flag, the value is unsigned, otherwise signed.
 </p>
 <p>
-In output, the <em>prec</em> (or sizeof(long) whatever is less) least
+In output, the <em>precision</em> (or sizeof(long) whatever is less) least
 significant bytes of the value are sign extended or zero extended
 (depending on the <code>0</code> flag) to <em>width</em> bytes.
 </p>
@@ -434,7 +434,7 @@ The <em>width</em> field is the byte number from which to start
 calculating the checksum.
 Default is 0, i.e. the first byte of the input or output of the current
 command.
-The last byte is <em>prec</em> bytes before the checksum (default 0).
+The last byte is <em>precision</em> bytes before the checksum (default 0).
 For example in <code>"abcdefg%&lt;xor&gt;"</code> the checksum is calculated
 from <code>abcdefg</code>,
 but in <code>"abcdefg%2.1&lt;xor&gt;"</code> only from <code>cdef</code>.
@@ -534,35 +534,38 @@ This input-only format matches <a target="ex"
 href="http://www.pcre.org/" >Perl compatible regular expressions (PCRE)</a>.
 It is only available if a PCRE library is installed.
 </p>
+<div class="box">
 <p>
 If PCRE is not available for your host or cross architecture, download
 the sourcecode from <a target="ex" href="http://www.pcre.org/">www.pcre.org</a>
 and try my EPICS compatible <a target="ex"
 href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>
-to compile it like a normal EPICS application.
+to compile it like a normal EPICS support module.
 The Makefile is known to work with EPICS 3.14.8 and PCRE 7.2.
 In your RELEASE file define the variable <code>PCRE</code> so that
 it points to the install location of PCRE.
 </p>
 <p>
-If PCRE is already installed on your system, use the variables
-<code>PCRE_INCLUDE</code> and <code>PCRE_LIB</code> instead to provide
-the install directories of <code>pcre.h</code> and the library.
+If PCRE is already installed on (some of) your systems, you may add
+architectures where PCRE can be found in standard include and library
+locations to the variable <code>WITH_SYSTEM_PCRE</code>.
+If either the header file or the library are in a non-standard place,
+set in your RELEASE file the variables <code>PCRE_INCLUDE_<em>arch</em></code>
+and/or <code>PCRE_LIB_<em>arch</em></code> for the respective architectures
+to the correct directories or set
+<code>PCRE_INCLUDE</code> and/or <code>PCRE_LIB</code>
+in architecture specific RELEASE.Common.<em>arch</em> files.
 </p>
-<p>
-If you have PCRE installed in different locations for different (cross)
-architectures, define the variables in RELEASE.Common.&lt;architecture&gt;
-instead of the global RELEASE file.
-</p>
+</div>
 <p>
 If the regular expression is not anchored, i.e. does not start with
 <code>^</code>, leading non-matching input is skipped. 
 A maximum of <em>width</em> bytes is matched, if specified.
-If <em>prec</em> is given, it specifies the sub-expression whose match
+If <em>precision</em> is given, it specifies the sub-expression whose match
 is retuned.
 Otherwise the complete match is returned.
 In any case, the complete match is consumed from the input buffer.
-If the expression contains a <code>/</code> it must be escaped.
+If the expression contains a <code>/</code> it must be escaped like <code>\/</code>.
 </p>
 <p>
 Example: <code>%.1/&lt;title&gt;(.*)&lt;\/title&gt;/</code> returns
@@ -579,48 +582,63 @@ it can be used as a pre-processor for input or
 as a post-processor for output.
 </p>
 <p>
-Any match of the <em>regex</em> is replaced by the string <em>subst</em> with any
-<code>&</code> or <code>\0</code> in <em>subst</em> replaced with the match itself and any
-<code>\1</code> through <code>\9</code> with the corresponding sub-expressions.
-To get a literal <code>&</code> or <code>\</code> in the substitution write
-<code>\&</code> or <code>\\</code>.
+Matches of the <em>regex</em> are replaced by the string <em>subst</em> with all
+<code>&</code> or <code>\0</code> in <em>subst</em> replaced with the match itself and all
+<code>\1</code> through <code>\9</code> replaced with the match of the corresponding sub-expression.
+To get a literal <code>&</code> or <code>\</code> or <code>/</code> in the substitution write
+<code>\&</code> or <code>\\</code> or <code>\/</code>.
+There is no way to specify literal bytes with values less or equal to 9 in the
+substitution!
 </p>
 <p>
 If <em>width</em> is specified, it limits the number of characters processed.
 If the <code>-</code> flag is used (i.e. <em>width</em> looks like a negative number)
-only the last <em>width</em> caracters are processed, else the first.
-Without <em>width</em> all available characters are processed.
+only the last <em>width</em> characters are processed, else the first.
+Without <em>width</em> (or 0) all available characters are processed.
 </p>
 <p>
-If <em>prec</em> is specified, it limits the number of times the substitution is applied.
-Without <em>prec</em>, the substitution is applied as often as possible.
+If <em>precision</em> is specified, it indicates which matches to replace.
+With the <code>+</code> flag given, <em>precision</em> is the maximum
+number of matches to replace.
+Otherwise <em>precision</em> is the index (counting from 1) of the match to replace. 
+Without <em>precision</em> (or 0), all matches are replaced.
 </p>
 <p>
 In input this converter pre-processes data received from the device before
-other converters after this one read it.
-Converters before this one will see unmodified input.
+following converters read it.
+Converters preceding this one will read unmodified input.
 Thus place this converter before those whose input should be pre-processed.
 </p>
 <p>
-In output it post-processes data already formatted by other converters before this one
+In output it post-processes data already formatted by preceding converters
 before sending it to the device.
-Converters after this one will send their output unmodified.
+Converters following this one will send their output unmodified.
 Thus place this converter after those whose output should be post-processed.
 </p>
 <p>
-Examples:<br>
-<code>%#-10.2/ab/X/</code> replaces the string <code>ab</code> with <code>X</code>
+Examples:
+<div class="indent">
+<code>%#+-10.2/ab/X/</code> replaces the string <code>ab</code> with <code>X</code>
 maximal 2 times in the last 10 characters.
-(<code>abcabcabcabc</code> becomes <code>abcXcXcabc</code>)<br>
-<code>%#/..\B/&:/</code> writes <code>:</code> after every second character
+(<code>abcabcabcabc</code> becomes <code>abcXcXcabc</code>)
+</div>
+<div class="indent">
+<code>%#/\\/\//</code> replaces all <code>\</code> with <code>/</code>
+(<code>\dir\file</code> becomes <code>/dir/file</code>)
+</div>
+<div class="indent">
+<code>%#/..\B/&:/</code> inserts <code>:</code> after every second character
 which is not at the end of a word.
-(<code>0b19353134</code> becomes <code>0b:19:35:31:34</code>)<br>
-<code>%#/://</code> removes all <code>:</code>.
-(<code>0b:19:35:31:34</code> becomes <code>0b19353134</code>)<br>
+(<code>0b19353134</code> becomes <code>0b:19:35:31:34</code>)
+</div>
+<div class="indent">
+<code>%#/://</code> removes all <code>:</code> characters.
+(<code>0b:19:35:31:34</code> becomes <code>0b19353134</code>)
+</div>
+<div class="indent">
 <code>%#/([^+-])*([+-])/\2\1/</code> moves a postfix sign to the front.
 (<code>1.23-</code> becomes <code>-1.23</code>)<br>
-
-</p>
+</div>
 <a name="mantexp"></a>
 <h2>15. MantissaExponent DOUBLE converter (<code>%m</code>)</h2>
 <p>
@@ -679,7 +697,7 @@ In output, the system function <em>strftime()</em> is used to format the time.
 There may be differences in the implementation between operating systems.
 </p>
 <p>
-In input, <em>StreamDevice</em> used its own implementation because many
+In input, <em>StreamDevice</em> uses its own implementation because many
 systems are missing the <em>strptime()</em> function and additional formats
 are supported.
 </p>
