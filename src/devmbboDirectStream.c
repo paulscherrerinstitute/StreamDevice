@@ -83,7 +83,7 @@ static long initRecord (dbCommon *record)
 
 static long write(dbCommon *record)
 {
-    int status = streamWrite(record);
+    long status = streamWrite(record);
     if (record->nsev == INVALID_ALARM) record->nsev = MAJOR_ALARM;
     return status;
 }
