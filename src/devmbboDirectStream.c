@@ -20,6 +20,7 @@
 ***************************************************************/
 
 #include <mbboDirectRecord.h>
+#include "alarm.h"
 #include "devStream.h"
 #include <epicsExport.h>
 
@@ -67,8 +68,26 @@ static long initRecord (dbCommon *record)
     mbboDirectRecord *mbboD = (mbboDirectRecord *) record;
 
     mbboD->mask <<= mbboD->shft;
+    
+    /* Workaround for bug in mbboDirect record:
+       Put to VAL overwrites value to 0 if SEVR is INVALID_ALARM
+       Thus first write may send a wrong value.
+    */
+    mbboD->sevr = 0;    
     return streamInitRecord (record, &mbboD->out, readData, writeData);
 }
+
+/* Unfortunately the bug also corrupts the next write to VAL after an I/O error.
+   Thus make sure the record is never left in INVALID_ALARM status.
+*/
+
+static long write(dbCommon *record)
+{
+    int status = streamWrite(record);
+    if (record->nsev == INVALID_ALARM) record->nsev = MAJOR_ALARM;
+    return status;
+}
+
 
 struct {
     long number;
@@ -83,7 +102,7 @@ struct {
     streamInit,
     initRecord,
     streamGetIointInfo,
-    streamWrite
+    write
 };
 
 epicsExportAddress(dset,devmbboDirectStream);
