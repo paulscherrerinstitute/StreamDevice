@@ -370,6 +370,9 @@ With the <code>0</code> flag, the value is unsigned, otherwise signed.
 In output, the <em>precision</em> (or sizeof(long) whatever is less) least
 significant bytes of the value are sign extended or zero extended
 (depending on the <code>0</code> flag) to <em>width</em> bytes.
+The default for <em>precision</em> is 1. Thus if you do not specify
+the <em>precision</em>, only the least significant byte is written!
+It is common error to write <code>out "%2r";</code> instead of <code>out "%.2r";</code>.
 </p>
 <p>
 In input, <em>width</em> bytes are read and put into the value.
@@ -380,7 +383,7 @@ the value is sign extended or zero extended, depending on the
 <code>0</code> flag.
 </p>
 <p>
-Example: <code>out "%.2r"</code>
+Examples: <code>out "%.2r"; in "%02r";</code>
 </p>
 
 <a name="rawdouble"></a>
