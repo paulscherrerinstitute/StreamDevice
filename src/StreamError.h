@@ -28,6 +28,7 @@
 #endif
 
 extern int streamDebug;
+extern int streamError;
 extern void (*StreamPrintTimestampFunction)(char* buffer, int size);
 
 void StreamError(int line, const char* file, const char* fmt, ...)

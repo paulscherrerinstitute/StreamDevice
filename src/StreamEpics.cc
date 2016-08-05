@@ -180,6 +180,7 @@ public:
 #ifndef EPICS_3_13
 extern "C" {
 epicsExportAddress(int, streamDebug);
+epicsExportAddress(int, streamError);
 }
 #endif
 

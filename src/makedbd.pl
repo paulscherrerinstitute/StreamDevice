@@ -2,6 +2,7 @@ if (@ARGV[0] == "-3.13") {
     shift;
 } else {
     print "variable(streamDebug, int)\n";
+    print "variable(streamError, int)\n";
     print "registrar(streamRegistrar)\n";
 }
 print "driver(stream)\n";
