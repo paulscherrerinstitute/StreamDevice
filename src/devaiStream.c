@@ -55,11 +55,14 @@ static long readData (dbCommon *record, format_t *format)
             ai->rval = rval;
             if (ai->linr == menuConvertNO_CONVERSION)
             {
-                /* allow more bits than 32 */
+                /* allow integers with more than 32 bits */
+                double val;
                 if (format->type == DBF_ULONG)
-                    ai->val = (unsigned long)rval;
+                    val = (unsigned long)rval;
                 else    
-                    ai->val = rval;
+                    val = rval;
+                if (ai->aslo != 0.0 && ai->aslo != 1.0) val *= ai->aslo;
+                ai->val = val + ai->aoff;
                 return DO_NOT_CONVERT;
             }
             return OK;

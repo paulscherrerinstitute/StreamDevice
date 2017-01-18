@@ -46,11 +46,14 @@ static long readData (dbCommon *record, format_t *format)
             ao->rval = rval;
             if (ao->linr == menuConvertNO_CONVERSION)
             {
-                /* allow more bits than 32 */
+                /* allow integers with more than 32 bits */
+                double val;
                 if (format->type == DBF_ULONG)
-                    ao->val = (unsigned long)rval;
+                    val = (unsigned long)rval;
                 else    
-                    ao->val = rval;
+                    val = rval;
+                if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
+                ao->val = val + ao->aoff;
                 return DO_NOT_CONVERT;
             }
             return OK;
@@ -63,20 +66,21 @@ static long writeData (dbCommon *record, format_t *format)
 {
     aoRecord *ao = (aoRecord *) record;
 
+    double val = (INIT_RUN ? ao->val : ao->oval) - ao->aoff;
+    if (ao->aslo != 0.0 && ao->aslo != 1.0) val /= ao->aslo;
+    
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            double val = (INIT_RUN ? ao->val : ao->oval) - ao->aoff;
-            if (ao->aslo != 0.0 && ao->aslo != 1.0) val /= ao->aslo;
             return streamPrintf (record, format, val);
         }
         case DBF_ULONG:
         {
             if (ao->linr == menuConvertNO_CONVERSION)
             {
-                /* allow more bits than 32 */
-                return streamPrintf (record, format, (unsigned long)(INIT_RUN ? ao->val : ao->oval));
+                /* allow integers with more than 32 bits */
+                return streamPrintf (record, format, (unsigned long)val);
             }
             return streamPrintf (record, format, (unsigned long)ao->rval);
         }
@@ -84,8 +88,8 @@ static long writeData (dbCommon *record, format_t *format)
         {
             if (ao->linr == menuConvertNO_CONVERSION)
             {
-                /* allow more bits than 32 */
-                return streamPrintf (record, format, (long)(INIT_RUN ? ao->val : ao->oval));
+                /* allow integers with more than 32 bits */
+                return streamPrintf (record, format, (long)val);
             }
             return streamPrintf (record, format, (long)ao->rval);
         }
