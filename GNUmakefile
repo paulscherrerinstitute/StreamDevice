@@ -1,4 +1,7 @@
-# Remove this file if not using the PSI build system
+ifeq ($(wildcard /ioc/tools/driver.makefile),)
+$(warning It seems you do not have the PSI build environment. Remove GNUmakefile.)
+include Makefile
+else
 include /ioc/tools/driver.makefile
 EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream
@@ -54,3 +57,5 @@ export DBDFILES = streamSup.dbd
 streamSup.dbd:
 	@echo Creating $@
 	perl ../src/makedbd.pl $(RECORDTYPES) > $@
+endif
+
