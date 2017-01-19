@@ -997,7 +997,7 @@ readCallback(StreamIoStatus status,
             finishProtocol(ReplyTimeout);
             return 0;
         case StreamIoFault:
-            error("%s: I/O error after reading %"P"d byte%s: \"%s%s\"\n",
+            error("%s: I/O error after reading %" P "d byte%s: \"%s%s\"\n",
                 name(),
                 inputBuffer.length(), inputBuffer.length()==1 ? "" : "s",
                 inputBuffer.length() > 20 ? "..." : "",
@@ -1006,7 +1006,7 @@ readCallback(StreamIoStatus status,
             return 0;
     }
     inputBuffer.append(input, size);
-    debug("StreamCore::readCallback(%s) inputBuffer=\"%s\", size %"P"d\n",
+    debug("StreamCore::readCallback(%s) inputBuffer=\"%s\", size %" P "d\n",
         name(), inputBuffer.expand()(), inputBuffer.length());
     if (*activeCommand != in_cmd)
     {

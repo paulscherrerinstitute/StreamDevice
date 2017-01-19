@@ -314,7 +314,7 @@ dump() const
     StreamBuffer result(256+cap*5);
     result.append("\033[0m");
     size_t i;
-    result.print("%"P"d,%"P"d,%"P"d:\033[37m", offs, len, cap);
+    result.print("%" P "d,%" P "d,%" P "d:\033[37m", offs, len, cap);
     for (i = 0; i < cap; i++)
     {
         if (i == offs) result.append("\033[34m[\033[0m");
