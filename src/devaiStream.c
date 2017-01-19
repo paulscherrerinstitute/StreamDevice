@@ -19,16 +19,11 @@
 ***************************************************************/
 
 #include <math.h>
+#include <epicsMath.h>
 #include <menuConvert.h>
 #include <aiRecord.h>
 #include "devStream.h"
 #include <epicsExport.h>
-
-#ifdef vxWorks
-#include <private/mathP.h>
-#define isinf(x) isInf(x)
-#define isnan(x) isNan(x)
-#endif
 
 static long readData (dbCommon *record, format_t *format)
 {
