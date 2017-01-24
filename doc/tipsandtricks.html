@@ -260,7 +260,7 @@ When asked "<code>CURRENT?</code>", the device send something like
 </p>
 <p>
 <code>
-read_current {out "CURRENT?"; in "CURRENT %f A"; @mismatch {in "%(\1)39c";}}
+read_current {out "CURRENT?"; in "CURRENT %f A"; @mismatch {in "%(\$1)39c";}}
 </code>
 </p>
 <p>
