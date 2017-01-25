@@ -1,2 +1,7 @@
 O.*
 *~
+bin
+lib
+dbd
+include
+.cvsignore
