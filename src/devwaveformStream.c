@@ -193,6 +193,7 @@ static long writeData (dbCommon *record, format_t *format)
                 break;
             }
             case DBF_LONG:
+            case DBF_ULONG:
             case DBF_ENUM:
             {
                 switch (wf->ftvl)
