@@ -13,8 +13,10 @@ else
   include $(TOP)/configure/CONFIG
 endif
 
-DIRS = src
-streamApp_DEPEND_DIRS  = src
+DIRS = configure
+DIRS += src
+src_DEPEND_DIRS = configure
 DIRS += streamApp
+streamApp_DEPEND_DIRS = src
 
-include $(CONFIG)/RULES_DIRS
+include $(CONFIG)/RULES_TOP
