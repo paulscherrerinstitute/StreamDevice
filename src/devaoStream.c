@@ -18,7 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <menuConvert.h>
 #include <aoRecord.h>
 #include "devStream.h"
 #include <epicsExport.h>
@@ -26,16 +25,14 @@
 static long readData (dbCommon *record, format_t *format)
 {
     aoRecord *ao = (aoRecord *) record;
+    double val;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            double val;
             if (streamScanf (record, format, &val)) return ERROR;
-            if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
-            ao->val = val + ao->aoff;
-            return DO_NOT_CONVERT;
+            break;
         }
         case DBF_ULONG:
         case DBF_LONG:
@@ -44,22 +41,23 @@ static long readData (dbCommon *record, format_t *format)
             if (streamScanf (record, format, &rval)) return ERROR;
             ao->rbv = rval;
             ao->rval = rval;
-            if (ao->linr == menuConvertNO_CONVERSION)
+            if (ao->linr == 0)
             {
                 /* allow integers with more than 32 bits */
-                double val;
                 if (format->type == DBF_ULONG)
                     val = (unsigned long)rval;
                 else    
                     val = rval;
-                if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
-                ao->val = val + ao->aoff;
-                return DO_NOT_CONVERT;
+                break;
             }
             return OK;
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
+    ao->val = val + ao->aoff;
+    return DO_NOT_CONVERT;
 }
 
 static long writeData (dbCommon *record, format_t *format)
@@ -77,7 +75,7 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_ULONG:
         {
-            if (ao->linr == menuConvertNO_CONVERSION)
+            if (ao->linr == 0)
             {
                 /* allow integers with more than 32 bits */
                 return streamPrintf (record, format, (unsigned long)val);
@@ -86,7 +84,7 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_LONG:
         {
-            if (ao->linr == menuConvertNO_CONVERSION)
+            if (ao->linr == 0)
             {
                 /* allow integers with more than 32 bits */
                 return streamPrintf (record, format, (long)val);
