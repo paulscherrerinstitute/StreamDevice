@@ -1,8 +1,5 @@
 TOP = ..
 
-DIRS = src
-streamApp_DEPEND_DIRS  = src
-
 # Look if we have EPICS R3.13 or R3.14
 ifneq ($(wildcard $(TOP)/configure),)
   # EPICS R3.14
@@ -16,12 +13,8 @@ else
   include $(TOP)/configure/CONFIG
 endif
 
+DIRS = src
+streamApp_DEPEND_DIRS  = src
 DIRS += streamApp
-ifneq ($(words $(CALC) $(SYNAPPS)), 0)
-# with synApps calc module (contains scalcout)
-DIRS += srcSynApps
-srcSynApps_DEPEND_DIRS  = src
-streamApp_DEPEND_DIRS  += srcSynApps
-endif
 
 include $(CONFIG)/RULES_DIRS

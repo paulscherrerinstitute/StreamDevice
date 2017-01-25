@@ -21,9 +21,12 @@ RECORDTYPES += aai aao
 # Due to strange cross dependencies in synApps
 # you have to build the 'sscan' and 'genSub'
 # modules before building 'calc'.
-# See doc/scalcout.html for a required fix in scalcout.
-
-SYNAPPS_RECORDTYPES += scalcout
+# The 'calc' version must be 2-4 or higher.
+# Up to version 2-6 (synApps 5.1) the 'calc' module needs a fix.
+# See doc/scalcout.html for details.
+ifneq ($(words $(CALC) $(SYNAPPS)), 0)
+RECORDTYPES += scalcout
+endif
 
 # You may add more bus interfaces
 # This requires the naming convention
