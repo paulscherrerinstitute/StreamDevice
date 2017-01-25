@@ -1,4 +1,4 @@
-TOP=../..
+TOP:=../$(TOP)
 
 include $(TOP)/configure/CONFIG
 

@@ -18,7 +18,7 @@
 #                                                              #
 ################################################################
 
-TOP=../..
+TOP:=../$(TOP)
 
 # Look if we have EPICS R3.13 or R3.14
 ifeq ($(wildcard $(TOP)/configure),)
