@@ -7,7 +7,7 @@ EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream
 BUILDCLASSES += Linux
 
-DOCUDIR = doc
+DOCUDIR = documentation
 
 PCRE=1
 ASYN=1
