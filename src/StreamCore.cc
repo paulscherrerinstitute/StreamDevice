@@ -1657,7 +1657,11 @@ timerCallback()
 bool StreamCore::
 evalExec()
 {
-    formatOutput();
+    if (!formatOutput())
+    {
+        finishProtocol(FormatError);
+        return false;
+    }
     debug ("StreamCore::evalExec: command = \"%s\"\n", outputLine.expand()());
     // release bus
     if (flags & BusOwner)
