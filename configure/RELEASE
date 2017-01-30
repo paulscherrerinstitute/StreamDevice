@@ -14,9 +14,16 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
+EPICS_BASE=/usr/local/epics/base-3.14.12
 ASYN=~/top/asyn4-30
 CALC=~/top/SynApps/calc-2-8
 PCRE=~/top/pcre-7.2
 
-# EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/usr/local/epics/base-3.14.12
+#3.14.8 does not understand ~
+#EPICS_BASE=/usr/local/epics/base-3.14.8
+#ASYN=/afs/psi.ch/user/z/zimoch/top/asyn-4.10
+
+##Example 3.13 build
+#EPICS_BASE=/usr/local/epics/base-3.13.10
+#ASYN=/afs/psi.ch/user/z/zimoch/top_3.13/4-6
+#COMPAT=/afs/psi.ch/user/z/zimoch/top_3.13
