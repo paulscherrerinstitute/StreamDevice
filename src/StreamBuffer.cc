@@ -26,8 +26,7 @@
 
 #if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no vsnprintf
-#include <epicsStdio.h>
-#define vsnprintf epicsVsnprintf
+#define vsnprintf(p,l,f,v) vsprintf(p,f,v)
 #endif
 
 #define P PRINTF_SIZE_T_PREFIX
