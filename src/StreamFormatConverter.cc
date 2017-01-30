@@ -442,10 +442,11 @@ int StdStringConverter::
 parse(const StreamFormat& fmt, StreamBuffer& info,
     const char*& source, bool scanFormat)
 {
-    if (fmt.flags & (sign_flag|zero_flag))
+    if (fmt.flags & sign_flag)
     {
-        error("Use of modifiers '+', '0'"
-            "not allowed with %%s conversion\n");
+        error("Use of modifier '+'"
+            "not allowed with %%%c conversion\n",
+            fmt.conv);
         return false;
     }
     if (scanFormat && fmt.prec >= 0)
@@ -463,7 +464,22 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 bool StdStringConverter::
 printString(const StreamFormat& fmt, StreamBuffer& output, const char* value)
 {
-    output.print(fmt.info, value);
+    if (fmt.flags & zero_flag && fmt.width)
+    {
+        size_t l;
+        if (fmt.prec > -1)
+        {
+            char* p = (char*)memchr(value, 0, fmt.prec);
+            if (p) l = p - value;
+            else l = fmt.prec;
+        }
+        else l = strlen(value);
+        if (!(fmt.flags & left_flag)) output.append('\0', fmt.width-l);
+        output.append(value, l);
+        if (fmt.flags & left_flag) output.append('\0', fmt.width-l);
+    }
+    else
+        output.print(fmt.info, value);
     return true;
 }
 
