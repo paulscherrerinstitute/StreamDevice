@@ -1,4 +1,4 @@
-TOP=../..
+TOP:=../$(TOP)
 
 # Look if we have EPICS R3.13 or R3.14
 ifeq ($(wildcard $(TOP)/configure),)
@@ -20,7 +20,7 @@ streamApp_DBD += base.dbd
 
 # In 3.14.12 aaiRecord.dbd and aaoRecord.dbd are part of base.dbd
 # In earlier versions, these records are buggy and not included by default
-#streamApp_DBD += aaiRecord.dbd aaoRecord.dbd
+streamApp_DBD += aaiRecord.dbd aaoRecord.dbd
 
 PROD_SRCS += streamApp_registerRecordDeviceDriver.cpp
 PROD_SRCS_DEFAULT = streamAppMain.cc
@@ -41,11 +41,9 @@ endif
 ifneq ($(words $(CALC) $(SYNAPPS)), 0)
 # With synApps scalcout record
 streamApp_DBD += calcSupport.dbd
-streamApp_DBD += streamSynApps.dbd
 PROD_LIBS += calc
 # older calc versions require sscan
 #PROD_LIBS += sscan
-PROD_LIBS_DEFAULT += streamSynApps
 endif
 
 streamApp_DBD += stream.dbd
@@ -68,13 +66,7 @@ CPPFLAGS += -DDEBUGFILE=StreamDebug.log
 
 include $(TOP)/configure/RULES
 
-ifeq ($(BASE_3_14), YES)
-clean:: myclean
-else
-clean: myclean
-endif
-
-myclean:
+clean::
 	$(RM) core* StreamDebug.log
 
 endif

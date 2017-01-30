@@ -18,13 +18,10 @@
 #                                                              #
 ################################################################
 
-TOP = ../../..
+TOP := ../../$(TOP)
 
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
-
-# In 3.13, calcout has no device support
-RECORDS_3_13 = $(filter-out calcout,$(RECORDS))
 
 DBDNAME = stream.dbd
 
@@ -35,8 +32,9 @@ INC += devStream.h
 CONFIGS = RULES.munch
 SCRIPTS = munch.pl
 
-include $(TOP)/config/RULES.Host
+include $(EPICS_BASE)/config/RULES.Host
 
-# create stream.dbd from all RECORDS
+# create stream.dbd from all RECORDTYPES
+# In 3.13, calcout has no device support
 stream.dbd: ../CONFIG_STREAM
-	$(PERL) ../makedbd.pl -3.13 $(RECORDS_3_13) > $@
+	$(PERL) ../makedbd.pl -3.13 $(filter-out calcout,$(RECORDTYPES)) > $@

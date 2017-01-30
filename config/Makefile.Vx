@@ -1,0 +1,15 @@
+#
+# Makefile.Vx,v 1.1.2.3 2001/09/14 19:39:15 anj Exp
+#
+
+TOP=../..
+include $(TOP)/config/CONFIG_APP
+
+TARGETS = CONFIG_APP_INCLUDE
+
+include $(TOP)/config/RULES.Vx
+
+inc:: $(TARGETS)
+
+CONFIG_APP_INCLUDE: $(wildcard $(TOP)/config/RELEASE*) $(TOP)/config/CONFIG_APP
+	$(PERL) $(TOP)/config/convertRelease.pl -h $(HOST_ARCH) $@

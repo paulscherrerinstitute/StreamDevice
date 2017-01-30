@@ -18,7 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <menuConvert.h>
 #include <aiRecord.h>
 #include "devStream.h"
 #ifdef EPICS_3_13
@@ -33,19 +32,14 @@
 static long readData (dbCommon *record, format_t *format)
 {
     aiRecord *ai = (aiRecord *) record;
+    double val;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            double val;
             if (streamScanf (record, format, &val)) return ERROR;
-            if (ai->aslo != 0.0 && ai->aslo != 1.0) val *= ai->aslo;
-            val += ai->aoff;
-            if (!(ai->smoo == 0.0 || ai->init || ai->udf || isinf(ai->val) || isnan(ai->val)))
-                val = ai->val * ai->smoo + val * (1.0 - ai->smoo);
-            ai->val = val;
-            return DO_NOT_CONVERT;
+            break;
         }
         case DBF_ULONG:
         case DBF_LONG:
@@ -53,51 +47,56 @@ static long readData (dbCommon *record, format_t *format)
             long rval;
             if (streamScanf (record, format, &rval)) return ERROR;
             ai->rval = rval;
-            if (ai->linr == menuConvertNO_CONVERSION)
+            if (ai->linr == 0)
             {
                 /* allow integers with more than 32 bits */
-                double val;
                 if (format->type == DBF_ULONG)
                     val = (unsigned long)rval;
                 else    
                     val = rval;
-                if (ai->aslo != 0.0 && ai->aslo != 1.0) val *= ai->aslo;
-                ai->val = val + ai->aoff;
-                return DO_NOT_CONVERT;
+                break;
             }
             return OK;
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    if (ai->aslo != 0.0 && ai->aslo != 1.0) val *= ai->aslo;
+    val += ai->aoff;
+    if (!(ai->smoo == 0.0 || ai->init || ai->udf || isinf(ai->val) || isnan(ai->val)))
+        val = ai->val * ai->smoo + val * (1.0 - ai->smoo);
+    ai->val = val;
+    return DO_NOT_CONVERT;
 }
 
 static long writeData (dbCommon *record, format_t *format)
 {
     aiRecord *ai = (aiRecord *) record;
 
+    double val = ai->val - ai->aoff;
+    if (ai->aslo != 0.0 && ai->aslo != 1.0) val /= ai->aslo;
+
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            double val = ai->val - ai->aoff;
-            if (ai->aslo != 0.0 && ai->aslo != 1.0) val /= ai->aslo;
             return streamPrintf (record, format, val);
         }
         case DBF_ULONG:
         {
-            if (ai->linr == menuConvertNO_CONVERSION)
+            if (ai->linr == 0)
             {
                 /* allow more bits than 32 */
-                return streamPrintf (record, format, (unsigned long)ai->val);
+                return streamPrintf (record, format, (unsigned long)val);
             }
             return streamPrintf (record, format, (unsigned long)ai->rval);
         }
         case DBF_LONG:
         {
-            if (ai->linr == menuConvertNO_CONVERSION)
+            if (ai->linr == 0)
             {
                 /* allow more bits than 32 */
-                return streamPrintf (record, format, (long)ai->val);
+                return streamPrintf (record, format, (long)val);
             }
             return streamPrintf (record, format, (long)ai->rval);
         }

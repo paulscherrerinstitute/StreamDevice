@@ -18,7 +18,7 @@
 #                                                              #
 ################################################################
 
-TOP=../..
+TOP:=../$(TOP)
 
 # Look if we have EPICS R3.13 or R3.14
 ifeq ($(wildcard $(TOP)/configure),)
@@ -40,13 +40,8 @@ DBD += $(LIBRARY_DEFAULT).dbd
 
 ifdef ASYN
 LIB_LIBS += asyn
-BUSSES += AsynDriver
-endif
-
-ifdef T_A
-ifndef BUSSES
-$(error No bus interface defined! Didn't you set ASYN in your RELEASE file?)
-endif
+else
+$(warning Asyn not included! Didn't you set ASYN in your RELEASE file?)
 endif
 
 ifeq ($(LOADABLE_MODULE),YES)
@@ -54,7 +49,7 @@ SRCS += $(LIBRARY_DEFAULT)_registerRecordDeviceDriver.cpp
 endif 
 SRCS += $(BUSSES:%=%Interface.cc)
 SRCS += $(FORMATS:%=%Converter.cc)
-SRCS += $(RECORDS:%=dev%Stream.c)
+SRCS += $(RECORDTYPES:%=dev%Stream.c)
 SRCS += $(STREAM_SRCS)
 
 # find system wide or local PCRE header and library
@@ -89,9 +84,9 @@ streamReferences: ../CONFIG_STREAM
 	$(PERL) ../makeref.pl Interface $(BUSSES) > $@
 	$(PERL) ../makeref.pl Converter $(FORMATS) >> $@
 
-# create stream.dbd from all RECORDS
+# create stream.dbd from all RECORDTYPES
 $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
-	$(PERL) ../makedbd.pl $(RECORDS) > $@
+	$(PERL) ../makedbd.pl $(RECORDTYPES) > $@
 
 $(LIBRARY_DEFAULT).dbd$(DEP): ../CONFIG_STREAM
 	echo $(LIBRARY_DEFAULT).dbd: $< > $@

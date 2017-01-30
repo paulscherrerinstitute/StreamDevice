@@ -3,17 +3,17 @@
 
 # You may add more record interfaces
 # This requires the naming conventions
-# dev$(RECORD)Stream.c
+# dev$(RECORDTYPE)Stream.c
 
-RECORDS += ao ai
-RECORDS += bo bi
-RECORDS += mbbo mbbi
-RECORDS += mbboDirect mbbiDirect
-RECORDS += longout longin
-RECORDS += stringout stringin
-RECORDS += waveform
-RECORDS += calcout
-RECORDS += aai aao
+RECORDTYPES += ao ai
+RECORDTYPES += bo bi
+RECORDTYPES += mbbo mbbi
+RECORDTYPES += mbboDirect mbbiDirect
+RECORDTYPES += longout longin
+RECORDTYPES += stringout stringin
+RECORDTYPES += waveform
+RECORDTYPES += calcout
+RECORDTYPES += aai aao
 
 # Do you have synApps and want support for scalcout?
 # Then define CALC or SYNAPPS in your RELEASE file
@@ -21,18 +21,23 @@ RECORDS += aai aao
 # Due to strange cross dependencies in synApps
 # you have to build the 'sscan' and 'genSub'
 # modules before building 'calc'.
-# See doc/scalcout.html for a required fix in scalcout.
-
-SYNAPPS_RECORDS += scalcout
+# The 'calc' version must be 2-4 or higher.
+# Up to version 2-6 (synApps 5.1) the 'calc' module needs a fix.
+# See doc/scalcout.html for details.
+ifneq ($(words $(CALC) $(SYNAPPS)), 0)
+RECORDTYPES += scalcout
+endif
 
 # You may add more bus interfaces
 # This requires the naming convention
 # $(BUS)Interface.cc
-# asynDriver interface is added automatically
-# if ASYN is defined in your RELEASE file.
+# asynDriver interface is added if ASYN is defined in your RELEASE file.
 
 BUSSES += Debug
 BUSSES += Dummy
+ifdef ASYN
+BUSSES += AsynDriver
+endif
 
 # You may add more format converters
 # This requires the naming convention

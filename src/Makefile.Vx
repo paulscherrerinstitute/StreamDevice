@@ -18,29 +18,23 @@
 #                                                              #
 ################################################################
 
-TOP = ../../..
+TOP := ../../$(TOP)
 
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
 
 LIBNAME = streamLib
 
-# In 3.13, calcout has no device support
-RECORDS_3_13 = $(filter-out calcout,$(RECORDS))
-
-ifdef ASYN
-BUSSES += AsynDriver
-endif
-
 SRCS.cc += $(patsubst %,../%,$(filter %.cc,$(STREAM_SRCS)))
 SRCS.cc += $(BUSSES:%=../%Interface.cc)
 SRCS.cc += $(FORMATS:%=../%Converter.cc)
 SRCS.c += $(patsubst %,../%,$(filter %.c,$(STREAM_SRCS)))
-SRCS.c += $(RECORDS_3_13:%=../dev%Stream.c)
+# In 3.13, calcout has no device support
+SRCS.c += $(patsubst %,../dev%Stream.c,$(filter-out calcout,$(RECORDTYPES)))
 
 LIBOBJS = $(patsubst ../%,%.o,$(basename $(SRCS.cc) $(SRCS.c)))
 
-include $(TOP)/config/RULES.Vx
+include $(EPICS_BASE)/config/RULES.Vx
 include $(TOP)/config/RULES.munch
 
 build:: depends

@@ -7,45 +7,22 @@ EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream
 BUILDCLASSES += Linux
 
-#DOCUDIR = doc
+DOCUDIR = documentation
 
-BUSSES  += AsynDriver
-BUSSES  += Dummy
+PCRE=1
+ASYN=1
+-include src/CONFIG_STREAM
 
-FORMATS += Enum
-FORMATS += BCD
-FORMATS += Raw
-FORMATS += RawFloat
-FORMATS += Binary
-FORMATS += Checksum
-FORMATS += Regexp
-FORMATS += MantissaExponent
-FORMATS += Timestamp
-
-RECORDTYPES += aai aao
-RECORDTYPES += ao ai
-RECORDTYPES += bo bi
-RECORDTYPES += mbbo mbbi
-RECORDTYPES += mbboDirect mbbiDirect
-RECORDTYPES += longout longin
-RECORDTYPES += stringout stringin
-RECORDTYPES += waveform
-
-SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
+SOURCES += $(RECORDS:%=src/dev%Stream.c)
 SOURCES += $(FORMATS:%=src/%Converter.cc)
 SOURCES += $(BUSSES:%=src/%Interface.cc)
-SOURCES += $(wildcard src/Stream*.cc)
-SOURCES += src/StreamVersion.c
+SOURCES += $(STREAM_SRCS:%=src/%)
 
 HEADERS += devStream.h
 HEADERS += StreamFormat.h
 HEADERS += StreamFormatConverter.h
 HEADERS += StreamBuffer.h
 HEADERS += StreamError.h
-
-ifneq (${EPICS_BASETYPE},3.13)
-RECORDTYPES += calcout
-endif
 
 StreamCore.o: streamReferences
 
@@ -58,4 +35,3 @@ streamSup.dbd:
 	@echo Creating $@
 	perl ../src/makedbd.pl $(RECORDTYPES) > $@
 endif
-
