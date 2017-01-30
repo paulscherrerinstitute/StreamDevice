@@ -81,7 +81,7 @@ static long initRecord (dbCommon *record)
    Thus make sure the record is never left in INVALID_ALARM status.
 */
 
-static long write(dbCommon *record)
+static long write_mbbo(dbCommon *record)
 {
     long status = streamWrite(record);
     if (record->nsev == INVALID_ALARM) record->nsev = MAJOR_ALARM;
@@ -102,7 +102,7 @@ struct {
     streamInit,
     initRecord,
     streamGetIointInfo,
-    write
+    write_mbbo
 };
 
 epicsExportAddress(dset,devmbboDirectStream);
