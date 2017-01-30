@@ -18,7 +18,7 @@
 #                                                              #
 ################################################################
 
-TOP = ../../..
+TOP := ../../$(TOP)
 
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
@@ -32,7 +32,7 @@ INC += devStream.h
 CONFIGS = RULES.munch
 SCRIPTS = munch.pl
 
-include $(TOP)/config/RULES.Host
+include $(EPICS_BASE)/config/RULES.Host
 
 # create stream.dbd from all RECORDTYPES
 # In 3.13, calcout has no device support

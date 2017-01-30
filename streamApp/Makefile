@@ -66,13 +66,7 @@ CPPFLAGS += -DDEBUGFILE=StreamDebug.log
 
 include $(TOP)/configure/RULES
 
-ifeq ($(BASE_3_14), YES)
-clean:: myclean
-else
-clean: myclean
-endif
-
-myclean:
+clean::
 	$(RM) core* StreamDebug.log
 
 endif

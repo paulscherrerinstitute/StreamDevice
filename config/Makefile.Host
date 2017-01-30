@@ -1,0 +1,21 @@
+#
+# Makefile.Host,v 1.1.2.3 2001/09/14 19:39:14 anj Exp
+#
+
+TOP=../..
+include $(TOP)/config/CONFIG_APP
+
+TARGETS = checkRelease CONFIG_APP_INCLUDE
+
+include $(TOP)/config/RULES.Host
+
+inc:: $(TARGETS)
+
+CONFIG_APP_INCLUDE: $(wildcard $(TOP)/config/RELEASE*) $(TOP)/config/CONFIG_APP
+	$(PERL) $(TOP)/config/convertRelease.pl $@
+
+checkRelease:
+	$(PERL) $(TOP)/config/convertRelease.pl $@
+
+.PHONY :: checkRelease
+

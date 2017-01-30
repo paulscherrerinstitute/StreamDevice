@@ -1,0 +1,14 @@
+MUNCH = $(PERL) $(INSTALL_LOCATION)/bin/$(HOST_ARCH)/munch.pl
+
+# The original 3.13.10 munching rule does not really work well
+
+build:: $(LIBNAME).munch
+
+buildInstall:: $(INSTALL_BIN)/$(LIBNAME).munch
+
+%.munch: %
+	$(RM) $*_ctct.o $*_ctdt.c
+	$(NM) $< | $(MUNCH) > $*_ctdt.c
+	$(GCC) -traditional $(CFLAGS) -fdollars-in-identifiers -c $(SOURCE_FLAG) $*_ctdt.c
+	$(LINK.c) $@ $< $*_ctdt.o
+

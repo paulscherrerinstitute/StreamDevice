@@ -1,8 +1,5 @@
-TOP = ../../..
+TOP := ../../$(TOP)
 
 include $(TOP)/config/CONFIG_APP
 
-DBDEXPAND = streamAppInclude-3-13.dbd
-DBDNAME = streamApp.dbd
-
-include $(TOP)/config/RULES.Host
+include $(EPICS_BASE)/config/RULES.Host
