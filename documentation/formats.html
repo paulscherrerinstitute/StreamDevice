@@ -454,8 +454,17 @@ With the <code>#</code> flag, the byte order is changed to <em>little
 endian</em>, i.e. least significant byte first.
 </p>
 <p>
-The <code>0</code> flag changes the checksum representation from
-binary to hexadecimal ASCII (2 bytes per checksum byte).
+The <code>0</code> flag changes the checksum representation to
+to hexadecimal ASCII (2 chars per checksum byte).
+</p>
+<p>
+The <code>-</code> flag changes the checksum representation to
+"poor man's hex": 0x30 ... 0x3f (2 chars per checksum byte).
+</p>
+<p>
+The <code>+</code> flag changes the checksum representation to
+decimal ASCII (formatted with %d).
+</p>
 <!--
 In output, the case of the ASCII checksum matches the case of first
 letter of the function name.
@@ -567,10 +576,15 @@ in architecture specific RELEASE.Common.<em>arch</em> files.
 </div>
 <p>
 If the regular expression is not anchored, i.e. does not start with
-<code>^</code>, leading non-matching input is skipped. 
+<code>^</code>, leading non-matching input is skipped.
+To match in multiline mode (across newlines) add <code>(?m)</code>
+at the beginning of the pattern.
+To match case insensitive, add <code>(?i)</code>.
+</p>
+<p>
 A maximum of <em>width</em> bytes is matched, if specified.
 If <em>precision</em> is given, it specifies the sub-expression whose match
-is retuned.
+is returned.
 Otherwise the complete match is returned.
 In any case, the complete match is consumed from the input buffer.
 If the expression contains a <code>/</code> it must be escaped like <code>\/</code>.
