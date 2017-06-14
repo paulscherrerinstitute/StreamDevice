@@ -20,6 +20,7 @@ pre {
     border:1px solid #000000;
     white-space:pre;
     margin:2ex;
+    page-break-inside:avoid;
 }
 
 kbd {
