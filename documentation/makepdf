@@ -1,3 +1,11 @@
+#/bin/sh
+if ! wkhtmltopdf -V >/dev/null 2>&1
+then
+    echo "wkhtmltopdf not installed."
+    echo "See https://wkhtmltopdf.org"
+    exit 1
+fi >&2
+
 PAGES="
 index.html
 setup.html
