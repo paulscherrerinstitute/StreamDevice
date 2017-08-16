@@ -21,4 +21,9 @@ src_DEPEND_DIRS = configure
 DIRS += streamApp
 streamApp_DEPEND_DIRS = src
 
-include $(CONFIG)/RULES_DIRS
+include $(CONFIG)/RULES_TOP
+
+documentation/stream.pdf: documentation/*.html documentation/*.css documentation/*.png
+	cd documentation; makepdf
+
+install: documentation/stream.pdf
