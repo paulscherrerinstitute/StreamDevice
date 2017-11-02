@@ -460,7 +460,7 @@ finishProtocol(ProtocolResult status)
         status = Fault;
     }
 ////    flags &= ~(AcceptInput|AcceptEvent);
-    if (runningHandler)
+    if (runningHandler || flags & InitRun)
     {
         // get original error status
         if (status == Success) status = runningHandler;
