@@ -718,13 +718,19 @@ writeHandler()
         pasynOctet->setOutputEos(pvtOctet, pasynUser,
             NULL, 0);
     }
+    pasynUser->errorMessage[0] = 0;
     status = pasynOctet->write(pvtOctet, pasynUser,
         outputBuffer, outputSize, &written);
+#ifndef NO_TEMPORARY
     debug("AsynDriverInterface::writeHandler(%s): "
-        "write(..., outputSize=%ld, written=%ld) "
-        "[timeout=%g sec] = %s\n",
-        clientName(), (long)outputSize,  (long)written,
-        pasynUser->timeout, asynStatusStr[status]);
+        "write(..., \"%s\", outputSize=%ld, written=%ld) "
+        "[timeout=%g sec] = %s (%s)\n",
+        clientName(), 
+        StreamBuffer(outputBuffer, outputSize).expand()(), 
+        (long)outputSize, (long)written,
+        pasynUser->timeout, asynStatusStr[status],
+        pasynUser->errorMessage);
+#endif
 
     if (oldeoslen >= 0) // restore asyn terminator
     {
@@ -769,34 +775,34 @@ writeHandler()
             writeCallback(StreamIoSuccess);
             return;
         case asynTimeout:
-            error("%s: asynTimeout (%g sec) in write. Asyn says: %s\n",
+            error("%s: asynTimeout (%g sec) in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->timeout, pasynUser->errorMessage);
             writeCallback(StreamIoTimeout);
             return;
         case asynOverflow:
-            error("%s: asynOverflow in write. Asyn driver says: %s\n",
+            error("%s: asynOverflow in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynError:
-            error("%s: asynError in write. Asyn driver says: %s\n",
+            error("%s: asynError in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #ifdef ASYN_VERSION // asyn >= 4.14
         case asynDisconnected:
-            error("%s: asynDisconnected in write. Asyn driver says: %s\n",
+            error("%s: asynDisconnected in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynDisabled:
-            error("%s: asynDisconnected in write. Asyn driver says: %s\n",
+            error("%s: asynDisconnected in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #endif
         default:
-            error("%s: unknown asyn error in write. Asyn driver says: %s\n",
+            error("%s: unknown asyn error in write. Asyn driver says: \"%s\"\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
@@ -887,6 +893,11 @@ readHandler()
             oldeoslen = -1;
         } else do {
             // device (e.g. GPIB) might not accept full eos length
+            if ((int)deveoslen == oldeoslen && strcmp(deveos, oldeos) == 0)
+            {
+                // nothing to do: old and new eos are the same
+                break;
+            }
             if (pasynOctet->setInputEos(pvtOctet, pasynUser,
                 deveos, deveoslen) == asynSuccess)
             {
@@ -894,8 +905,9 @@ readHandler()
                 if (ioAction != AsyncRead)
                 {
                     debug("AsynDriverInterface::readHandler(%s) "
-                        "input EOS set to %s\n",
+                        "input EOS changed from \"%s\" to \"%s\"\n",
                         clientName(),
+                        StreamBuffer(oldeos, oldeoslen).expand()(),
                         StreamBuffer(deveos, deveoslen).expand()());
                 }
 #endif
@@ -951,6 +963,7 @@ readHandler()
         readMore = 0;
         received = 0;
         eomReason = 0;
+        pasynUser->errorMessage[0] = 0;
         
         debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
             "read(..., bytesToRead=%ld, ...) "
@@ -959,12 +972,13 @@ readHandler()
             bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
+#ifndef NO_TEMPORARY
         debug("AsynDriverInterface::readHandler(%s): "
             "read returned %s: ioAction=%s received=%ld, eomReason=%s, buffer=\"%s\"\n",
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
             (long)received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
-
+#endif
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
             "device is now %sconnected\n",
@@ -1094,29 +1108,29 @@ readHandler()
                 }
                 peeksize = inputBuffer.capacity();
                 // deliver whatever we could save
-                error("%s: asynOverflow in read. Asyn driver says: %s\n",
+                error("%s: asynOverflow in read. Asyn driver says: \"%s\"\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
             case asynError:
-                error("%s: asynError in read. Asyn driver says: %s\n",
+                error("%s: asynError in read. Asyn driver says: \"%s\"\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
 #ifdef ASYN_VERSION // asyn >= 4.14
             case asynDisconnected:
-                error("%s: asynDisconnected in read. Asyn driver says: %s\n",
+                error("%s: asynDisconnected in read. Asyn driver says: \"%s\"\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
             case asynDisabled:
-                error("%s: asynDisconnected in read. Asyn driver says: %s\n",
+                error("%s: asynDisconnected in read. Asyn driver says: \"%s\"\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
 #endif
             default:
-                error("%s: unknown asyn error in read. Asyn driver says: %s\n",
+                error("%s: unknown asyn error in read. Asyn driver says: \"%s\"\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
@@ -1138,10 +1152,16 @@ readHandler()
     }
     
     // restore original EOS
-    if (oldeoslen >= 0)
+    if (oldeoslen >= 0 && oldeoslen != (int)deveoslen && strcmp(deveos, oldeos) != 0)
     {
         pasynOctet->setInputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
+#ifndef NO_TEMPORARY
+        debug("AsynDriverInterface::readHandler(%s) "
+            "input EOS restored to \"%s\"\n",
+            clientName(),
+            StreamBuffer(oldeos, oldeoslen).expand()());
+#endif
     }
 }
 
