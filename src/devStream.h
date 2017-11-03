@@ -58,7 +58,6 @@ extern "C" {
 #include <dbCommon.h>
 #include <dbScan.h>
 #include <devSup.h>
-/* #include <dbFldTypes.h> */
 #include <dbAccess.h>
 
 #ifdef devStream_epicsExportSharedSymbols
