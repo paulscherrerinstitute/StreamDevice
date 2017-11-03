@@ -296,7 +296,7 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
     for (i = start; i < end; i++)
     {
         c = buffer[i];
-        if ((c & 0x7f) < 0x20 || (c & 0x7f) == 0x7f)
+        if (c < 0x20 || c >= 0x7f)
         {
             result.print("<%02x>", c & 0xff);
         }
