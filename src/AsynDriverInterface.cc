@@ -667,25 +667,28 @@ writeHandler()
 
     pasynUser->timeout = 0;
     if (!pasynGpib)
-    // discard any early input, but forward it to potential async records
-    // thus do not use pasynOctet->flush()
-    // unfortunately we cannot do this with GPIB because addressing a device as talker
-    // when it has nothing to say is an error. Also timeout=0 does not help here (would need
-    // a change in asynGPIB), thus use flush() for GPIB.
-    do {
-        char buffer [256];
-        size_t received = 0;
-        int eomReason = 0;
-        debug("AsynDriverInterface::writeHandler(%s): reading old input\n",
-            clientName());
-        status = pasynOctet->read(pvtOctet, pasynUser,
-            buffer, sizeof(buffer), &received, &eomReason);
-        if (status == asynError || received == 0) break;
+    {
+        // discard any early input, but forward it to potential async records
+        // thus do not use pasynOctet->flush()
+        // unfortunately we cannot do this with GPIB because addressing a device as talker
+        // when it has nothing to say is an error. Also timeout=0 does not help here
+        // (would need a change in asynGPIB), thus use flush() for GPIB.
+        do {
+            char buffer [256];
+            size_t received = 0;
+            int eomReason = 0;
+            debug("AsynDriverInterface::writeHandler(%s): reading old input\n",
+                clientName());
+            status = pasynOctet->read(pvtOctet, pasynUser,
+                buffer, sizeof(buffer), &received, &eomReason);
+            if (status == asynError || received == 0) break;
 #ifndef NO_TEMPORARY
-        if (received) debug("AsynDriverInterface::writeHandler(%s): flushing %ld bytes: \"%s\"\n",
-            clientName(), (long)received, StreamBuffer(buffer, received).expand()());
+            if (received) debug("AsynDriverInterface::writeHandler(%s): "
+                "flushing %ld bytes: \"%s\"\n",
+                clientName(), (long)received, StreamBuffer(buffer, received).expand()());
 #endif
-    } while (status == asynSuccess);
+        } while (status == asynSuccess);
+    }
     else
     {
         debug("AsynDriverInterface::writeHandler(%s): flushing old input\n",
