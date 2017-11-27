@@ -171,6 +171,7 @@ class AsynDriverInterface : StreamBusInterface
     epicsTimerQueueActive* timerQueue;
     epicsTimer* timer;
 #endif
+    asynStatus previousAsynStatus;
 
     AsynDriverInterface(Client* client);
     ~AsynDriverInterface();
@@ -229,6 +230,7 @@ class AsynDriverInterface : StreamBusInterface
         timer->cancel();
 #endif
     }
+    void reportAsynStatus(asynStatus status, const char *name);
 
     // asynUser callback functions
     friend void handleRequest(asynUser*);
@@ -262,6 +264,7 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
     eventMask = 0;
     receivedEvent = 0;
     peeksize = 1;
+    previousAsynStatus = asynSuccess;
     debug ("AsynDriverInterface(%s) createAsynUser\n", client->name());
     pasynUser = pasynManager->createAsynUser(handleRequest,
         handleTimeout);
@@ -490,6 +493,19 @@ connectToBus(const char* portname, int addr)
     return true;
 }
 
+void AsynDriverInterface::
+reportAsynStatus(asynStatus status, const char *name)
+{
+    if (previousAsynStatus != status) {
+        previousAsynStatus = status;
+        if (status == asynSuccess) {
+            error("%s %s: status returned to normal\n", clientName(), name);
+        } else {
+            error("%s %s: %s\n", clientName(), name, pasynUser->errorMessage);
+        }
+    }
+}
+
 // interface function: we want exclusive access to the device
 // lockTimeout_ms=0 means "block here" (used in @init)
 bool AsynDriverInterface::
@@ -503,16 +519,11 @@ lockRequest(unsigned long lockTimeout_ms)
     ioAction = Lock;
     status = pasynManager->queueRequest(pasynUser,
         priority(), lockTimeout);
-    if (status != asynSuccess)
-    {
-        error("%s lockRequest: pasynManager->queueRequest() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return false;
-    }
+    reportAsynStatus(status, "lockRequest: pasynManager->queueRequest");
+    return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> lockHandler() -> lockCallback()
     // or handleTimeout() -> lockCallback(StreamIoTimeout)
-    return true;
 }
 
 bool AsynDriverInterface::
@@ -562,22 +573,12 @@ connectToAsynPort()
         clientName(), connected ? "already" : "not yet");
     if (!connected)
     {
-        printf ("%s: AsynDriverInterface::connectToAsynPort: "
-            "pasynCommon->connect(%p, %p)\n",
-            clientName(), pvtCommon, pasynUser);
         status = pasynCommon->connect(pvtCommon, pasynUser);
-        printf ("%s: AsynDriverInterface::connectToAsynPort: "
-            "pasynCommon->connect(%p, %p) = %s\n",
-            clientName(), pvtCommon, pasynUser, asynStatusStr[status]);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
                 "status=%s\n",
             clientName(), asynStatusStr[status]);
-        if (status != asynSuccess)
-        {
-            error("%s connectToAsynPort: pasynCommon->connect() failed: %s\n",
-                clientName(), pasynUser->errorMessage);
-            return false;
-        }
+        reportAsynStatus(status, "connectToAsynPort: pasynCommon->connect");
+        return (status == asynSuccess);
     }
 //  We probably should set REN=1 prior to sending but this
 //  seems to hang up the device every other time.
@@ -644,16 +645,11 @@ writeRequest(const void* output, size_t size,
     ioAction = Write;
     status = pasynManager->queueRequest(pasynUser, priority(),
         writeTimeout);
-    if (status != asynSuccess)
-    {
-        error("%s writeRequest: pasynManager->queueRequest() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return false;
-    }
+    reportAsynStatus(status, "writeRequest: pasynManager->queueRequest");
+    return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> writeHandler() -> lockCallback()
     // or handleTimeout() -> writeCallback(StreamIoTimeout)
-    return true;
 }
 
 // now, we can write (called by asynManager)
@@ -757,11 +753,9 @@ writeHandler()
             {
                 status = pasynManager->queueRequest(pasynUser,
                     priority(), lockTimeout);
+                reportAsynStatus(status, "writeHandler: pasynManager->queueRequest");
                 if (status != asynSuccess)
                 {
-                    error("%s writeHandler: "
-                        "pasynManager->queueRequest() failed: %s\n",
-                        clientName(), pasynUser->errorMessage);
                     writeCallback(StreamIoFault);
                 }
                 // continues with:
@@ -841,6 +835,10 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
         clientName(), priority(), queueTimeout,
         asynStatusStr[status], async? "true" : "false",
         status!=asynSuccess ? pasynUser->errorMessage : "");
+    if (!async)
+    {
+        reportAsynStatus(status, "readRequest: pasynManager->queueRequest");
+    }
     if (status != asynSuccess)
     {
         // Not queued for some reason (e.g. disconnected / already queued)
@@ -850,8 +848,6 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
             startTimer(replyTimeout);
             return true;
         }
-        error("%s readRequest: pasynManager->queueRequest() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
         return false;
     }
     // continues with:
@@ -1411,16 +1407,11 @@ connectRequest(unsigned long connecttimeout_ms)
         clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, queueTimeout);
-    if (status != asynSuccess)
-    {
-        error("%s connectRequest: pasynManager->queueRequest() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return false;
-    }
+    reportAsynStatus(status, "connectRequest: pasynManager->queueRequest");
+    return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> connectHandler() -> connectCallback()
     // or handleTimeout() -> connectCallback(StreamIoTimeout)
-    return true;
 }
 
 void AsynDriverInterface::
@@ -1439,15 +1430,10 @@ disconnectRequest()
         clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, 0.0);
-    if (status != asynSuccess)
-    {
-        error("%s disconnectRequest: pasynManager->queueRequest() failed: %s\n",
-            clientName(), pasynUser->errorMessage);
-        return false;
-    }
+    reportAsynStatus(status, "disconnectRequest: pasynManager->queueRequest");
+    return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> disconnectHandler()
-    return true;
 }
 
 void AsynDriverInterface::
