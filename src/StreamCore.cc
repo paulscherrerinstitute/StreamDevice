@@ -1364,13 +1364,15 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s\" mismatch after %ld byte%s\n",
+                        error("%s: Input \"%s%s\" mismatch after %ld byte%s: %c != %c\n",
                             name(),
                             consumedInput > 10 ? "..." : "",
                             inputLine.expand(consumedInput > 10 ?
                                 consumedInput-10 : 0,20)(),
                             consumedInput,
-                            consumedInput==1 ? "" : "s");
+                            consumedInput==1 ? "" : "s",
+                            command,
+                            inputLine[consumedInput]);
 
 #ifndef NO_TEMPORARY
                         error("%s: got \"%s\" where \"%s\" was expected\n",
