@@ -1059,6 +1059,14 @@ bool StreamProtocolParser::Protocol::
 compileString(StreamBuffer& buffer, const char*& source,
     FormatType formatType, Client* client, int quoted)
 {
+    return compileStringInternal(buffer, source, formatType, client, quoted, 0);
+}
+
+
+bool StreamProtocolParser::Protocol::
+compileStringInternal(StreamBuffer& buffer, const char*& source,
+    FormatType formatType, Client* client, int quoted, int recursionDepth)
+{
     bool escaped = false;
     int newline = 0;
     StreamBuffer formatbuffer;
@@ -1085,7 +1093,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             // compile all formats in this line
             // We do this here after all variables in this line
             // have been replaced and after string has been coded.
-            if (formatType != NoFormat)
+            if (recursionDepth == 0 && formatType != NoFormat)
             {
                 int nformats=0;
                 char c;
@@ -1250,7 +1258,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                 source += strlen(source)+1+sizeof(int);
                 p = value();
                 int saveline = line;
-                if (!compileString(buffer, p, formatType, client))
+                if (!compileStringInternal(buffer, p, formatType, client, false, recursionDepth + 1))
                     return false;
                 line = saveline;
                 continue;
