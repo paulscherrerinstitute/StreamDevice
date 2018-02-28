@@ -59,6 +59,8 @@ public:
         bool compileCommands(StreamBuffer&, const char*& source, Client*);
         bool replaceVariable(StreamBuffer&, const char* varname);
         const Variable* getVariable(const char* name);
+        bool compileStringInternal(StreamBuffer& buffer, const char*& source,
+            FormatType formatType, Client*, int quoted, int recursionDepth);
 
     public:
 
