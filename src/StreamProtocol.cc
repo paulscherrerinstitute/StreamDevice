@@ -1057,14 +1057,6 @@ compileNumber(unsigned long& number, const char*& source, unsigned long max)
 
 bool StreamProtocolParser::Protocol::
 compileString(StreamBuffer& buffer, const char*& source,
-    FormatType formatType, Client* client, int quoted)
-{
-    return compileStringInternal(buffer, source, formatType, client, quoted, 0);
-}
-
-
-bool StreamProtocolParser::Protocol::
-compileStringInternal(StreamBuffer& buffer, const char*& source,
     FormatType formatType, Client* client, int quoted, int recursionDepth)
 {
     bool escaped = false;
@@ -1074,8 +1066,8 @@ compileStringInternal(StreamBuffer& buffer, const char*& source,
     line = getLineNumber(source);
 
     debug("StreamProtocolParser::Protocol::compileString "
-        "line %d source=\"%s\"\n",
-        line, source);
+        "line %d source=\"%s\" recursionDepth=%d\n",
+        line, source, recursionDepth);
 
     // coding is done in two steps:
     // 1) read a line from protocol source and code quoted strings,
@@ -1258,7 +1250,7 @@ compileStringInternal(StreamBuffer& buffer, const char*& source,
                 source += strlen(source)+1+sizeof(int);
                 p = value();
                 int saveline = line;
-                if (!compileStringInternal(buffer, p, formatType, client, false, recursionDepth + 1))
+                if (!compileString(buffer, p, formatType, client, false, recursionDepth + 1))
                     return false;
                 line = saveline;
                 continue;
