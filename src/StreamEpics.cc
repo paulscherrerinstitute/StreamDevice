@@ -1119,7 +1119,7 @@ bool Stream::
 matchValue(const StreamFormat& format, const void* fieldaddress)
 {
     // this function must increase consumedInput
-    long consumed;
+    long consumed = 0;
     long lval;
     double dval;
     char* buffer;
