@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-
 #include <sys/types.h>
 
 #ifndef __GNUC__

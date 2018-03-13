@@ -19,10 +19,10 @@
 ***************************************************************/
 
 #include <string.h>
-#include <errlog.h>
-#include <waveformRecord.h>
+#include "errlog.h"
+#include "waveformRecord.h"
+#include "epicsExport.h"
 #include "devStream.h"
-#include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {

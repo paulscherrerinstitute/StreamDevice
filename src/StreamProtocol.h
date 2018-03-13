@@ -21,8 +21,8 @@
 #ifndef StreamProtocol_h
 #define StreamProtocol_h
 
-#include "StreamBuffer.h"
 #include <stdio.h>
+#include "StreamBuffer.h"
 
 enum FormatType {NoFormat, ScanFormat, PrintFormat};
 

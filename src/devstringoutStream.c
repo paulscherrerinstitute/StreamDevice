@@ -18,9 +18,9 @@
 *                                                              *
 ***************************************************************/
 
-#include <stringoutRecord.h>
+#include "stringoutRecord.h"
+#include "epicsExport.h"
 #include "devStream.h"
-#include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {

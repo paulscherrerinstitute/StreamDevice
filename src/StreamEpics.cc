@@ -18,9 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#define epicsExportSharedSymbols
-#include "devStream.h"
-#undef epicsExportSharedSymbols
 #include "StreamCore.h"
 #include "StreamError.h"
 
@@ -78,6 +75,8 @@ epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #include <epicsExport.h>
 
 #endif
+
+#include "devStream.h"
 
 #if defined(__vxworks) || defined(vxWorks)
 #include <symLib.h>
