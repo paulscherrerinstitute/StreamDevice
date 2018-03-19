@@ -73,6 +73,12 @@ static long readData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         ((epicsFloat32 *)aai->bptr)[aai->nord] = (epicsFloat32)lval;
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                    case DBF_UINT64:
+                        ((epicsInt64 *)aai->bptr)[aai->nord] = (epicsInt64)lval;
+                        break;
+#endif
                     case DBF_LONG:
                     case DBF_ULONG:
                         ((epicsInt32 *)aai->bptr)[aai->nord] = (epicsInt32)lval;
@@ -163,6 +169,14 @@ static long writeData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         dval = ((epicsFloat32 *)aai->bptr)[nowd];
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        dval = ((epicsInt64 *)aai->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        dval = ((epicsUInt64 *)aai->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         dval = ((epicsInt32 *)aai->bptr)[nowd];
                         break;
@@ -198,6 +212,14 @@ static long writeData (dbCommon *record, format_t *format)
             {
                 switch (aai->ftvl)
                 {
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        lval = ((epicsInt64 *)aao->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        lval = ((epicsUInt64 *)aao->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         lval = ((epicsInt32 *)aai->bptr)[nowd];
                         break;
@@ -274,10 +296,9 @@ static long writeData (dbCommon *record, format_t *format)
 
 static long initRecord (dbCommon *record)
 {
-    static const int typesize[] = {MAX_STRING_SIZE,1,1,2,2,4,4,4,8,2};
     aaiRecord *aai = (aaiRecord *) record;
 
-    aai->bptr = calloc(aai->nelm, typesize[aai->ftvl]);
+    aai->bptr = calloc(aai->nelm, dbValueSize(aai->ftvl));
     if (aai->bptr == NULL)
     {
         errlogSevPrintf (errlogFatal,

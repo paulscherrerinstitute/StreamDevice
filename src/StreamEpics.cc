@@ -967,10 +967,11 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
 }
 
 static const unsigned char dbfMapping[] =
+#ifdef DBF_INT64
+    {0, DBF_UINT64, DBF_INT64, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
+#else
     {0, DBF_ULONG, DBF_LONG, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
-static const short typeSize[] =
-    {0, sizeof(epicsUInt32), sizeof(epicsInt32), sizeof(epicsUInt16),
-        sizeof(epicsFloat64), MAX_STRING_SIZE};
+#endif
 
 bool Stream::
 formatValue(const StreamFormat& format, const void* fieldaddress)
@@ -1018,7 +1019,7 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
 
         /* convert type to LONG, ENUM, DOUBLE, or STRING */
         long nelem = pdbaddr->no_elements;
-        size_t size = nelem * typeSize[format.type];
+        size_t size = nelem * dbValueSize(fmt.type);
 
         /* print (U)CHAR arrays as string */
         if (format.type == string_format &&
@@ -1137,7 +1138,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
         long nord;
         long nelem = pdbaddr->no_elements;
-        size_t size = nelem * typeSize[format.type];
+        size_t size = nelem * dbValueSize(fmt.type);
         buffer = fieldBuffer.clear().reserve(size);
         for (nord = 0; nord < nelem; nord++)
         {
