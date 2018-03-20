@@ -656,11 +656,15 @@ printString(StreamBuffer& buffer, const char* s)
                 buffer.append("\\\\");
                 break;
             case format_field:
+                // <format_field> field <eos> addrLength AddressStructure formatstr <eos> StreamFormat [info <eos>]
+                unsigned short fieldSize;
                 buffer.print("%%(%s)", ++s);
                 while (*s++);
-                s += extract<unsigned short>(s); // skip fieldaddress
+                fieldSize = extract<unsigned short>(s);
+                s += fieldSize; // skip fieldAddress
                 goto format;
             case format:
+                // <format> formatstr <eos> StreamFormat [info <eos>]
                 buffer.append('%');
                 s++;
 format:         {
