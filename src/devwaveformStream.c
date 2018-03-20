@@ -121,8 +121,8 @@ static long readData (dbCommon *record, format_t *format)
                         {
                             return ERROR;
                         }
-                        ((char*)wf->bptr)[wf->nelm] = 0;
-                        for (lval = wf->nelm;
+                        ((char*)wf->bptr)[wf->nelm-1] = 0;
+                        for (lval = wf->nelm-2;
                             lval >= 0 && ((char*)wf->bptr)[lval] == 0;
                             lval--);
                         wf->nord = lval+1;
