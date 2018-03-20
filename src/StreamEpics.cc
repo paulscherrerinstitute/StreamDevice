@@ -60,6 +60,7 @@ extern DBBASE *pdbbase;
 #include <epicsEvent.h>
 #include <epicsTime.h>
 #include <epicsThread.h>
+#include <epicsString.h>
 #include <registryFunction.h>
 #include <iocsh.h>
 
@@ -92,7 +93,8 @@ enum MoreFlags {
 
 extern "C" void streamExecuteCommand(CALLBACK *pcallback);
 extern "C" void streamRecordProcessCallback(CALLBACK *pcallback);
-extern "C" long streamReload(char* recordname);
+extern "C" long streamReload(const char* recordname);
+extern "C" long streamReportRecord(const char* recordname);
 
 class Stream : protected StreamCore
 #ifndef EPICS_3_13
@@ -144,6 +146,7 @@ class Stream : protected StreamCore
     bool execute();
     friend void streamExecuteCommand(CALLBACK *pcallback);
     friend void streamRecordProcessCallback(CALLBACK *pcallback);
+    friend long streamReportRecord(const char* recordname);
 
 // Stream Epics methods
     Stream(dbCommon* record, const struct link *ioLink,
@@ -166,7 +169,7 @@ class Stream : protected StreamCore
     friend long streamPrintf(dbCommon *record, format_t *format, ...);
     friend long streamScanfN(dbCommon *record, format_t *format,
         void*, size_t maxStringSize);
-    friend long streamReload(char* recordname);
+    friend long streamReload(const char* recordname);
 
 public:
     long priority() { return record->prio; };
@@ -183,12 +186,12 @@ epicsExportAddress(int, streamDebug);
 #endif
 
 // for subroutine record
-extern "C" long streamReloadSub()
+long streamReloadSub()
 {
     return streamReload(NULL);
 }
 
-extern "C" long streamReload(char* recordname)
+long streamReload(const char* recordname)
 {
     DBENTRY	dbentry;
     dbCommon*   record;
@@ -240,17 +243,30 @@ static const iocshArg streamReloadArg0 =
     { "recordname", iocshArgString };
 static const iocshArg * const streamReloadArgs[] =
     { &streamReloadArg0 };
-static const iocshFuncDef reloadDef =
+static const iocshFuncDef streamReloadDef =
     { "streamReload", 1, streamReloadArgs };
 
-extern "C" void streamReloadFunc (const iocshArgBuf *args)
+void streamReloadFunc (const iocshArgBuf *args)
 {
     streamReload(args[0].sval);
 }
 
+static const iocshArg streamReportRecordArg0 =
+    { "recordname", iocshArgString };
+static const iocshArg * const streamReportRecordArgs[] =
+    { &streamReportRecordArg0 };
+static const iocshFuncDef streamReportRecordDef =
+    { "streamReportRecord", 1, streamReportRecordArgs };
+
+void streamReportRecordFunc (const iocshArgBuf *args)
+{
+    streamReportRecord(args[0].sval);
+}
+
 static void streamRegistrar ()
 {
-    iocshRegister(&reloadDef, streamReloadFunc);
+    iocshRegister(&streamReloadDef, streamReloadFunc);
+    iocshRegister(&streamReportRecordDef, streamReportRecordFunc);
     // make streamReload available for subroutine records
     registryFunctionAdd("streamReload",
         (REGISTRYFUNCTION)streamReloadSub);
@@ -354,6 +370,31 @@ report(int interest)
                 pstream->printStatus(buffer);
                 printf("      %s\n", buffer());
             }
+        }
+    }
+    return OK;
+}
+
+long streamReportRecord(const char* recordname)
+{
+    Stream* pstream;
+    for (pstream = static_cast<Stream*>(Stream::first); pstream;
+        pstream = static_cast<Stream*>(pstream->next))
+    {
+        if (!recordname ||
+#ifdef EPICS_3_13
+            strcmp(pstream->name(), recordname) == 0)
+#else
+            epicsStrGlobMatch(pstream->name(), recordname))
+#endif
+        {
+            printf("%s: %s\n", pstream->name(),
+                pstream->ioLink->value.instio.string);
+            StreamBuffer buffer;
+            pstream->printStatus(buffer);
+            printf("%s\n", buffer());
+            pstream->printProtocol();
+            printf("\n");
         }
     }
     return OK;
