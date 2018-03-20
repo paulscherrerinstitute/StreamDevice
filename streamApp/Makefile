@@ -1,6 +1,6 @@
 TOP=../..
 
-# Look if we have EPICS R3.13 or R3.14
+# Look if we have EPICS R3.13 or R3.14+
 ifeq ($(wildcard $(TOP)/configure),)
 # EPICS R3.13
 include $(TOP)/config/CONFIG_APP
@@ -8,10 +8,8 @@ include $(TOP)/config/CONFIG_APP
 include $(TOP)/config/RULES_ARCHS
 else
 
-# EPICS R3.14
+# EPICS R3.14+
 include $(TOP)/configure/CONFIG
-
-#HOST_OPT = NO
 
 PROD = streamApp
 DBD  = streamApp.dbd
@@ -41,11 +39,11 @@ endif
 ifneq ($(words $(CALC) $(SYNAPPS)), 0)
 # With synApps scalcout record
 streamApp_DBD += calcSupport.dbd
-streamApp_DBD += streamSynApps.dbd
 PROD_LIBS += calc
 # older calc versions require sscan
-#PROD_LIBS += sscan
-PROD_LIBS_DEFAULT += streamSynApps
+ifneq ($(words $(SSCAN) $(SYNAPPS)), 0)
+PROD_LIBS += sscan
+endif
 endif
 
 streamApp_DBD += stream.dbd

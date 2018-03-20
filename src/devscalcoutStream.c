@@ -21,14 +21,14 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-/* scalcout record has a bug: it never calls init_record
+/* Up to version 2-6-1 of the SynApps calc module
+   scalcout record has a bug: it never calls init_record
    of the device support.
    Fix: sCalcoutRecord.c, end of init_record() add
   
         if(pscalcoutDSET->init_record ) {
 	    return (*pscalcoutDSET->init_record)(pcalc);
         }
-   The bug has been fixed in version 2-6-1.
 */
 
 static long readData (dbCommon *record, format_t *format)

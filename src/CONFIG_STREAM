@@ -1,6 +1,3 @@
-# Want debugging?
-# HOST_OPT = NO
-
 # You may add more record interfaces
 # This requires the naming conventions
 # dev$(RECORD)Stream.c
@@ -18,12 +15,13 @@ RECORDS += aai aao
 # Do you have synApps and want support for scalcout?
 # Then define CALC or SYNAPPS in your RELEASE file
 # pointing to the 'calc' module of synApps.
-# Due to strange cross dependencies in synApps
-# you have to build the 'sscan' and 'genSub'
-# modules before building 'calc'.
+# Older 'calc' versions have a cross reference on 
+# 'sscan' and/or 'genSub', so you may have to build them first.
 # See doc/scalcout.html for a required fix in scalcout.
 
-SYNAPPS_RECORDS += scalcout
+ifneq ($(words $(CALC) $(SYNAPPS)),0)
+RECORDS += scalcout
+endif
 
 # You may add more bus interfaces
 # This requires the naming convention
@@ -33,6 +31,9 @@ SYNAPPS_RECORDS += scalcout
 
 BUSSES += Debug
 BUSSES += Dummy
+ifdef ASYN
+BUSSES += AsynDriver
+endif
 
 # You may add more format converters
 # This requires the naming convention

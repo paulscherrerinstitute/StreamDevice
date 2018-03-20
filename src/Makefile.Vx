@@ -28,10 +28,6 @@ LIBNAME = streamLib
 # In 3.13, calcout has no device support
 RECORDS_3_13 = $(filter-out calcout,$(RECORDS))
 
-ifdef ASYN
-BUSSES += AsynDriver
-endif
-
 SRCS.cc += $(patsubst %,../%,$(filter %.cc,$(STREAM_SRCS)))
 SRCS.cc += $(BUSSES:%=../%Interface.cc)
 SRCS.cc += $(FORMATS:%=../%Converter.cc)

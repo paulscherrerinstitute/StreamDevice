@@ -20,7 +20,7 @@
 
 TOP=../..
 
-# Look if we have EPICS R3.13 or R3.14
+# Look if we have EPICS R3.13 or R3.14+
 ifeq ($(wildcard $(TOP)/configure),)
 # EPICS R3.13
 include $(TOP)/config/CONFIG_APP
@@ -40,13 +40,8 @@ DBD += $(LIBRARY_DEFAULT).dbd
 
 ifdef ASYN
 LIB_LIBS += asyn
-BUSSES += AsynDriver
-endif
-
-ifdef T_A
-ifndef BUSSES
-$(error No bus interface defined! Didn't you set ASYN in your RELEASE file?)
-endif
+else
+$(Warning AsynDriver interface not included! Didn't you set ASYN in your RELEASE file?)
 endif
 
 ifeq ($(LOADABLE_MODULE),YES)
