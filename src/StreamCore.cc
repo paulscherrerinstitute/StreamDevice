@@ -139,6 +139,7 @@ StreamCore()
     StreamCore** pstream;
     for (pstream = &first; *pstream; pstream = &(*pstream)->next);
     *pstream = this;
+    activeCommand = NULL;
 }
 
 StreamCore::
@@ -1760,7 +1761,7 @@ void StreamCore::
 printStatus(StreamBuffer& buffer)
 {
     buffer.print("active command=%s ",
-        activeCommand ? commandName(*activeCommand) : "NULL");
+        activeCommand ? commandName(*activeCommand) : "none");
     buffer.print("flags=0x%04lx ", flags);
     if (flags & IgnoreExtraInput) buffer.append("IgnoreExtraInput ");
     if (flags & InitRun) buffer.append("InitRun ");
