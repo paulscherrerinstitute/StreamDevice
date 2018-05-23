@@ -33,9 +33,6 @@ extern "C" {
 #define epicsAlarmGLOBAL
 #include "alarm.h"
 #undef epicsAlarmGLOBAL
-#include <ctype.h>
-#include <stdarg.h>
-#include <stdlib.h>
 #include "dbStaticLib.h"
 #include "drvSup.h"
 #include "recSup.h"
@@ -43,6 +40,9 @@ extern "C" {
 #include "devLib.h"
 #include "callback.h"
 
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdlib.h>
 #ifdef EPICS_3_13
 
 #include <semLib.h>
@@ -65,12 +65,10 @@ extern DBBASE *pdbbase;
 #include "iocsh.h"
 
 #if EPICS_MODIFICATION<9
-extern "C" {
 // iocshCmd() is missing in iocsh.h (up to R3.14.8.2)
 // To build with win32-x86, you MUST fix iocsh.h.
 // Move the declaration below to iocsh.h and rebuild base.
-epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
-}
+extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #endif
 
 #include "epicsExport.h"

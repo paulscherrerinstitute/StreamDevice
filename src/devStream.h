@@ -49,11 +49,11 @@
 extern "C" {
 #endif
 
-#include <stdio.h>
 #include "dbCommon.h"
 #include "dbScan.h"
 #include "devSup.h"
 #include "dbAccess.h"
+#include <stdio.h>
 
 #if defined(__cplusplus) && defined(EPICS_3_13)
 }

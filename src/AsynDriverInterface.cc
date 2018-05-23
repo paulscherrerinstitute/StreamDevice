@@ -26,13 +26,13 @@
 #include <assert.h>
 #include <wdLib.h>
 #include <sysLib.h>
+extern "C" {
+#include "callback.h"
+}
 #else
 #include "epicsAssert.h"
 #include "epicsTime.h"
 #include "epicsTimer.h"
-extern "C" {
-#include <callback.h>
-}
 #endif
 
 #include "asynDriver.h"

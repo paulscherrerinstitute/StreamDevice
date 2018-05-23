@@ -21,6 +21,7 @@
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 #include <ctype.h>
+
 #if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no strncasecmp
 #include "epicsVersion.h"
