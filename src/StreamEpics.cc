@@ -21,7 +21,7 @@
 #include "StreamCore.h"
 #include "StreamError.h"
 
-#include <epicsVersion.h>
+#include "epicsVersion.h"
 #ifdef BASE_VERSION
 #define EPICS_3_13
 #endif
@@ -31,17 +31,17 @@ extern "C" {
 #endif
 
 #define epicsAlarmGLOBAL
-#include <alarm.h>
+#include "alarm.h"
 #undef epicsAlarmGLOBAL
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <dbStaticLib.h>
-#include <drvSup.h>
-#include <recSup.h>
-#include <recGbl.h>
-#include <devLib.h>
-#include <callback.h>
+#include "dbStaticLib.h"
+#include "drvSup.h"
+#include "recSup.h"
+#include "recGbl.h"
+#include "devLib.h"
+#include "callback.h"
 
 #ifdef EPICS_3_13
 
@@ -55,14 +55,14 @@ extern DBBASE *pdbbase;
 
 #else
 
-#include <epicsTimer.h>
-#include <epicsMutex.h>
-#include <epicsEvent.h>
-#include <epicsTime.h>
-#include <epicsThread.h>
-#include <epicsString.h>
-#include <registryFunction.h>
-#include <iocsh.h>
+#include "epicsTimer.h"
+#include "epicsMutex.h"
+#include "epicsEvent.h"
+#include "epicsTime.h"
+#include "epicsThread.h"
+#include "epicsString.h"
+#include "registryFunction.h"
+#include "iocsh.h"
 
 #if EPICS_MODIFICATION<9
 extern "C" {
@@ -73,7 +73,7 @@ epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 }
 #endif
 
-#include <epicsExport.h>
+#include "epicsExport.h"
 
 #endif
 

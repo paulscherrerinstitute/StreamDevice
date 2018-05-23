@@ -20,12 +20,12 @@
 
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
+#include <ctype.h>
 #if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no strncasecmp
-#include <epicsVersion.h>
+#include "epicsVersion.h"
 #ifdef BASE_VERSION
 // 3.13
-#include <ctype.h>
 static int strncasecmp(const char *s1, const char *s2, size_t n)
 {
     int r=0;
@@ -33,11 +33,10 @@ static int strncasecmp(const char *s1, const char *s2, size_t n)
     return r;
 }
 #else
-#include <epicsString.h>
+#include "epicsString.h"
 #define strncasecmp epicsStrnCaseCmp
 #endif
 #endif
-#include <ctype.h>
 
 typedef unsigned int (*checksumFunc)(const unsigned char* data, unsigned int len,  unsigned int init);
 

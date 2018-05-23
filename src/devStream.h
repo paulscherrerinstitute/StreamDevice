@@ -40,7 +40,7 @@
 #define DO_NOT_CONVERT 2
 #define INIT_RUN (!interruptAccept)
 
-#include <epicsVersion.h>
+#include "epicsVersion.h"
 #ifdef BASE_VERSION
 #define EPICS_3_13
 #endif
@@ -50,10 +50,10 @@ extern "C" {
 #endif
 
 #include <stdio.h>
-#include <dbCommon.h>
-#include <dbScan.h>
-#include <devSup.h>
-#include <dbAccess.h>
+#include "dbCommon.h"
+#include "dbScan.h"
+#include "devSup.h"
+#include "dbAccess.h"
 
 #if defined(__cplusplus) && defined(EPICS_3_13)
 }

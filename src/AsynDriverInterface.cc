@@ -27,19 +27,19 @@
 #include <wdLib.h>
 #include <sysLib.h>
 #else
-#include <epicsAssert.h>
-#include <epicsTime.h>
-#include <epicsTimer.h>
+#include "epicsAssert.h"
+#include "epicsTime.h"
+#include "epicsTimer.h"
 extern "C" {
 #include <callback.h>
 }
 #endif
 
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynInt32.h>
-#include <asynUInt32Digital.h>
-#include <asynGpibDriver.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInt32.h"
+#include "asynUInt32Digital.h"
+#include "asynGpibDriver.h"
 
 /* How things are implemented:
 
