@@ -273,9 +273,7 @@ static void streamRegistrar ()
         (REGISTRYFUNCTION)streamReloadSub);
 }
 
-extern "C" {
 epicsExportRegistrar(streamRegistrar);
-}
 #endif
 
 // driver support ////////////////////////////////////////////////////////
@@ -291,9 +289,7 @@ struct stream_drvsup {
 };
 
 #ifndef EPICS_3_13
-extern "C" {
 epicsExportAddress(drvet, stream);
-}
 #endif
 
 #ifdef EPICS_3_13

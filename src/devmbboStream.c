@@ -47,13 +47,13 @@ static long readData (dbCommon *record, format_t *format)
                     return OK;
                 }
             }
-            mbbo->val = (short)val;
+            mbbo->val = val;
             return DO_NOT_CONVERT;
         }
         case DBF_ENUM:
         {
             if (streamScanf (record, format, &val)) return ERROR;
-            mbbo->val = (short)val;
+            mbbo->val = val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
@@ -65,7 +65,7 @@ static long readData (dbCommon *record, format_t *format)
             {
                 if (strcmp ((&mbbo->zrst)[val], buffer) == 0)
                 {
-                    mbbo->val = (short)val;
+                    mbbo->val = val;
                     return DO_NOT_CONVERT;
                 }
             }
@@ -101,7 +101,7 @@ static long writeData (dbCommon *record, format_t *format)
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long) mbbo->val);
+            return streamPrintf (record, format, (long)mbbo->val);
         }
         case DBF_STRING:
         {
