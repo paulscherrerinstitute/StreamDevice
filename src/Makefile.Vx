@@ -29,8 +29,7 @@ SRCS.cc += $(patsubst %,../%,$(filter %.cc,$(STREAM_SRCS)))
 SRCS.cc += $(BUSSES:%=../%Interface.cc)
 SRCS.cc += $(FORMATS:%=../%Converter.cc)
 SRCS.c += $(patsubst %,../%,$(filter %.c,$(STREAM_SRCS)))
-# In 3.13, calcout has no device support
-SRCS.c += $(patsubst %,../dev%Stream.c,$(filter-out calcout,$(RECORDTYPES)))
+SRCS.c += $(patsubst %,../dev%Stream.c,$(RECORDTYPES)))
 
 LIBOBJS = $(patsubst ../%,%.o,$(basename $(SRCS.cc) $(SRCS.c)))
 

@@ -35,6 +35,5 @@ SCRIPTS = munch.pl
 include $(EPICS_BASE)/config/RULES.Host
 
 # create stream.dbd from all RECORDTYPES
-# In 3.13, calcout has no device support
 stream.dbd: ../CONFIG_STREAM
-	$(PERL) ../makedbd.pl -3.13 $(filter-out calcout,$(RECORDTYPES)) > $@
+	$(PERL) ../makedbd.pl -3.13 $(RECORDTYPES) > $@
