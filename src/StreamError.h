@@ -32,13 +32,13 @@ extern int streamError;
 extern void (*StreamPrintTimestampFunction)(char* buffer, int size);
 
 void StreamError(int line, const char* file, const char* fmt, ...)
-__attribute__ ((format(printf,3,4)));
+__attribute__((__format__(__printf__,3,4)));
 
 void StreamVError(int line, const char* file, const char* fmt, va_list args)
-__attribute__ ((format(printf,3,0)));
+__attribute__((__format__(__printf__,3,0)));
 
 void StreamError(const char* fmt, ...)
-__attribute__ ((format(printf,1,2)));
+__attribute__((__format__(__printf__,1,2)));
 
 inline void StreamVError(const char* fmt, va_list args)
 {
@@ -53,7 +53,7 @@ public:
     StreamDebugClass(const char* file, int line) :
         file(file), line(line) {}
     int print(const char* fmt, ...)
-        __attribute__ ((format(printf,2,3)));
+        __attribute__((__format__(__printf__,2,3)));
 };
 
 inline StreamDebugClass

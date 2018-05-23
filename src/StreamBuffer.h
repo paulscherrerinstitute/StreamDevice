@@ -195,7 +195,7 @@ public:
         {return replace(pos, 0, &c, 1);}
 
     StreamBuffer& print(const char* fmt, ...)
-        __attribute__ ((format(printf,2,3)));
+        __attribute__((__format__(__printf__,2,3)));
 
     // find: get index of data in buffer or -1
     ssize_t find(char c, ssize_t start=0) const
