@@ -18,16 +18,12 @@
 *                                                              *
 ***************************************************************/
 
-#include <aiRecord.h>
+#include <math.h>
+#include "epicsMath.h"
+#include "menuConvert.h"
+#include "aiRecord.h"
+#include "epicsExport.h"
 #include "devStream.h"
-#ifdef EPICS_3_13
-#include <private/mathP.h>
-#define isinf(x) isInf(x)
-#define isnan(x) isNan(x)
-#else
-#include <epicsMath.h>
-#endif
-#include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {

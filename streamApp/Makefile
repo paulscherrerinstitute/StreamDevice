@@ -1,6 +1,6 @@
 TOP:=../$(TOP)
 
-# Look if we have EPICS R3.13 or R3.14
+# Look if we have EPICS R3.13 or R3.14+
 ifeq ($(wildcard $(TOP)/configure),)
 # EPICS R3.13
 include $(TOP)/config/CONFIG_APP
@@ -8,10 +8,8 @@ include $(TOP)/config/CONFIG_APP
 include $(TOP)/config/RULES_ARCHS
 else
 
-# EPICS R3.14
+# EPICS R3.14+
 include $(TOP)/configure/CONFIG
-
-#HOST_OPT = NO
 
 PROD = streamApp
 DBD  = streamApp.dbd
