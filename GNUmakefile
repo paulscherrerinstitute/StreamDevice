@@ -13,7 +13,7 @@ PCRE=1
 ASYN=1
 -include src/CONFIG_STREAM
 
-SOURCES += $(RECORDS:%=src/dev%Stream.c)
+SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
 SOURCES += $(FORMATS:%=src/%Converter.cc)
 SOURCES += $(BUSSES:%=src/%Interface.cc)
 SOURCES += $(STREAM_SRCS:%=src/%)
@@ -24,14 +24,15 @@ HEADERS += StreamFormatConverter.h
 HEADERS += StreamBuffer.h
 HEADERS += StreamError.h
 
-StreamCore.o: streamReferences
+StreamCore.o StreamCore.d: streamReferences
 
 streamReferences:
-	perl ../src/makeref.pl Interface $(BUSSES) > $@
-	perl ../src/makeref.pl Converter $(FORMATS) >> $@
+	$(PERL) ../src/makeref.pl Interface $(BUSSES) > $@
+	$(PERL) ../src/makeref.pl Converter $(FORMATS) >> $@
 
 export DBDFILES = streamSup.dbd
 streamSup.dbd:
 	@echo Creating $@
-	perl ../src/makedbd.pl $(RECORDTYPES) > $@
+	$(PERL) ../src/makedbd.pl $(RECORDTYPES) > $@
+
 endif
