@@ -49,26 +49,19 @@
 extern "C" {
 #endif
 
-#ifdef epicsExportSharedSymbols
-#   define devStream_epicsExportSharedSymbols
-#   undef epicsExportSharedSymbols
-#endif
-
 #include <stdio.h>
 #include <dbCommon.h>
 #include <dbScan.h>
 #include <devSup.h>
 #include <dbAccess.h>
 
-#ifdef devStream_epicsExportSharedSymbols
-#   define epicsExportSharedSymbols
-#   include "shareLib.h"
-#endif
-
 #if defined(__cplusplus) && defined(EPICS_3_13)
 }
 #endif
 
+#ifndef EPICS_3_13
+#include "shareLib.h"
+#endif
 
 typedef const struct format_s {
     unsigned char type;

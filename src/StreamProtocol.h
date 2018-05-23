@@ -21,8 +21,8 @@
 #ifndef StreamProtocol_h
 #define StreamProtocol_h
 
-#include "StreamBuffer.h"
 #include <stdio.h>
+#include "StreamBuffer.h"
 
 enum FormatType {NoFormat, ScanFormat, PrintFormat};
 
@@ -59,6 +59,8 @@ public:
         bool compileCommands(StreamBuffer&, const char*& source, Client*);
         bool replaceVariable(StreamBuffer&, const char* varname);
         const Variable* getVariable(const char* name);
+        bool compileString(StreamBuffer& buffer, const char*& source,
+            FormatType formatType, Client*, int quoted, int recursionDepth);
 
     public:
 
@@ -73,7 +75,9 @@ public:
         bool compileNumber(unsigned long& number, const char*& source,
             unsigned long max = 0xFFFFFFFF);
         bool compileString(StreamBuffer& buffer, const char*& source,
-            FormatType formatType = NoFormat, Client* = NULL, int quoted = false);
+            FormatType formatType = NoFormat, Client* client = NULL, int quoted = false) {
+            return compileString(buffer, source, formatType, client, quoted, 0);
+        }
         bool checkUnused();
         ~Protocol();
         void report();

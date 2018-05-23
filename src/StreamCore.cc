@@ -139,6 +139,7 @@ StreamCore()
     StreamCore** pstream;
     for (pstream = &first; *pstream; pstream = &(*pstream)->next);
     *pstream = this;
+    activeCommand = NULL;
 }
 
 StreamCore::
@@ -1364,13 +1365,15 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s\" mismatch after %ld byte%s\n",
+                        error("%s: Input \"%s%s\" mismatch after %ld byte%s: %c != %c\n",
                             name(),
                             consumedInput > 10 ? "..." : "",
                             inputLine.expand(consumedInput > 10 ?
                                 consumedInput-10 : 0,20)(),
                             consumedInput,
-                            consumedInput==1 ? "" : "s");
+                            consumedInput==1 ? "" : "s",
+                            command,
+                            inputLine[consumedInput]);
 
 #ifndef NO_TEMPORARY
                         error("%s: got \"%s\" where \"%s\" was expected\n",
@@ -1762,7 +1765,7 @@ void StreamCore::
 printStatus(StreamBuffer& buffer)
 {
     buffer.print("active command=%s ",
-        activeCommand ? commandName(*activeCommand) : "NULL");
+        activeCommand ? commandName(*activeCommand) : "none");
     buffer.print("flags=0x%04lx ", flags);
     if (flags & IgnoreExtraInput) buffer.append("IgnoreExtraInput ");
     if (flags & InitRun) buffer.append("InitRun ");

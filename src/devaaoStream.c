@@ -20,10 +20,10 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <errlog.h>
-#include <aaoRecord.h>
+#include "errlog.h"
+#include "aaoRecord.h"
+#include "epicsExport.h"
 #include "devStream.h"
-#include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {
@@ -73,6 +73,12 @@ static long readData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         ((epicsFloat32 *)aao->bptr)[aao->nord] = (epicsFloat32)lval;
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                    case DBF_UINT64:
+                        ((epicsInt64 *)aao->bptr)[aao->nord] = (epicsInt64)lval;
+                        break;
+#endif
                     case DBF_LONG:
                     case DBF_ULONG:
                         ((epicsInt32 *)aao->bptr)[aao->nord] = (epicsInt32)lval;
@@ -115,8 +121,8 @@ static long readData (dbCommon *record, format_t *format)
                         {
                             return ERROR;
                         }
-                        ((char*)aao->bptr)[aao->nelm] = 0;
-                        for (lval = aao->nelm;
+                        ((char*)aao->bptr)[aao->nelm-1] = 0;
+                        for (lval = aao->nelm-2;
                             lval >= 0 && ((char*)aao->bptr)[lval] == 0;
                             lval--);
                         aao->nord = lval+1;
@@ -163,6 +169,14 @@ static long writeData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         dval = ((epicsFloat32 *)aao->bptr)[nowd];
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        dval = ((epicsInt64 *)aao->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        dval = ((epicsUInt64 *)aao->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         dval = ((epicsInt32 *)aao->bptr)[nowd];
                         break;
@@ -198,6 +212,14 @@ static long writeData (dbCommon *record, format_t *format)
             {
                 switch (aao->ftvl)
                 {
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        lval = ((epicsInt64 *)aao->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        lval = ((epicsUInt64 *)aao->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         lval = ((epicsInt32 *)aao->bptr)[nowd];
                         break;
@@ -274,10 +296,9 @@ static long writeData (dbCommon *record, format_t *format)
 
 static long initRecord (dbCommon *record)
 {
-    static const int typesize[] = {MAX_STRING_SIZE,1,1,2,2,4,4,4,8,2};
     aaoRecord *aao = (aaoRecord *) record;
 
-    aao->bptr = calloc(aao->nelm, typesize[aao->ftvl]);
+    aao->bptr = calloc(aao->nelm, dbValueSize(aao->ftvl));
     if (aao->bptr == NULL)
     {
         errlogSevPrintf (errlogFatal,

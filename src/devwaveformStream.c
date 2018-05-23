@@ -19,10 +19,10 @@
 ***************************************************************/
 
 #include <string.h>
-#include <errlog.h>
-#include <waveformRecord.h>
+#include "errlog.h"
+#include "waveformRecord.h"
+#include "epicsExport.h"
 #include "devStream.h"
-#include <epicsExport.h>
 
 static long readData (dbCommon *record, format_t *format)
 {
@@ -73,6 +73,12 @@ static long readData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         ((epicsFloat32 *)wf->bptr)[wf->nord] = (epicsFloat32)lval;
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                    case DBF_UINT64:
+                        ((epicsInt64 *)wf->bptr)[aao->nord] = (epicsInt64)lval;
+                        break;
+#endif
                     case DBF_LONG:
                     case DBF_ULONG:
                         ((epicsInt32 *)wf->bptr)[wf->nord] = (epicsInt32)lval;
@@ -115,8 +121,8 @@ static long readData (dbCommon *record, format_t *format)
                         {
                             return ERROR;
                         }
-                        ((char*)wf->bptr)[wf->nelm] = 0;
-                        for (lval = wf->nelm;
+                        ((char*)wf->bptr)[wf->nelm-1] = 0;
+                        for (lval = wf->nelm-2;
                             lval >= 0 && ((char*)wf->bptr)[lval] == 0;
                             lval--);
                         wf->nord = lval+1;
@@ -163,6 +169,14 @@ static long writeData (dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         dval = ((epicsFloat32 *)wf->bptr)[nowd];
                         break;
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        dval = ((epicsInt64 *)wf->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        dval = ((epicsUInt64 *)wf->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         dval = ((epicsInt32 *)wf->bptr)[nowd];
                         break;
@@ -198,6 +212,14 @@ static long writeData (dbCommon *record, format_t *format)
             {
                 switch (wf->ftvl)
                 {
+#ifdef DBF_INT64
+                    case DBF_INT64:
+                        lval = ((epicsInt64 *)wf->bptr)[nowd];
+                        break;
+                    case DBF_UINT64:
+                        lval = ((epicsUInt64 *)wf->bptr)[nowd];
+                        break;
+#endif
                     case DBF_LONG:
                         lval = ((epicsInt32 *)wf->bptr)[nowd];
                         break;

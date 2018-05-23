@@ -17,9 +17,9 @@
 *                                                              *
 ***************************************************************/
 
-#include <epicsThread.h>
-#include <iocsh.h>
-#include <devStream.h>
+#include "epicsThread.h"
+#include "iocsh.h"
+#include "devStream.h"
 
 int main(int argc,char *argv[])
 {

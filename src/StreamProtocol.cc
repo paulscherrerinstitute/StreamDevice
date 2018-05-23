@@ -656,11 +656,15 @@ printString(StreamBuffer& buffer, const char* s)
                 buffer.append("\\\\");
                 break;
             case format_field:
+                // <format_field> field <eos> addrLength AddressStructure formatstr <eos> StreamFormat [info <eos>]
+                unsigned short fieldSize;
                 buffer.print("%%(%s)", ++s);
                 while (*s++);
-                s += extract<unsigned short>(s); // skip fieldaddress
+                fieldSize = extract<unsigned short>(s);
+                s += fieldSize; // skip fieldAddress
                 goto format;
             case format:
+                // <format> formatstr <eos> StreamFormat [info <eos>]
                 buffer.append('%');
                 s++;
 format:         {
@@ -1057,7 +1061,7 @@ compileNumber(unsigned long& number, const char*& source, unsigned long max)
 
 bool StreamProtocolParser::Protocol::
 compileString(StreamBuffer& buffer, const char*& source,
-    FormatType formatType, Client* client, int quoted)
+    FormatType formatType, Client* client, int quoted, int recursionDepth)
 {
     bool escaped = false;
     int newline = 0;
@@ -1066,8 +1070,8 @@ compileString(StreamBuffer& buffer, const char*& source,
     line = getLineNumber(source);
 
     debug("StreamProtocolParser::Protocol::compileString "
-        "line %d source=\"%s\"\n",
-        line, source);
+        "line %d source=\"%s\" recursionDepth=%d\n",
+        line, source, recursionDepth);
 
     // coding is done in two steps:
     // 1) read a line from protocol source and code quoted strings,
@@ -1085,7 +1089,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             // compile all formats in this line
             // We do this here after all variables in this line
             // have been replaced and after string has been coded.
-            if (formatType != NoFormat)
+            if (recursionDepth == 0 && formatType != NoFormat)
             {
                 int nformats=0;
                 char c;
@@ -1250,7 +1254,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                 source += strlen(source)+1+sizeof(int);
                 p = value();
                 int saveline = line;
-                if (!compileString(buffer, p, formatType, client))
+                if (!compileString(buffer, p, formatType, client, false, recursionDepth + 1))
                     return false;
                 line = saveline;
                 continue;

@@ -21,7 +21,7 @@
 #define StreamBusInterface_h
 
 #include <stddef.h>
-#include <StreamBuffer.h>
+#include "StreamBuffer.h"
 
 enum StreamIoStatus {
     StreamIoSuccess, StreamIoTimeout, StreamIoNoReply,
