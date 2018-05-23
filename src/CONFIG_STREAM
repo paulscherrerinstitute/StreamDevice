@@ -15,6 +15,10 @@ ifdef BASE_3_14
 RECORDTYPES += calcout
 endif
 
+ifdef BASE_3_16
+RECORDTYPES += int64in int64out
+endif
+
 # Do you have synApps and want support for scalcout?
 # Then define CALC or SYNAPPS in your RELEASE file
 # pointing to the 'calc' module of synApps.
