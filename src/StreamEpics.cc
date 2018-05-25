@@ -89,10 +89,12 @@ enum MoreFlags {
     Aborted       = 0x0400000
 };
 
-extern "C" void streamExecuteCommand(CALLBACK *pcallback);
-extern "C" void streamRecordProcessCallback(CALLBACK *pcallback);
-extern "C" long streamReload(const char* recordname);
-extern "C" long streamReportRecord(const char* recordname);
+extern "C" {
+void streamExecuteCommand(CALLBACK *pcallback);
+void streamRecordProcessCallback(CALLBACK *pcallback);
+long streamReload(const char* recordname);
+long streamReportRecord(const char* recordname);
+}
 
 class Stream : protected StreamCore
 #ifndef EPICS_3_13
@@ -178,10 +180,8 @@ public:
 
 // shell functions ///////////////////////////////////////////////////////
 #ifndef EPICS_3_13
-extern "C" {
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
-}
 #endif
 
 // for subroutine record
