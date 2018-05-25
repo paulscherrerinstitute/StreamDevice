@@ -1,5 +1,5 @@
+# If you are not using the PSI build environment, this file can be removed.
 ifeq ($(wildcard /ioc/tools/driver.makefile),)
-$(warning It seems you do not have the PSI build environment. Remove GNUmakefile.)
 include Makefile
 else
 include /ioc/tools/driver.makefile
@@ -9,9 +9,14 @@ BUILDCLASSES += Linux
 
 DOCUDIR = documentation
 
+ifdef EPICSVERSION
+ifndef RECORDTYPES
 PCRE=1
 ASYN=1
--include src/CONFIG_STREAM
+include src/CONFIG_STREAM
+export RECORDTYPES BUSSES FORMATS
+endif
+endif
 
 SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
 SOURCES += $(FORMATS:%=src/%Converter.cc)
@@ -32,7 +37,7 @@ streamReferences:
 
 export DBDFILES = streamSup.dbd
 streamSup.dbd:
-	@echo Creating $@
+	@echo Creating $@ from $(RECORDTYPES)
 	$(PERL) ../src/makedbd.pl $(RECORDTYPES) > $@
 
 endif
