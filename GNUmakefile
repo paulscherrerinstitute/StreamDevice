@@ -44,7 +44,7 @@ ifneq (${EPICS_BASETYPE},3.13)
 RECORDTYPES += calcout
 endif
 
-StreamCore.o: streamReferences
+StreamCore.o StreamCore.d: streamReferences
 
 streamReferences:
 	perl ../src/makeref.pl Interface $(BUSSES) > $@
