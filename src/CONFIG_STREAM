@@ -15,6 +15,10 @@ ifdef BASE_3_14
 RECORDTYPES += calcout
 endif
 
+ifdef BASE_3_15
+RECORDTYPES += lsi lso
+endif
+
 ifdef BASE_3_16
 RECORDTYPES += int64in int64out
 endif
