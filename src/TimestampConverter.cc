@@ -75,7 +75,7 @@ class TimestampConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printDouble(const StreamFormat&, StreamBuffer&, double);
-    int scanDouble(const StreamFormat&, const char*, double&);
+    long scanDouble(const StreamFormat&, const char*, double&);
 };
 
 int TimestampConverter::
@@ -516,9 +516,7 @@ startover:
     return input;
 }
 
-
-
-int TimestampConverter::
+long TimestampConverter::
 scanDouble(const StreamFormat& format, const char* input, double& value)
 {
     struct tm brokenDownTime;

@@ -137,7 +137,7 @@ protected:
     bool printValue(const StreamFormat& format, char* value);
     long scanValue(const StreamFormat& format, long& value);
     long scanValue(const StreamFormat& format, double& value);
-    long scanValue(const StreamFormat& format, char* value, long maxlen);
+    long scanValue(const StreamFormat& format, char* value, unsigned long& size);
     long scanValue(const StreamFormat& format);
 
     StreamBuffer protocolname;

@@ -113,12 +113,12 @@ parseFormat(const char*& source, FormatType formatType, StreamFormat& streamForm
     char* p;
     val = strtoul (source, &p, 10);
     source = p;
-    if (val > 0xFFFF)
+    if (val > LONG_MAX)
     {
         error("Field width %ld out of range\n", val);
         return false;
     }
-    streamFormat.width = (unsigned short)val;
+    streamFormat.width = val;
     // look for prec
     streamFormat.prec = -1;
     if (*source == '.')
@@ -132,7 +132,7 @@ parseFormat(const char*& source, FormatType formatType, StreamFormat& streamForm
             return false;
         }
         source = p;
-        if (val > 0x7FFF)
+        if (val > SHRT_MAX)
         {
             error("Precision %ld out of range\n", val);
             return false;
@@ -205,7 +205,7 @@ printPseudo(const StreamFormat& fmt, StreamBuffer&)
     return false;
 }
 
-int StreamFormatConverter::
+long StreamFormatConverter::
 scanLong(const StreamFormat& fmt, const char*, long&)
 {
     error("Unimplemented scanLong method for %%%c format\n",
@@ -213,7 +213,7 @@ scanLong(const StreamFormat& fmt, const char*, long&)
     return -1;
 }
 
-int StreamFormatConverter::
+long StreamFormatConverter::
 scanDouble(const StreamFormat& fmt, const char*, double&)
 {
     error("Unimplemented scanDouble method for %%%c format\n",
@@ -221,15 +221,15 @@ scanDouble(const StreamFormat& fmt, const char*, double&)
     return -1;
 }
 
-int StreamFormatConverter::
-scanString(const StreamFormat& fmt, const char*, char*, size_t)
+long StreamFormatConverter::
+scanString(const StreamFormat& fmt, const char*, char*, unsigned long&)
 {
     error("Unimplemented scanString method for %%%c format\n",
         fmt.conv);
     return -1;
 }
 
-int StreamFormatConverter::
+long StreamFormatConverter::
 scanPseudo(const StreamFormat& fmt, StreamBuffer&, long&)
 {
     error("Unimplemented scanPseudo method for %%%c format\n",
@@ -255,11 +255,11 @@ static void copyFormatString(StreamBuffer& info, const char* source)
 
 // Standard Long Converter for 'diouxX'
 
-static int prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
+static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
 {
-    int length = 0;
+    long consumed = 0;
     neg = false;
-    while (isspace(*input)) { input++; length++; }
+    while (isspace(*input)) { input++; consumed++; }
     if (fmt.width)
     {
         // take local copy because strto* don't have width parameter
@@ -268,7 +268,7 @@ static int prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
         {
             // normally whitespace does not count to width
             // but do so if space flag is present
-            width -= length;
+            width -= consumed;
         }
         strncpy((char*)fmt.info, input, width);
         ((char*)fmt.info)[width] = 0;
@@ -283,21 +283,21 @@ static int prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
         neg = true;
 skipsign:
         input++;
-        length++;
+        consumed++;
     }
     if (isspace(*input))
     {
         // allow space after sign only if # flag is set
         if (!(fmt.flags & alt_flag)) return -1;
     }
-    return length;
+    return consumed;
 }
 
 class StdLongConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat& fmt, StreamBuffer& output, const char*& value, bool scanFormat);
     bool printLong(const StreamFormat& fmt, StreamBuffer& output, long value);
-    int scanLong(const StreamFormat& fmt, const char* input, long& value);
+    long scanLong(const StreamFormat& fmt, const char* input, long& value);
 };
 
 int StdLongConverter::
@@ -306,7 +306,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 {
     if (scanFormat && fmt.prec >= 0)
     {
-        error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
+        error("Use of precision field '.%ld' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
@@ -334,17 +334,17 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-int StdLongConverter::
+long StdLongConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     char* end;
-    int length;
+    long consumed;
     bool neg;
     int base;
     long v;
 
-    length = prepareval(fmt, input, neg);
-    if (length < 0) return -1;
+    consumed = prepareval(fmt, input, neg);
+    if (consumed < 0) return -1;
     switch (fmt.conv)
     {
         case 'd':
@@ -366,9 +366,9 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     }
     v = strtoul(input, &end, base);
     if (end == input) return -1;
-    length += end-input;
+    consumed += end-input;
     value = neg ? -v : v;
-    return length;
+    return consumed;
 }
 
 RegisterConverter (StdLongConverter, "diouxX");
@@ -379,7 +379,7 @@ class StdDoubleConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printDouble(const StreamFormat&, StreamBuffer&, double);
-    virtual int scanDouble(const StreamFormat&, const char*, double&);
+    virtual long scanDouble(const StreamFormat&, const char*, double&);
 };
 
 int StdDoubleConverter::
@@ -388,7 +388,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
 {
     if (scanFormat && fmt.prec >= 0)
     {
-        error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
+        error("Use of precision field '.%ld' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
@@ -411,20 +411,20 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     return true;
 }
 
-int StdDoubleConverter::
+long StdDoubleConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
     char* end;
-    int length;
+    long consumed;
     bool neg;
 
-    length = prepareval(fmt, input, neg);
-    if (length < 0) return -1;
+    consumed = prepareval(fmt, input, neg);
+    if (consumed < 0) return -1;
     value = strtod(input, &end);
     if (neg) value = -value;
     if (end == input) return -1;
-    length += end-input;
-    return length;
+    consumed += end-input;
+    return consumed;
 }
 
 RegisterConverter (StdDoubleConverter, "feEgG");
@@ -435,7 +435,7 @@ class StdStringConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printString(const StreamFormat&, StreamBuffer&, const char*);
-    virtual int scanString(const StreamFormat&, const char*, char*, size_t);
+    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
 };
 
 int StdStringConverter::
@@ -451,7 +451,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     if (scanFormat && fmt.prec >= 0)
     {
-        error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
+        error("Use of precision field '.%ld' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
@@ -483,17 +483,17 @@ printString(const StreamFormat& fmt, StreamBuffer& output, const char* value)
     return true;
 }
 
-int StdStringConverter::
+long StdStringConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, size_t maxlen)
+    char* value, unsigned long &size)
 {
-    int length = 0;
-
+    long consumed = 0;
+    long space_left = size;
     int width = fmt.width;
 
-    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
-    // if user does not specify width assume "ininity" (-1)
+    // if user does not specify width assume "infinity" (-1)
     if (width == 0)
     {
         if (fmt.conv == 'c') width = 1;
@@ -506,14 +506,14 @@ scanString(const StreamFormat& fmt, const char* input,
         // but do so if space flag is present
         if (fmt.flags & space_flag)
         {
-            if (maxlen > 1)
+            if (space_left > 1) // keep space for terminal null byte
             {
                 *value++ = *input;
-                maxlen--;
+                space_left--;
             }
             width--;
         }
-        length++;
+        consumed++;
         input++;
     }
     while (*input && width)
@@ -521,20 +521,22 @@ scanString(const StreamFormat& fmt, const char* input,
         // normally whitespace ends string
         // but don't end if # flag is present
         if (!(fmt.flags & alt_flag) && isspace(*input)) break;
-        if (maxlen > 1)
+        if (space_left > 1)
         {
             *value++ = *input;
-            maxlen--;
+            space_left--;
         }
-        length++;
+        consumed++;
         width--;
         input++;
     }
-    if (maxlen > 0)
+    if (space_left)
     {
         *value = '\0';
+        space_left--;
+        size -= space_left; // update number of bytes copied to value
     }
-    return length;
+    return consumed;
 }
 
 RegisterConverter (StdStringConverter, "s");
@@ -545,7 +547,7 @@ class StdCharsConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printLong(const StreamFormat&, StreamBuffer&, long);
-    virtual int scanString(const StreamFormat&, const char*, char*, size_t);
+    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
 };
 
 int StdCharsConverter::
@@ -560,7 +562,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     if (scanFormat && fmt.prec >= 0)
     {
-        error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
+        error("Use of precision field '.%ld' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
@@ -581,35 +583,37 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-int StdCharsConverter::
+long StdCharsConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, size_t maxlen)
+    char* value, unsigned long& size)
 {
-    int length = 0;
+    long consumed = 0;
+    long width = fmt.width;
+    long space_left = size;
 
-    int width = fmt.width;
-
-    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
     // if user does not specify width assume 1
     if (width == 0) width = 1;
 
     while (*input && width)
     {
-        if (maxlen > 1)
+        if (space_left > 1) // keep space for terminal null byte
         {
             *value++ = *input;
-            maxlen--;
+            space_left--;
         }
-        length++;
+        consumed++;
         width--;
         input++;
     }
-    if (maxlen > 0)
+    if (space_left)
     {
         *value = '\0';
+        space_left--;
+        size -= space_left; // update number of bytes written to value
     }
-    return length;
+    return consumed; // return number of bytes consumed from input
 }
 
 RegisterConverter (StdCharsConverter, "c");
@@ -619,7 +623,7 @@ RegisterConverter (StdCharsConverter, "c");
 class StdCharsetConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
-    virtual int scanString(const StreamFormat&, const char*, char*, size_t);
+    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
     // no print method, %[ is readonly
 };
 
@@ -651,7 +655,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     if (scanFormat && fmt.prec >= 0)
     {
-        error("Use of precision field '.%d' not allowed with %%%c input conversion\n",
+        error("Use of precision field '.%ld' not allowed with %%%c input conversion\n",
             fmt.prec, fmt.conv);
         return false;
     }
@@ -698,35 +702,38 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     return string_format;
 }
 
-int StdCharsetConverter::
+long StdCharsetConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, size_t maxlen)
+    char* value, unsigned long& size)
 {
-    int length = 0;
-    int width = fmt.width;
+    long consumed = 0;
+    long width = fmt.width;
+    long space_left = size;
 
-    if ((fmt.flags & skip_flag) || value == NULL) maxlen = 0;
+    if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
-    // if user does not specify width assume "ininity" (-1)
+    // if user does not specify width assume "infinity" (-1)
     if (width == 0) width = -1;
 
     while (*input && width)
     {
         if (fmt.info[*input>>3] & 1<<(*input&7)) break;
-        if (maxlen > 1)
+        if (space_left > 1) // keep space for terminal null byte
         {
             *value++ = *input;
-            maxlen--;
+            space_left--;
         }
-        length++;
+        consumed++;
         width--;
         input++;
     }
-    if (maxlen > 0)
+    if (space_left)
     {
         *value = '\0';
+        space_left--;
+        size -= space_left; // update number of bytes written to value
     }
-    return length;
+    return consumed;
 }
 
 RegisterConverter (StdCharsetConverter, "[");

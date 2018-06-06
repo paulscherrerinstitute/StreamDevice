@@ -29,7 +29,7 @@ class BinaryConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    int scanLong(const StreamFormat&, const char*, long&);
+    long scanLong(const StreamFormat&, const char*, long&);
 };
 
 int BinaryConverter::
@@ -77,7 +77,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         if (x <= 0x3FFFFFFF) { prec -= 2; x <<=2; }
         if (x <= 0x7FFFFFFF) { prec -= 1; }
     }
-    int width = prec;
+    unsigned long width = prec;
     if (fmt.width > width) width = fmt.width;
     char zero = fmt.info[0];
     char one = fmt.info[1];
@@ -88,7 +88,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         if (!(fmt.flags & left_flag))
         {
             // pad left
-            while (width > prec)
+            while (width > (unsigned int)prec)
             {
                 output.append(' ');
                 width--;
@@ -112,7 +112,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         if (!(fmt.flags & left_flag))
         {
             // pad left
-            while (width > prec)
+            while (width > (unsigned int)prec)
             {
                 output.append(fill);
                 width--;
@@ -132,13 +132,13 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-int BinaryConverter::
+long BinaryConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     long val = 0;
-    int width = fmt.width;
+    long width = fmt.width;
     if (width == 0) width = -1;
-    int length = 0;
+    long length = 0;
     char zero = fmt.info[0];
     char one = fmt.info[1];
     if (!isspace(zero) && !isspace(one))

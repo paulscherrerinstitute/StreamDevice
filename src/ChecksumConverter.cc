@@ -500,7 +500,7 @@ class ChecksumConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printPseudo(const StreamFormat&, StreamBuffer&);
-    int scanPseudo(const StreamFormat&, StreamBuffer&, long& cursor);
+    long scanPseudo(const StreamFormat&, StreamBuffer&, long& cursor);
 };
 
 int ChecksumConverter::
@@ -535,7 +535,7 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
         source+=3;
         notflag = true;
     }
-    unsigned  fnum;
+    unsigned char fnum;
     int len = p-source;
     unsigned int init, xorout;
     for (fnum = 0; fnum < sizeof(checksumMap)/sizeof(checksum); fnum++)
@@ -573,7 +573,7 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     const char* info = format.info;
     unsigned int init = extract<unsigned int>(info);
     unsigned int xorout = extract<unsigned int>(info);
-    int fnum = extract<char>(info);
+    unsigned char fnum = extract<unsigned char>(info);
 
     int start = format.width;
     int length = output.length()-format.width;
@@ -641,7 +641,7 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     return true;
 }
 
-int ChecksumConverter::
+long ChecksumConverter::
 scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
 {
     unsigned int sum;
@@ -649,8 +649,8 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, long& cursor)
     unsigned int init = extract<unsigned int>(info);
     unsigned int xorout = extract<unsigned int>(info);
     int start = format.width;
-    int fnum = extract<char>(info);
-    int length = cursor-format.width;
+    unsigned char fnum = extract<unsigned char>(info);
+    long length = cursor-format.width;
 
     if (format.prec > 0) length -= format.prec;
     

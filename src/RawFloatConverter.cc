@@ -29,7 +29,7 @@ class RawFloatConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printDouble(const StreamFormat&, StreamBuffer&, double);
-    int scanDouble(const StreamFormat&, const char*, double&);
+    long scanDouble(const StreamFormat&, const char*, double&);
 };
 
 int RawFloatConverter::
@@ -90,7 +90,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     return true;
 }
 
-int RawFloatConverter::
+long RawFloatConverter::
 scanDouble(const StreamFormat& format, const char* input, double& value)
 {
     int nbOfBytes;

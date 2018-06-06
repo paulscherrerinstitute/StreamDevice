@@ -114,18 +114,23 @@ static long readData(dbCommon *record, format_t *format)
                         break;
                     case DBF_CHAR:
                     case DBF_UCHAR:
-                        memset(aai->bptr, 0, aai->nelm);
                         aai->nord = 0;
-                        if (streamScanfN(record, format,
-                            (char *)aai->bptr, aai->nelm) == ERROR)
+                        if ((lval = streamScanfN(record, format,
+                            (char *)aai->bptr, aai->nelm)) == ERROR)
                         {
+                            memset(aai->bptr, 0, aai->nelm);
                             return ERROR;
                         }
-                        ((char*)aai->bptr)[aai->nelm-1] = 0;
-                        for (lval = aai->nelm-2;
-                            lval >= 0 && ((char*)aai->bptr)[lval] == 0;
-                            lval--);
-                        aai->nord = lval+1;
+                        if ((size_t)lval < aai->nelm)
+                        {
+                            memset(((char*)aai->bptr)+lval , 0, aai->nelm-lval);
+                            lval++;
+                        }
+                        else
+                        {
+                            ((char*)aai->bptr)[aai->nelm-1] = 0;
+                        }
+                        aai->nord = lval;
                         return OK;
                     default:
                         errlogSevPrintf(errlogFatal,

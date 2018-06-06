@@ -50,9 +50,9 @@ typedef struct StreamFormat
     char conv;
     StreamFormatType type;
     unsigned short flags;
-    short prec;
-    unsigned short width;
-    unsigned short infolen;
+    long prec;
+    unsigned long width;
+    unsigned long infolen;
     const char* info;
 } StreamFormat;
 

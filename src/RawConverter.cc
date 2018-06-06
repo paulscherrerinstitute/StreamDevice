@@ -27,7 +27,7 @@ class RawConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    int scanLong(const StreamFormat&, const char*, long&);
+    long scanLong(const StreamFormat&, const char*, long&);
 };
 
 int RawConverter::
@@ -40,10 +40,9 @@ parse(const StreamFormat& fmt, StreamBuffer&,
 bool RawConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    int prec = fmt.prec;      // number of bytes from value
-    if (prec == -1) prec = 1;    // default: 1 byte
-    int width = prec;            // number of bytes in output
-    if (prec > (int)sizeof(long)) prec=sizeof(long);
+    unsigned int prec = fmt.prec < 0 ? 1 : fmt.prec; // number of bytes from value, default 1
+    unsigned long width = prec;  // number of bytes in output
+    if (prec > sizeof(long)) prec=sizeof(long);
     if (fmt.width > width) width = fmt.width;
     
     char byte = 0;
@@ -96,12 +95,12 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-int RawConverter::
+long RawConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     long length = 0;
     long val = 0;
-    int width = fmt.width;
+    unsigned long width = fmt.width;
     if (width == 0) width = 1; // default: 1 byte
     if (fmt.flags & skip_flag)
     {

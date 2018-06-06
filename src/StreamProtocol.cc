@@ -1484,7 +1484,7 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
     buffer.append(infoString);
 
     debug("StreamProtocolParser::Protocol::compileFormat: format.type=%s, "
-        "infolen=%d infostring=\"%s\"\n",
+        "infolen=%ld infostring=\"%s\"\n",
         StreamFormatTypeStr[streamFormat.type],
         streamFormat.infolen, infoString.expand()());
     formatstr = source; // move pointer after parsed format

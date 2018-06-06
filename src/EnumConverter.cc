@@ -29,7 +29,7 @@ class EnumConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    int scanLong(const StreamFormat&, const char*, long&);
+    long scanLong(const StreamFormat&, const char*, long&);
 };
 
 // info format: <numEnums><index><string>0<index><string>0...
@@ -148,7 +148,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-int EnumConverter::
+long EnumConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     debug("EnumConverter::scanLong(%%%c, \"%s\")\n",
@@ -156,7 +156,7 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     const char* s = fmt.info;
     long numEnums = extract<long>(s);
     long index;
-    int length;
+    long length;
 
     bool match;
     while (numEnums--)

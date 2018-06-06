@@ -157,7 +157,7 @@ class Stream : protected StreamCore
     long initRecord(const char* filename, const char* protocol,
         const char* busname, int addr, const char* busparam);
     bool print(format_t *format, va_list ap);
-    bool scan(format_t *format, void* pvalue, size_t maxStringSize);
+    long scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
 
 // device support functions
@@ -554,19 +554,21 @@ long streamPrintf(dbCommon *record, format_t *format, ...)
 long streamScanfN(dbCommon* record, format_t *format,
     void* value, size_t maxStringSize)
 {
+    long size;
     debug("streamScanfN(%s,format=%%%c,maxStringSize=%ld)\n",
         record->name, format->priv->conv, (long)maxStringSize);
     Stream* pstream = (Stream*)record->dpvt;
     if (!pstream) return ERROR;
-    if (!pstream->scan(format, value, maxStringSize))
+    size = pstream->scan(format, value, maxStringSize);
+    if (size == ERROR)
     {
-        return ERROR;
+        debug("streamScanfN(%s) failed\n", record->name);
     }
 #ifndef NO_TEMPORARY
     debug("streamScanfN(%s) success, value=\"%s\"\n",
         record->name, StreamBuffer((char*)value).expand()());
 #endif
-    return OK;
+    return size;
 }
 
 // Stream methods ////////////////////////////////////////////////////////
@@ -800,11 +802,12 @@ print(format_t *format, va_list ap)
     return false;
 }
 
-bool Stream::
+long Stream::
 scan(format_t *format, void* value, size_t maxStringSize)
 {
     // called by streamScanfN
 
+    unsigned long size = maxStringSize;
     // first remove old value from inputLine (if we are scanning arrays)
     consumedInput += currentValueLength;
     currentValueLength = 0;
@@ -820,20 +823,17 @@ scan(format_t *format, void* value, size_t maxStringSize)
             break;
         case DBF_STRING:
             currentValueLength  = scanValue(*format->priv, (char*)value,
-                maxStringSize);
+                size);
             break;
         default:
             error("INTERNAL ERROR (%s): Illegal format type\n", name());
-            return false;
-    }
-    if (currentValueLength < 0)
-    {
-        currentValueLength = 0;
-        return false;
+            return ERROR;
     }
     // Don't remove scanned value from inputLine yet, because
     // we might need the string in a later error message.
-    return true;
+    if (currentValueLength == ERROR) return ERROR;
+    if (format->type == DBF_STRING) return size;
+    return OK;
 }
 
 // epicsTimerNotify virtual method ///////////////////////////////////////
@@ -1163,6 +1163,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
     int status;
     const char* putfunc;
     format_s fmt;
+    unsigned long stringsize = MAX_STRING_SIZE;
 
     fmt.type = dbfMapping[format.type];
     fmt.priv = &format;
@@ -1172,10 +1173,18 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         // to field of this or other record.
         StreamBuffer fieldBuffer;
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
-        long nord;
-        long nelem = pdbaddr->no_elements;
-        size_t size = nelem * dbValueSize(fmt.type);
-        buffer = fieldBuffer.clear().reserve(size);
+        size_t size;
+        unsigned long nord;
+        unsigned long nelem = pdbaddr->no_elements;
+        if (format.type == string_format &&
+            (pdbaddr->field_type == DBF_CHAR || pdbaddr->field_type == DBF_UCHAR))
+        {
+            // string to char array
+            size = nelem;
+        }
+        else
+            size = nelem * dbValueSize(fmt.type);
+        buffer = fieldBuffer.clear().reserve(size);  // maybe write to field directly in case types match?
         for (nord = 0; nord < nelem; nord++)
         {
             debug("Stream::matchValue(%s): buffer before: %s\n",
@@ -1232,24 +1241,27 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 }
                 case string_format:
                 {
-                    if (pdbaddr->field_type == DBF_CHAR)
+                    if (pdbaddr->field_type == DBF_CHAR ||
+                        pdbaddr->field_type == DBF_UCHAR)
                     {
                         // string to char array
-                        consumed = scanValue(format, buffer, nelem);
+                        stringsize = nelem;
+                        consumed = scanValue(format, buffer, stringsize);
                         debug("Stream::matchValue(%s): %s.%s = \"%.*s\"\n",
                                 name(), pdbaddr->precord->name,
                                 ((dbFldDes*)pdbaddr->pfldDes)->name,
                                 (int)consumed, buffer);
-                        nord = nelem;
+                        nord = nelem; // this shortcuts the loop
                     }
                     else
                     {
+                        stringsize = MAX_STRING_SIZE;
                         consumed = scanValue(format,
-                            buffer+MAX_STRING_SIZE*nord, MAX_STRING_SIZE);
+                            buffer+MAX_STRING_SIZE*nord, stringsize);
                         debug("Stream::matchValue(%s): %s.%s[%li] = \"%.*s\"\n",
                                 name(), pdbaddr->precord->name,
                                 ((dbFldDes*)pdbaddr->pfldDes)->name,
-                                nord, MAX_STRING_SIZE, buffer+MAX_STRING_SIZE*nord);
+                                nord, (int)stringsize, buffer+MAX_STRING_SIZE*nord);
                     }
                     break;
                 }
@@ -1290,7 +1302,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             /* convert from Unix epoch (1 Jan 1970) to EPICS epoch (1 Jan 1990) */
             dval = dval-631152000u;
             pdbaddr->precord->time.secPastEpoch = (long)dval;
-            // rouding: we don't have 9 digits precision
+            // rounding: we don't have 9 digits precision
             // in a double of today's number of seconds
             pdbaddr->precord->time.nsec = (long)((dval-(long)dval)*1e6)*1000;
             debug("Stream::matchValue(%s): writing %i.%i to %s.TIME field\n",
@@ -1307,10 +1319,11 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
 #endif
         }
         if (format.type == string_format &&
-            (pdbaddr->field_type == DBF_CHAR || pdbaddr->field_type == DBF_UCHAR))
+            (pdbaddr->field_type == DBF_CHAR ||
+            pdbaddr->field_type == DBF_UCHAR))
         {
             /* write strings to [U]CHAR arrays */
-            nord = consumed;
+            nord = stringsize;
             fmt.type = DBF_CHAR;
         }
         if (pdbaddr->precord == record || INIT_RUN)
@@ -1349,25 +1362,26 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 case DBF_ULONG:
                 case DBF_LONG:
                 case DBF_ENUM:
-                    error("%s: %s(%s.%s, %s, %li) failed\n",
+                    error("%s: %s(%s.%s, %s, %li, %lu) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,
-                        lval);
+                        lval, nord);
                     return false;
                 case DBF_DOUBLE:
-                    error("%s: %s(%s.%s, %s, %#g) failed\n",
+                    error("%s: %s(%s.%s, %s, %#g, %lu) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,
-                        dval);
+                        dval, nord);
                     return false;
                 case DBF_STRING:
-                    error("%s: %s(%s.%s, %s, \"%.*s\") failed\n",
+                case DBF_CHAR:
+                    error("%s: %s(%s.%s, %s, \"%.*s\", %lu) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,
-                        (int)consumed, buffer);
+                        (int)consumed, buffer, nord);
                     return false;
                 default:
                     return false;

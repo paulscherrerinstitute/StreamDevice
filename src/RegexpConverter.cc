@@ -38,8 +38,8 @@
 class RegexpConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat& fmt, StreamBuffer&, const char*&, bool);
-    int scanString(const StreamFormat& fmt, const char*, char*, size_t);
-    int scanPseudo(const StreamFormat& fmt, StreamBuffer& input, long& cursor);
+    long scanString(const StreamFormat& fmt, const char*, char*, unsigned long&);
+    long scanPseudo(const StreamFormat& fmt, StreamBuffer& input, long& cursor);
     bool printPseudo(const StreamFormat& fmt, StreamBuffer& output);
 };
 
@@ -54,7 +54,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     if (fmt.prec > 9)
     {
-        error("Subexpression index %d too big (>9)\n", fmt.prec);
+        error("Subexpression index %ld too big (>9)\n", fmt.prec);
         return false;
     }    
 
@@ -115,14 +115,13 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     return string_format;
 }
 
-int RegexpConverter::
+long RegexpConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, size_t maxlen)
+    char* value, unsigned long& size)
 {
     int ovector[30];
     int rc;
     unsigned int l;
-    
     const char* info = fmt.info;
     pcre* code = extract<pcre*>(info);
     int length = fmt.width > 0 ? fmt.width : strlen(input);
@@ -141,17 +140,18 @@ scanString(const StreamFormat& fmt, const char* input,
     if (fmt.flags & skip_flag) return ovector[subexpr*2+1];
 
     l = ovector[subexpr*2+1] - ovector[subexpr*2];
-    if (l >= maxlen) {
+    if (l >= size) {
         if (!(fmt.flags & sign_flag)) {
             error("Regexp: Matching string \"%s\" too long (%d>%ld bytes). You may want to try the + flag: \"%%+/.../\"\n",
                 StreamBuffer(input + ovector[subexpr*2],l).expand()(),
-                l, (long)maxlen-1);
+                l, (long)size-1);
             return -1;
         }
-        l = maxlen-1;
+        l = size-1;
     }
     memcpy(value, input + ovector[subexpr*2], l);
     value[l] = '\0';
+    size = l+1; // update number of bytes written to value
     return ovector[1]; // consume input until end of match 
 }
 
@@ -159,8 +159,8 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
 {
     const char* subst = fmt.info;
     pcre* code = extract<pcre*>(subst);
-    long length;
-    int rc, l, c, r, rl, n;
+    unsigned long length, c;
+    int rc, l, r, rl, n;
     int ovector[30];
     StreamBuffer s;
 
@@ -176,7 +176,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
     for (c = 0, n = 1; c < length; n++)
     {
         rc = pcre_exec(code, NULL, buffer(start+c), length-c, 0, 0, ovector, 30);
-        debug("pcre_exec match \"%.*s\" result = %d\n", (int)length-c, buffer(start+c), rc);
+        debug("pcre_exec match \"%.*s\" result = %d\n", (int)(length-c), buffer(start+c), rc);
         if (rc < 0) // no match 
             return;
             
@@ -229,7 +229,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
     }
 }
 
-int RegexpConverter::
+long RegexpConverter::
 scanPseudo(const StreamFormat& fmt, StreamBuffer& input, long& cursor)
 {
     /* re-write input buffer */

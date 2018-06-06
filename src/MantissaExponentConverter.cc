@@ -39,7 +39,7 @@
 class MantissaExponentConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
-    virtual int scanDouble(const StreamFormat&, const char*, double&);
+    virtual long scanDouble(const StreamFormat&, const char*, double&);
     virtual bool printDouble(const StreamFormat&, StreamBuffer&, double);
 };
 
@@ -50,7 +50,7 @@ parse(const StreamFormat&, StreamBuffer&,
     return double_format;
 }
 
-int MantissaExponentConverter::
+long MantissaExponentConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
     int mantissa;

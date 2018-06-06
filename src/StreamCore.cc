@@ -1215,6 +1215,7 @@ normal_format:
                 {
                     long ldummy;
                     double ddummy;
+                    long unsigned size=0;
                     switch (fmt.type)
                     {
                         case unsigned_format:
@@ -1229,7 +1230,7 @@ normal_format:
                             break;
                         case string_format:
                             consumed = StreamFormatConverter::find(fmt.conv)->
-                                scanString(fmt, inputLine(consumedInput), NULL, 0);
+                                scanString(fmt, inputLine(consumedInput), NULL, size);
                             break;
                         case pseudo_format:
                             // pass complete input
@@ -1482,7 +1483,7 @@ scanValue(const StreamFormat& fmt, long& value)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && consumed != fmt.width) return -1;
+    if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %li\n",
         name(), value);
@@ -1514,7 +1515,7 @@ scanValue(const StreamFormat& fmt, double& value)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && (consumed != (fmt.width + fmt.prec + 1))) return -1;
+    if (fmt.flags & fix_width_flag && ((unsigned long)consumed != (fmt.width + fmt.prec + 1))) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %#g\n",
         name(), value);
@@ -1523,7 +1524,7 @@ scanValue(const StreamFormat& fmt, double& value)
 }
 
 long StreamCore::
-scanValue(const StreamFormat& fmt, char* value, long maxlen)
+scanValue(const StreamFormat& fmt, char* value, unsigned long& size)
 {
     if (fmt.type != string_format)
     {
@@ -1531,13 +1532,12 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
             name(), fmt.conv);
         return -1;
     }
-    if (maxlen < 0) maxlen = 0;
     flags |= ScanTried;
     if (!matchSeparator()) return -1;
     long consumed = StreamFormatConverter::find(fmt.conv)->
-        scanString(fmt, inputLine(consumedInput), value, maxlen);
-    debug("StreamCore::scanValue(%s, format=%%%c, char*, maxlen=%ld) input=\"%s\"\n",
-        name(), fmt.conv, maxlen, inputLine.expand(consumedInput)());
+        scanString(fmt, inputLine(consumedInput), value, size);
+    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%ld) input=\"%s\"\n",
+        name(), fmt.conv, size, inputLine.expand(consumedInput)());
     if (consumed < 0)
     {
         if (fmt.flags & default_flag)
@@ -1547,11 +1547,11 @@ scanValue(const StreamFormat& fmt, char* value, long maxlen)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && consumed != fmt.width) return -1;
+    if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
     if (consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",
-        name(), StreamBuffer(value, maxlen).expand()());
+        name(), StreamBuffer(value, size).expand()());
 #endif
     flags |= GotValue;
     return consumed;

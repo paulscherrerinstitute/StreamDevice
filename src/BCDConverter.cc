@@ -27,7 +27,7 @@ class BCDConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    int scanLong(const StreamFormat&, const char*, long&);
+    long scanLong(const StreamFormat&, const char*, long&);
 };
 
 int BCDConverter::
@@ -39,64 +39,65 @@ parse(const StreamFormat& fmt, StreamBuffer&, const char*&, bool)
 bool BCDConverter::
 printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
-    unsigned char bcd[6]={0,0,0,0,0,0}; // sufficient for 2^32
-    int i;
-    int prec = fmt.prec; // number of nibbles
-    if (prec == -1)
-    {
-        prec = 2 * sizeof (value);
-    }
-    int width = (prec + (fmt.flags & sign_flag ? 2 : 1)) / 2;
+    unsigned char bcd;
+    bool neg = false;
+    long i;
+    unsigned long prec = fmt.prec < 0 ? 2 * sizeof(value) : fmt.prec; // number of nibbles
+    unsigned long width = (prec + (fmt.flags & sign_flag ? 2 : 1)) / 2;
     if (fmt.width > width) width = fmt.width;
-    if (fmt.flags & sign_flag && value < 0)
+    if (fmt.flags & sign_flag && value < 0 && prec > 0)
     {
-        // negative BCD value, I hope "F" as "-" is OK
-        bcd[5] = 0xF0;
+        neg = true;
         value = -value;
-    }
-    if (prec > 10) prec = 10;
-    for (i = 0; i < prec; i++)
-    {
-        bcd[i/2] |= (value % 10) << (4 * (i & 1));
-        value /= 10;
     }
     if (fmt.flags & alt_flag)
     {
         // least significant byte first (little endian)
-        for (i = 0; i < (prec + 1) / 2; i++)
+        while (width-- && prec)
         {
-            output.append(bcd[i]);
+            bcd = value%10;
+            if (--prec)
+            {
+                --prec;
+                value /= 10;
+                bcd |= (value%10)<<4;
+                value /= 10;
+            }
+            output.append(bcd);
         }
-        for (; i < width; i++)
-        {
-            output.append('\0');
-        }
-        output[-1] |=  bcd[5];
+        if (width)
+            output.append('\0', width);
+        if (neg) output[-1] |= 0xf0;
     }
     else
     {
         // most significant byte first (big endian)
-        int firstbyte = output.length();
-        for (i = 0; i < width - (prec + 1) / 2; i++)
+        output.append('\0', width);
+        if (neg) output[-width] |= 0xf0;
+        i = 0;
+        while (width-- && prec)
         {
-            output.append('\0');
+            bcd = value%10;
+            if (--prec)
+            {
+                --prec;
+                value /= 10;
+                bcd |= (value%10)<<4;
+                value /= 10;
+            }
+            output[--i]=bcd;
         }
-        for (i = (prec - 1) / 2; i >= 0; i--)
-        {
-            output.append(bcd[i]);
-        }
-        output[firstbyte] |= bcd[5];
     }
     return true;
 }
 
-int BCDConverter::
+long BCDConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
-    int length = 0;
-    int val = 0;
+    long length = 0;
+    long val = 0;
     unsigned char bcd1, bcd10;
-    int width = fmt.width;
+    long width = fmt.width;
     if (width == 0) width = 1;
     if (fmt.flags & alt_flag)
     {
