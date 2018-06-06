@@ -39,21 +39,23 @@ static long readData(dbCommon *record, format_t *format)
     {
         case DBF_DOUBLE:
         {
-            return streamScanf(record, format, &sco->val);
+            if (streamScanf(record, format, &sco->val) == ERROR) return ERROR;
+            return OK;
         }
         case DBF_LONG:
         case DBF_ENUM:
         {
             long lval;
 
-            if (streamScanf(record, format, &lval)) return ERROR;
+            if (streamScanf(record, format, &lval) == ERROR) return ERROR;
             sco->val = lval;
             return OK;
         }
         case DBF_STRING:
         {
-            return (streamScanfN(record, format,
-                sco->sval, sizeof(sco->val)));
+            if ((streamScanfN(record, format,
+                sco->sval, sizeof(sco->val)) == ERROR) return ERROR;
+            return OK;
         }
     }
     return ERROR;

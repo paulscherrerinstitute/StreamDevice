@@ -31,7 +31,7 @@ static long readData(dbCommon *record, format_t *format)
 
     if (format->type == DBF_ULONG || format->type == DBF_LONG)
     {
-        if (streamScanf(record, format, &val)) return ERROR;
+        if (streamScanf(record, format, &val) == ERROR) return ERROR;
         if (mbboD->mask)
         {
             val &= mbboD->mask;

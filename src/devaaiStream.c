@@ -37,7 +37,7 @@ static long readData(dbCommon *record, format_t *format)
         {
             case DBF_DOUBLE:
             {
-                if (streamScanf(record, format, &dval) != OK)
+                if (streamScanf(record, format, &dval) == ERROR)
                 {
                     return aai->nord ? OK : ERROR;
                 }
@@ -61,7 +61,7 @@ static long readData(dbCommon *record, format_t *format)
             case DBF_LONG:
             case DBF_ENUM:
             {
-                if (streamScanf(record, format, &lval) != OK)
+                if (streamScanf(record, format, &lval) == ERROR)
                 {
                     return aai->nord ? OK : ERROR;
                 }
@@ -107,7 +107,7 @@ static long readData(dbCommon *record, format_t *format)
                     case DBF_STRING:
                         if (streamScanfN(record, format,
                             (char *)aai->bptr + aai->nord * MAX_STRING_SIZE,
-                            MAX_STRING_SIZE) != OK)
+                            MAX_STRING_SIZE) == ERROR)
                         {
                             return aai->nord ? OK : ERROR;
                         }
@@ -117,7 +117,7 @@ static long readData(dbCommon *record, format_t *format)
                         memset(aai->bptr, 0, aai->nelm);
                         aai->nord = 0;
                         if (streamScanfN(record, format,
-                            (char *)aai->bptr, aai->nelm) != OK)
+                            (char *)aai->bptr, aai->nelm) == ERROR)
                         {
                             return ERROR;
                         }

@@ -33,7 +33,7 @@ static long readData(dbCommon *record, format_t *format)
         case DBF_ENUM:
         {
             long val;
-            if (streamScanf(record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val) == ERROR) return ERROR;
             li->val = val;
             return OK;
         }

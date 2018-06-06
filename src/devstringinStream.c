@@ -28,7 +28,8 @@ static long readData(dbCommon *record, format_t *format)
 
     if (format->type == DBF_STRING)
     {
-        return streamScanfN(record, format, si->val, sizeof(si->val));
+        if (streamScanfN(record, format, si->val, sizeof(si->val)) == ERROR) return ERROR;
+        return OK;
     }
     return ERROR;
 }

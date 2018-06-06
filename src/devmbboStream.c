@@ -35,7 +35,7 @@ static long readData(dbCommon *record, format_t *format)
         case DBF_ULONG:
         case DBF_LONG:
         {
-            if (streamScanf(record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val) == ERROR) return ERROR;
             /* read VAL or RBV? Look if any value is defined */
             if (mbbo->sdef) for (i=0; i<16; i++)
             {
@@ -52,14 +52,14 @@ static long readData(dbCommon *record, format_t *format)
         }
         case DBF_ENUM:
         {
-            if (streamScanf(record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val) == ERROR) return ERROR;
             mbbo->val = val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
         {
             char buffer[sizeof(mbbo->zrst)];
-            if (streamScanfN(record, format, buffer, sizeof(buffer)))
+            if (streamScanfN(record, format, buffer, sizeof(buffer)) == ERROR)
                 return ERROR;
             for (val = 0; val < 16; val++)
             {

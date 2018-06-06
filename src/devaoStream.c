@@ -32,14 +32,14 @@ static long readData(dbCommon *record, format_t *format)
     {
         case DBF_DOUBLE:
         {
-            if (streamScanf(record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val) == ERROR) return ERROR;
             break;
         }
         case DBF_ULONG:
         case DBF_LONG:
         {
             long rval;
-            if (streamScanf(record, format, &rval)) return ERROR;
+            if (streamScanf(record, format, &rval) == ERROR) return ERROR;
             ao->rbv = rval;
             ao->rval = rval;
             if (ao->linr == 0)
