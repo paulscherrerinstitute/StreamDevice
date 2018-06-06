@@ -25,9 +25,9 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    aaiRecord *aai = (aaiRecord *) record;
+    aaiRecord *aai = (aaiRecord *)record;
     double dval;
     long lval;
 
@@ -37,7 +37,7 @@ static long readData (dbCommon *record, format_t *format)
         {
             case DBF_DOUBLE:
             {
-                if (streamScanf (record, format, &dval) != OK)
+                if (streamScanf(record, format, &dval) != OK)
                 {
                     return aai->nord ? OK : ERROR;
                 }
@@ -50,7 +50,7 @@ static long readData (dbCommon *record, format_t *format)
                         ((epicsFloat32 *)aai->bptr)[aai->nord] = (epicsFloat32)dval;
                         break;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from double to %s\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
@@ -61,7 +61,7 @@ static long readData (dbCommon *record, format_t *format)
             case DBF_LONG:
             case DBF_ENUM:
             {
-                if (streamScanf (record, format, &lval) != OK)
+                if (streamScanf(record, format, &lval) != OK)
                 {
                     return aai->nord ? OK : ERROR;
                 }
@@ -93,7 +93,7 @@ static long readData (dbCommon *record, format_t *format)
                         ((epicsInt8 *)aai->bptr)[aai->nord] = (epicsInt8)lval;
                         break;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from long to %s\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
@@ -105,7 +105,7 @@ static long readData (dbCommon *record, format_t *format)
                 switch (aai->ftvl)
                 {
                     case DBF_STRING:
-                        if (streamScanfN (record, format,
+                        if (streamScanfN(record, format,
                             (char *)aai->bptr + aai->nord * MAX_STRING_SIZE,
                             MAX_STRING_SIZE) != OK)
                         {
@@ -114,9 +114,9 @@ static long readData (dbCommon *record, format_t *format)
                         break;
                     case DBF_CHAR:
                     case DBF_UCHAR:
-                        memset (aai->bptr, 0, aai->nelm);
+                        memset(aai->bptr, 0, aai->nelm);
                         aai->nord = 0;
-                        if (streamScanfN (record, format,
+                        if (streamScanfN(record, format,
                             (char *)aai->bptr, aai->nelm) != OK)
                         {
                             return ERROR;
@@ -128,7 +128,7 @@ static long readData (dbCommon *record, format_t *format)
                         aai->nord = lval+1;
                         return OK;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from string to %s\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
@@ -137,7 +137,7 @@ static long readData (dbCommon *record, format_t *format)
             }
             default:
             {
-                errlogSevPrintf (errlogMajor,
+                errlogSevPrintf(errlogMajor,
                     "readData %s: can't convert from %s to %s\n",
                     record->name, pamapdbfType[format->type].strvalue,
                     pamapdbfType[aai->ftvl].strvalue);
@@ -148,9 +148,9 @@ static long readData (dbCommon *record, format_t *format)
     return OK;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    aaiRecord *aai = (aaiRecord *) record;
+    aaiRecord *aai = (aaiRecord *)record;
     double dval;
     long lval;
     unsigned long nowd;
@@ -197,12 +197,12 @@ static long writeData (dbCommon *record, format_t *format)
                         dval = ((epicsUInt8 *)aai->bptr)[nowd];
                         break;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "writeData %s: can't convert from %s to double\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
                 }
-                if (streamPrintf (record, format, dval))
+                if (streamPrintf(record, format, dval))
                     return ERROR;
                 break;
             }
@@ -240,12 +240,12 @@ static long writeData (dbCommon *record, format_t *format)
                         lval = ((epicsUInt8 *)aai->bptr)[nowd];
                         break;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "writeData %s: can't convert from %s to long\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
                 }
-                if (streamPrintf (record, format, lval))
+                if (streamPrintf(record, format, lval))
                     return ERROR;
                 break;
             }
@@ -254,7 +254,7 @@ static long writeData (dbCommon *record, format_t *format)
                 switch (aai->ftvl)
                 {
                     case DBF_STRING:
-                        if (streamPrintf (record, format,
+                        if (streamPrintf(record, format,
                             ((char *)aai->bptr) + nowd * MAX_STRING_SIZE))
                             return ERROR;
                         break;
@@ -269,12 +269,12 @@ static long writeData (dbCommon *record, format_t *format)
                         {
                             ((char *)aai->bptr)[aai->nelm-1] = 0;
                         }
-                        if (streamPrintf (record, format,
+                        if (streamPrintf(record, format,
                             ((char *)aai->bptr)))
                             return ERROR;
                         return OK;
                     default:
-                        errlogSevPrintf (errlogFatal,
+                        errlogSevPrintf(errlogFatal,
                             "writeData %s: can't convert from %s to string\n",
                             record->name, pamapdbfType[aai->ftvl].strvalue);
                         return ERROR;
@@ -283,7 +283,7 @@ static long writeData (dbCommon *record, format_t *format)
             }
             default:
             {
-                errlogSevPrintf (errlogFatal,
+                errlogSevPrintf(errlogFatal,
                     "writeData %s: can't convert from %s to %s\n",
                     record->name, pamapdbfType[aai->ftvl].strvalue,
                     pamapdbfType[format->type].strvalue);
@@ -294,19 +294,19 @@ static long writeData (dbCommon *record, format_t *format)
     return OK;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    aaiRecord *aai = (aaiRecord *) record;
+    aaiRecord *aai = (aaiRecord *)record;
 
     aai->bptr = calloc(aai->nelm, dbValueSize(aai->ftvl));
     if (aai->bptr == NULL)
     {
-        errlogSevPrintf (errlogFatal,
+        errlogSevPrintf(errlogFatal,
             "initRecord %s: can't allocate memory for data array\n",
             record->name);
         return ERROR;
     }
-    return streamInitRecord (record, &aai->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &aai->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

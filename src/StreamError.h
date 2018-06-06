@@ -42,7 +42,7 @@ __attribute__((__format__(__printf__,1,2)));
 
 inline void StreamVError(const char* fmt, va_list args)
 {
-    StreamVError(0, NULL, fmt, args); 
+    StreamVError(0, NULL, fmt, args);
 }
 
 class StreamDebugClass

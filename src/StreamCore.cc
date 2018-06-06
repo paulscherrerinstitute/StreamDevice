@@ -244,7 +244,7 @@ compile(StreamProtocolParser::Protocol* protocol)
     pollPeriod = 1000;
     inTerminatorDefined = false;
     outTerminatorDefined = false;
-    
+
     unsigned short ignoreExtraInput = false;
     if (!protocol->getEnumVariable("extrainput", ignoreExtraInput,
         extraInputNames))
@@ -383,7 +383,7 @@ compileCommand(StreamProtocolParser::Protocol* protocol,
         buffer.append(disconnect_cmd);
         return true;
     }
-    
+
     error(getLineNumber(command), protocol->filename(),
         "Unknown command name '%s'\n", command);
     return false;
@@ -636,7 +636,7 @@ formatOutput()
     const char* fieldName = NULL;
     const char* formatstring;
     int formatstringlen;
-    
+
     outputLine.clear();
     while ((command = *commandIndex++) != StreamProtocolParser::eos)
     {
@@ -670,7 +670,7 @@ normal_format:
                 }
                 formatstringlen = commandIndex-formatstring;
                 commandIndex++;
-                
+
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
@@ -1016,12 +1016,12 @@ readCallback(StreamIoStatus status,
         if (inputBuffer) unparsedInput = true;
         return 0;
     }
-    
+
     // prepare to parse the input
     const char *commandStart = commandIndex;
     long end = -1;
     long termlen = 0;
-    
+
     if (inTerminator)
     {
         // look for terminator
@@ -1175,9 +1175,9 @@ matchInput()
     char command;
     const char* fieldName = NULL;
     StreamBuffer formatstring;
-    
+
     consumedInput = 0;
-    
+
     while ((command = *commandIndex++) != StreamProtocolParser::eos)
     {
         switch (command)
@@ -1202,7 +1202,7 @@ normal_format:
                 // formatstring <eos> StreamFormat [info]
                 formatstring.clear();
                 commandIndex = StreamProtocolParser::printString(formatstring, commandIndex);
-                
+
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
@@ -1279,7 +1279,7 @@ normal_format:
 #ifndef NO_TEMPORARY
                     debug("StreamCore::matchInput(%s): compare \"%s\" with \"%s\"\n",
                         name(), inputLine.expand(consumedInput,
-                            outputLine.length())(), outputLine.expand()()); 
+                            outputLine.length())(), outputLine.expand()());
 #endif
                     if (inputLine.length() - consumedInput < outputLine.length())
                     {
@@ -1287,7 +1287,7 @@ normal_format:
                         {
                             error("%s: Input \"%s%s\" too short."
                                   " No match for format \"%%%s\" (\"%s\")\n",
-                                name(), 
+                                name(),
                                 inputLine.length() > 20 ? "..." : "",
                                 inputLine.expand(-20)(),
                                 formatstring(),
@@ -1349,7 +1349,7 @@ normal_format:
                     if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
                     {
                         error("%s: Input \"%s%s\" too short.\n",
-                            name(), 
+                            name(),
                             inputLine.length() > 20 ? "..." : "",
                             inputLine.expand(-20)());
 #ifndef NO_TEMPORARY
@@ -1396,7 +1396,7 @@ normal_format:
                 name(), surplus, surplus==1 ? "" : "s",
                 inputLine.expand(consumedInput, 20)(),
                 surplus > 20 ? "..." : "");
-                
+
             if (consumedInput>20)
                 error("%s: after %ld byte%s \"...%s\"\n",
                     name(), consumedInput,

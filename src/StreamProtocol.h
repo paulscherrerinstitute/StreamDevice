@@ -118,7 +118,7 @@ private:
     bool parseAssignment(const char* variable, Protocol&);
     bool parseValue(StreamBuffer& buffer, bool lazy = false);
 
-protected: 
+protected:
     ~StreamProtocolParser(); // get rid of cygnus-2.7.2 compiler warning
 
 public:

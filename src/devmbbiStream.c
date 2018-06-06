@@ -24,9 +24,9 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    mbbiRecord *mbbi = (mbbiRecord *) record;
+    mbbiRecord *mbbi = (mbbiRecord *)record;
     unsigned long val;
     int i;
 
@@ -35,7 +35,7 @@ static long readData (dbCommon *record, format_t *format)
         case DBF_ULONG:
         case DBF_LONG:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             /* read VAL or RBV? Look if any value is defined */
             if (mbbi->sdef) for (i=0; i<16; i++)
             {
@@ -51,14 +51,14 @@ static long readData (dbCommon *record, format_t *format)
         }
         case DBF_ENUM:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             mbbi->val = val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
         {
             char buffer[sizeof(mbbi->zrst)];
-            if (streamScanfN (record, format, buffer, sizeof(buffer)))
+            if (streamScanfN(record, format, buffer, sizeof(buffer)))
                 return ERROR;
             for (val = 0; val < 16; val++)
             {
@@ -73,9 +73,9 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    mbbiRecord *mbbi = (mbbiRecord *) record;
+    mbbiRecord *mbbi = (mbbiRecord *)record;
     long val;
     int i;
 
@@ -94,28 +94,28 @@ static long writeData (dbCommon *record, format_t *format)
                     break;
                 }
             }
-            return streamPrintf (record, format, val);
+            return streamPrintf(record, format, val);
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long)mbbi->val);
+            return streamPrintf(record, format, (long)mbbi->val);
         }
         case DBF_STRING:
         {
             if (mbbi->val >= 16) return ERROR;
-            return streamPrintf (record, format,
+            return streamPrintf(record, format,
                 mbbi->zrst + sizeof(mbbi->zrst) * mbbi->val);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    mbbiRecord *mbbi = (mbbiRecord *) record;
+    mbbiRecord *mbbi = (mbbiRecord *)record;
 
     mbbi->mask <<= mbbi->shft;
-    return streamInitRecord (record, &mbbi->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &mbbi->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

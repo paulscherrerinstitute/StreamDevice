@@ -24,9 +24,9 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    mbboRecord *mbbo = (mbboRecord *) record;
+    mbboRecord *mbbo = (mbboRecord *)record;
     unsigned long val;
     int i;
 
@@ -35,7 +35,7 @@ static long readData (dbCommon *record, format_t *format)
         case DBF_ULONG:
         case DBF_LONG:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             /* read VAL or RBV? Look if any value is defined */
             if (mbbo->sdef) for (i=0; i<16; i++)
             {
@@ -52,14 +52,14 @@ static long readData (dbCommon *record, format_t *format)
         }
         case DBF_ENUM:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             mbbo->val = val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
         {
             char buffer[sizeof(mbbo->zrst)];
-            if (streamScanfN (record, format, buffer, sizeof(buffer)))
+            if (streamScanfN(record, format, buffer, sizeof(buffer)))
                 return ERROR;
             for (val = 0; val < 16; val++)
             {
@@ -74,9 +74,9 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    mbboRecord *mbbo = (mbboRecord *) record;
+    mbboRecord *mbbo = (mbboRecord *)record;
     unsigned long val;
     int i;
 
@@ -97,28 +97,28 @@ static long writeData (dbCommon *record, format_t *format)
                     break;
                 }
             }
-            return streamPrintf (record, format, val);
+            return streamPrintf(record, format, val);
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long)mbbo->val);
+            return streamPrintf(record, format, (long)mbbo->val);
         }
         case DBF_STRING:
         {
             if (mbbo->val >= 16) return ERROR;
-            return streamPrintf (record, format,
+            return streamPrintf(record, format,
                 mbbo->zrst + sizeof(mbbo->zrst) * mbbo->val);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    mbboRecord *mbbo = (mbboRecord *) record;
+    mbboRecord *mbbo = (mbboRecord *)record;
 
     mbbo->mask <<= mbbo->shft;
-    return streamInitRecord (record, &mbbo->out, readData, writeData);
+    return streamInitRecord(record, &mbbo->out, readData, writeData);
 }
 
 struct {

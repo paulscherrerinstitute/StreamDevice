@@ -23,18 +23,18 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    int64outRecord *i64o = (int64outRecord *) record;
+    int64outRecord *i64o = (int64outRecord *)record;
 
     switch (format->type)
     {
         case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
-        {       
+        {
             long val;
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             if (format->type == DBF_LONG)
                 i64o->val = val;
             else
@@ -45,25 +45,25 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    int64outRecord *i64o = (int64outRecord *) record;
+    int64outRecord *i64o = (int64outRecord *)record;
 
     switch (format->type)
     {
         case DBF_ULONG:
         case DBF_ENUM:
         case DBF_LONG:
-            return streamPrintf (record, format, (long)i64o->val);
+            return streamPrintf(record, format, (long)i64o->val);
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    int64outRecord *i64o = (int64outRecord *) record;
+    int64outRecord *i64o = (int64outRecord *)record;
 
-    return streamInitRecord (record, &i64o->out, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &i64o->out, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

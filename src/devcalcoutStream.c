@@ -22,15 +22,15 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    calcoutRecord *co = (calcoutRecord *) record;
+    calcoutRecord *co = (calcoutRecord *)record;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            return streamScanf (record, format, &co->val);
+            return streamScanf(record, format, &co->val);
         }
         case DBF_ULONG:
         case DBF_LONG:
@@ -38,7 +38,7 @@ static long readData (dbCommon *record, format_t *format)
         {
             long lval;
 
-            if (streamScanf (record, format, &lval)) return ERROR;
+            if (streamScanf(record, format, &lval)) return ERROR;
             if (format->type == DBF_LONG)
                 co->val = lval;
             else
@@ -49,34 +49,34 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    calcoutRecord *co = (calcoutRecord *) record;
+    calcoutRecord *co = (calcoutRecord *)record;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            return streamPrintf (record, format, co->oval);
+            return streamPrintf(record, format, co->oval);
         }
         case DBF_ULONG:
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (unsigned long)co->oval);
+            return streamPrintf(record, format, (unsigned long)co->oval);
         }
         case DBF_LONG:
         {
-            return streamPrintf (record, format, (long)co->oval);
+            return streamPrintf(record, format, (long)co->oval);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    calcoutRecord *co = (calcoutRecord *) record;
+    calcoutRecord *co = (calcoutRecord *)record;
 
-    return streamInitRecord (record, &co->out, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &co->out, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

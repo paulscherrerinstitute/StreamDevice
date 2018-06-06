@@ -25,68 +25,68 @@
    scalcout record has a bug: it never calls init_record
    of the device support.
    Fix: sCalcoutRecord.c, end of init_record() add
-  
+
         if(pscalcoutDSET->init_record ) {
-	    return (*pscalcoutDSET->init_record)(pcalc);
+            return (*pscalcoutDSET->init_record)(pcalc);
         }
 */
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    scalcoutRecord *sco = (scalcoutRecord *) record;
+    scalcoutRecord *sco = (scalcoutRecord *)record;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            return streamScanf (record, format, &sco->val);
+            return streamScanf(record, format, &sco->val);
         }
         case DBF_LONG:
         case DBF_ENUM:
         {
             long lval;
 
-            if (streamScanf (record, format, &lval)) return ERROR;
+            if (streamScanf(record, format, &lval)) return ERROR;
             sco->val = lval;
             return OK;
         }
         case DBF_STRING:
         {
-            return (streamScanfN (record, format,
+            return (streamScanfN(record, format,
                 sco->sval, sizeof(sco->val)));
         }
     }
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    scalcoutRecord *sco = (scalcoutRecord *) record;
+    scalcoutRecord *sco = (scalcoutRecord *)record;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            return streamPrintf (record, format, sco->oval);
+            return streamPrintf(record, format, sco->oval);
         }
         case DBF_LONG:
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long)sco->oval);
+            return streamPrintf(record, format, (long)sco->oval);
         }
         case DBF_STRING:
         {
-            return streamPrintf (record, format, sco->osv);
+            return streamPrintf(record, format, sco->osv);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    scalcoutRecord *sco = (scalcoutRecord *) record;
+    scalcoutRecord *sco = (scalcoutRecord *)record;
 
-    return streamInitRecord (record, &sco->out, readData, writeData);
+    return streamInitRecord(record, &sco->out, readData, writeData);
 }
 
 struct {

@@ -22,7 +22,7 @@ endif
 # Do you have synApps and want support for scalcout?
 # Then define CALC or SYNAPPS in your RELEASE file
 # pointing to the 'calc' module of synApps.
-# Older 'calc' versions have a cross reference on 
+# Older 'calc' versions have a cross reference on
 # 'sscan' and/or 'genSub', so you may have to build them first.
 # Up to version 2-6 (synApps 5-1) the 'calc' module needs a fix.
 # See doc/scalcout.html for details.
@@ -71,7 +71,7 @@ ifneq ($(words $(PCRE) $(PCRE_LIB) $(PCRE_INCLUDE)),0)
 FORMATS += Regexp
 endif
 
-# Want a loadable module? 
+# Want a loadable module?
 # For Tornado 2.0.2, a fix is needed in the
 # registerRecordDeviceDriver.pl script in base:
 # at the end replace the line "IoccrfReg iocshReg;"

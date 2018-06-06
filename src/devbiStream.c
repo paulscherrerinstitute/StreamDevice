@@ -23,9 +23,9 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    biRecord *bi = (biRecord *) record;
+    biRecord *bi = (biRecord *)record;
     unsigned long val;
 
     switch (format->type)
@@ -33,21 +33,21 @@ static long readData (dbCommon *record, format_t *format)
         case DBF_ULONG:
         case DBF_LONG:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             if (bi->mask) val &= bi->mask;
             bi->rval = val;
             return OK;
         }
         case DBF_ENUM:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             bi->val = (val != 0);
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
         {
             char buffer[sizeof(bi->znam)];
-            if (streamScanfN (record, format, buffer, sizeof(buffer)))
+            if (streamScanfN(record, format, buffer, sizeof(buffer)))
                 return ERROR;
             if (strcmp (bi->znam, buffer) == 0)
             {
@@ -64,35 +64,35 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    biRecord *bi = (biRecord *) record;
+    biRecord *bi = (biRecord *)record;
 
     switch (format->type)
     {
         case DBF_ULONG:
         case DBF_LONG:
         {
-            return streamPrintf (record, format, bi->rval);
+            return streamPrintf(record, format, bi->rval);
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long)bi->val);
+            return streamPrintf(record, format, (long)bi->val);
         }
         case DBF_STRING:
         {
-            return streamPrintf (record, format,
+            return streamPrintf(record, format,
                 bi->val ? bi->onam : bi->znam);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    biRecord *bi = (biRecord *) record;
+    biRecord *bi = (biRecord *)record;
 
-    return streamInitRecord (record, &bi->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &bi->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

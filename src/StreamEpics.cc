@@ -192,8 +192,8 @@ long streamReloadSub()
 
 long streamReload(const char* recordname)
 {
-    DBENTRY	dbentry;
-    dbCommon*   record;
+    DBENTRY dbentry;
+    dbCommon* record;
     long status;
 
     if(!pdbbase) {
@@ -748,7 +748,7 @@ process()
         {
             debug("Stream::process(%s) error status=%s (%d)\n",
                 name(),
-                status >= 0 && status < ALARM_NSTATUS ? 
+                status >= 0 && status < ALARM_NSTATUS ?
                     epicsAlarmConditionStrings[status] : "ERROR",
                 status);
             (void) recGblSetSevr(record, status, INVALID_ALARM);
@@ -826,7 +826,7 @@ scan(format_t *format, void* value, size_t maxStringSize)
             error("INTERNAL ERROR (%s): Illegal format type\n", name());
             return false;
     }
-    if (currentValueLength < 0) 
+    if (currentValueLength < 0)
     {
         currentValueLength = 0;
         return false;
@@ -1027,12 +1027,12 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
         // from field of this or other record.
         StreamBuffer fieldBuffer;
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
-        
+
         /* Handle time stamps special. %T converter takes double. */
         if (strcmp(((dbFldDes*)pdbaddr->pfldDes)->name, "TIME") == 0)
         {
             double time;
-            
+
             if (format.type != double_format)
             {
                 error ("%s: can only read double values from TIME field\n",
@@ -1071,7 +1071,7 @@ formatValue(const StreamFormat& format, const void* fieldaddress)
             fmt.type = DBF_CHAR;
             size = nelem;
         }
-        
+
         char* buffer = fieldBuffer.clear().reserve(size);
 
         if (dbGet(pdbaddr, fmt.type, buffer,

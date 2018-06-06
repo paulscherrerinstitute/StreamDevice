@@ -23,14 +23,14 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *) record;
+    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *)record;
     unsigned long val;
 
     if (format->type == DBF_ULONG || format->type == DBF_LONG)
     {
-        if (streamScanf (record, format, &val)) return ERROR;
+        if (streamScanf(record, format, &val)) return ERROR;
         if (mbbiD->mask)
         {
             val &= mbbiD->mask;
@@ -47,26 +47,26 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *) record;
+    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *)record;
     unsigned long val;
 
     if (format->type == DBF_ULONG || format->type == DBF_LONG)
     {
         if (mbbiD->mask) val = mbbiD->rval & mbbiD->mask;
         else val = mbbiD->val;
-        return streamPrintf (record, format, val);
+        return streamPrintf(record, format, val);
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *) record;
+    mbbiDirectRecord *mbbiD = (mbbiDirectRecord *)record;
 
     mbbiD->mask <<= mbbiD->shft;
-    return streamInitRecord (record, &mbbiD->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &mbbiD->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

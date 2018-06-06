@@ -130,7 +130,7 @@ public:
 
     StreamBuffer& append(const StreamBuffer& s)
         {return append(s.buffer+s.offs, s.len);}
-        
+
     // operator += alias for append
     StreamBuffer& operator+=(char c)
         {return append(c);}
@@ -224,7 +224,7 @@ public:
 // expand: create copy of StreamBuffer where all nonprintable characters
 // are replaced by <xx> with xx being the hex code of the characters
     StreamBuffer expand(ssize_t start, ssize_t length) const;
-    
+
     StreamBuffer expand(ssize_t start=0) const
         {return expand(start, len);}
 

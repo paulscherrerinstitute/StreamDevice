@@ -117,7 +117,7 @@ public:
 
 protected:
     StreamBusInterface(Client* client);
-    
+
 // map client functions into StreamBusInterface namespace
     void lockCallback(StreamIoStatus status)
         { client->lockCallback(status); }
@@ -178,7 +178,7 @@ protected:
     StreamBusInterfaceRegistrarBase(const char* name);
     virtual ~StreamBusInterfaceRegistrarBase();
 };
-    
+
 template <class C>
 class StreamBusInterfaceRegistrar : protected StreamBusInterfaceRegistrarBase
 {

@@ -25,30 +25,30 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    aiRecord *ai = (aiRecord *) record;
+    aiRecord *ai = (aiRecord *)record;
     double val;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             break;
         }
         case DBF_ULONG:
         case DBF_LONG:
         {
             long rval;
-            if (streamScanf (record, format, &rval)) return ERROR;
+            if (streamScanf(record, format, &rval)) return ERROR;
             ai->rval = rval;
             if (ai->linr == 0)
             {
                 /* allow integers with more than 32 bits */
                 if (format->type == DBF_ULONG)
                     val = (unsigned long)rval;
-                else    
+                else
                     val = rval;
                 break;
             }
@@ -65,9 +65,9 @@ static long readData (dbCommon *record, format_t *format)
     return DO_NOT_CONVERT;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    aiRecord *ai = (aiRecord *) record;
+    aiRecord *ai = (aiRecord *)record;
 
     double val = ai->val - ai->aoff;
     if (ai->aslo != 0.0 && ai->aslo != 1.0) val /= ai->aslo;
@@ -76,35 +76,35 @@ static long writeData (dbCommon *record, format_t *format)
     {
         case DBF_DOUBLE:
         {
-            return streamPrintf (record, format, val);
+            return streamPrintf(record, format, val);
         }
         case DBF_ULONG:
         {
             if (ai->linr == 0)
             {
                 /* allow more bits than 32 */
-                return streamPrintf (record, format, (unsigned long)val);
+                return streamPrintf(record, format, (unsigned long)val);
             }
-            return streamPrintf (record, format, (unsigned long)ai->rval);
+            return streamPrintf(record, format, (unsigned long)ai->rval);
         }
         case DBF_LONG:
         {
             if (ai->linr == 0)
             {
                 /* allow more bits than 32 */
-                return streamPrintf (record, format, (long)val);
+                return streamPrintf(record, format, (long)val);
             }
-            return streamPrintf (record, format, (long)ai->rval);
+            return streamPrintf(record, format, (long)ai->rval);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    aiRecord *ai = (aiRecord *) record;
+    aiRecord *ai = (aiRecord *)record;
 
-    return streamInitRecord (record, &ai->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &ai->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 

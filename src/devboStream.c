@@ -23,9 +23,9 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    boRecord *bo = (boRecord *) record;
+    boRecord *bo = (boRecord *)record;
     unsigned long val;
 
     switch (format->type)
@@ -33,7 +33,7 @@ static long readData (dbCommon *record, format_t *format)
         case DBF_ULONG:
         case DBF_LONG:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             if (bo->mask) val &= bo->mask;
             bo->rbv = val;
             if (INIT_RUN) bo->rval = val;
@@ -41,14 +41,14 @@ static long readData (dbCommon *record, format_t *format)
         }
         case DBF_ENUM:
         {
-            if (streamScanf (record, format, &val)) return ERROR;
+            if (streamScanf(record, format, &val)) return ERROR;
             bo->val = (val != 0);
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
         {
             char buffer[sizeof(bo->znam)];
-            if (streamScanfN (record, format, buffer, sizeof(buffer)))
+            if (streamScanfN(record, format, buffer, sizeof(buffer)))
                 return ERROR;
             if (strcmp (bo->znam, buffer) == 0)
             {
@@ -65,35 +65,35 @@ static long readData (dbCommon *record, format_t *format)
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    boRecord *bo = (boRecord *) record;
+    boRecord *bo = (boRecord *)record;
 
     switch (format->type)
     {
         case DBF_ULONG:
         case DBF_LONG:
         {
-            return streamPrintf (record, format, bo->rval);
+            return streamPrintf(record, format, bo->rval);
         }
         case DBF_ENUM:
         {
-            return streamPrintf (record, format, (long)bo->val);
+            return streamPrintf(record, format, (long)bo->val);
         }
         case DBF_STRING:
         {
-            return streamPrintf (record, format,
+            return streamPrintf(record, format,
                 bo->val ? bo->onam : bo->znam);
         }
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    boRecord *bo = (boRecord *) record;
+    boRecord *bo = (boRecord *)record;
 
-    return streamInitRecord (record, &bo->out, readData, writeData);
+    return streamInitRecord(record, &bo->out, readData, writeData);
 }
 
 struct {

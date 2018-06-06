@@ -22,33 +22,33 @@
 #include "epicsExport.h"
 #include "devStream.h"
 
-static long readData (dbCommon *record, format_t *format)
+static long readData(dbCommon *record, format_t *format)
 {
-    stringinRecord *si = (stringinRecord *) record;
+    stringinRecord *si = (stringinRecord *)record;
 
     if (format->type == DBF_STRING)
     {
-        return streamScanfN (record, format, si->val, sizeof(si->val));
+        return streamScanfN(record, format, si->val, sizeof(si->val));
     }
     return ERROR;
 }
 
-static long writeData (dbCommon *record, format_t *format)
+static long writeData(dbCommon *record, format_t *format)
 {
-    stringinRecord *si = (stringinRecord *) record;
+    stringinRecord *si = (stringinRecord *)record;
 
     if (format->type == DBF_STRING)
     {
-        return streamPrintf (record, format, si->val);
+        return streamPrintf(record, format, si->val);
     }
     return ERROR;
 }
 
-static long initRecord (dbCommon *record)
+static long initRecord(dbCommon *record)
 {
-    stringinRecord *si = (stringinRecord *) record;
+    stringinRecord *si = (stringinRecord *)record;
 
-    return streamInitRecord (record, &si->inp, readData, writeData) == ERROR ?
+    return streamInitRecord(record, &si->inp, readData, writeData) == ERROR ?
         ERROR : OK;
 }
 
