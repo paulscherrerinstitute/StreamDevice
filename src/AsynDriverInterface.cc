@@ -562,13 +562,7 @@ connectToAsynPort()
         clientName(), connected ? "already" : "not yet");
     if (!connected)
     {
-        printf ("%s: AsynDriverInterface::connectToAsynPort: "
-            "pasynCommon->connect(%p, %p)\n",
-            clientName(), pvtCommon, pasynUser);
         status = pasynCommon->connect(pvtCommon, pasynUser);
-        printf ("%s: AsynDriverInterface::connectToAsynPort: "
-            "pasynCommon->connect(%p, %p) = %s\n",
-            clientName(), pvtCommon, pasynUser, asynStatusStr[status]);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
                 "status=%s\n",
             clientName(), asynStatusStr[status]);
