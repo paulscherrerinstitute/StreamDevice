@@ -53,7 +53,7 @@ extern DBBASE *pdbbase;
 
 } // extern "C"
 
-#else
+#else // !EPICS_3_13
 
 #include "epicsTimer.h"
 #include "epicsMutex.h"
@@ -64,16 +64,14 @@ extern DBBASE *pdbbase;
 #include "registryFunction.h"
 #include "iocsh.h"
 
-#if EPICS_MODIFICATION<9
+#if (!defined VERSION_INT && EPICS_MODIFICATION<9)
 // iocshCmd() is missing in iocsh.h (up to R3.14.8.2)
 // To build with win32-x86, you MUST fix iocsh.h.
 // Move the declaration below to iocsh.h and rebuild base.
 extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #endif
 
-#include "epicsExport.h"
-
-#endif
+#endif // !EPICS_3_13
 
 #include "devStream.h"
 
@@ -179,10 +177,8 @@ public:
 
 
 // shell functions ///////////////////////////////////////////////////////
-#ifndef EPICS_3_13
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
-#endif
 
 // for subroutine record
 long streamReloadSub()
@@ -274,23 +270,16 @@ static void streamRegistrar ()
 }
 
 epicsExportRegistrar(streamRegistrar);
-#endif
+#endif // !EPICS_3_13
 
 // driver support ////////////////////////////////////////////////////////
 
-struct stream_drvsup {
-    long number;
-    long (*report)(int);
-    long (*init)();
-} stream = {
+struct drvet stream = {
     2,
-    Stream::report,
-    Stream::drvInit
+    (DRVSUPFUN) Stream::report,
+    (DRVSUPFUN) Stream::drvInit
 };
-
-#ifndef EPICS_3_13
 epicsExportAddress(drvet, stream);
-#endif
 
 #ifdef EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, int size)
@@ -307,7 +296,7 @@ void streamEpicsPrintTimestamp(char* buffer, int size)
     tlen = strlen(buffer);
     sprintf(buffer+tlen, " %.*s", size-tlen-2, taskName(0));
 }
-#else
+#else // !EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, int size)
 {
     int tlen;
@@ -315,7 +304,7 @@ void streamEpicsPrintTimestamp(char* buffer, int size)
     tlen = tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%06f");
     sprintf(buffer+tlen, " %.*s", size-tlen-2, epicsThreadGetNameSelf());
 }
-#endif
+#endif // !EPICS_3_13
 
 long Stream::
 report(int interest)

@@ -59,10 +59,6 @@ extern "C" {
 }
 #endif
 
-#ifndef EPICS_3_13
-#include "shareLib.h"
-#endif
-
 typedef const struct format_s {
     unsigned char type;
     const struct StreamFormat* priv;
@@ -111,6 +107,12 @@ epicsShareFunc long streamScanfN(dbCommon *record, format_t *format,
 
 #ifdef __cplusplus
 }
+#endif
+
+#ifndef EPICS_3_13
+#include "epicsExport.h"
+#else
+#define epicsExportAddress(a,b) extern int dummy
 #endif
 
 #endif

@@ -18,7 +18,6 @@
 ***************************************************************/
 
 #include "int64inRecord.h"
-#include "epicsExport.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)

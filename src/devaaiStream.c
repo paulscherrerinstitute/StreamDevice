@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include "errlog.h"
 #include "aaiRecord.h"
-#include "epicsExport.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)

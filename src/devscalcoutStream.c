@@ -18,7 +18,6 @@
 ***************************************************************/
 
 #include "sCalcoutRecord.h"
-#include "epicsExport.h"
 #include "devStream.h"
 
 /* Up to version 2-6-1 of the SynApps calc module
