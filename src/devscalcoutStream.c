@@ -53,7 +53,7 @@ static long readData(dbCommon *record, format_t *format)
         case DBF_STRING:
         {
             if ((streamScanfN(record, format,
-                sco->sval, sizeof(sco->val)) == ERROR) return ERROR;
+                sco->sval, sizeof(sco->val)) == ERROR)) return ERROR;
             return OK;
         }
     }
