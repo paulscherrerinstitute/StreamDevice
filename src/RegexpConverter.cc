@@ -38,8 +38,8 @@
 class RegexpConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat& fmt, StreamBuffer&, const char*&, bool);
-    long scanString(const StreamFormat& fmt, const char*, char*, unsigned long&);
-    long scanPseudo(const StreamFormat& fmt, StreamBuffer& input, long& cursor);
+    ssize_t scanString(const StreamFormat& fmt, const char*, char*, unsigned long&);
+    ssize_t scanPseudo(const StreamFormat& fmt, StreamBuffer& input, size_t& cursor);
     bool printPseudo(const StreamFormat& fmt, StreamBuffer& output);
 };
 
@@ -56,7 +56,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     {
         error("Subexpression index %ld too big (>9)\n", fmt.prec);
         return false;
-    }    
+    }
 
     StreamBuffer pattern;
     while (*source != '/')
@@ -81,10 +81,10 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     source++;
     debug("regexp = \"%s\"\n", pattern.expand()());
-    
+
     const char* errormsg;
     int eoffset;
-    pcre* code = pcre_compile(pattern(), 0, 
+    pcre* code = pcre_compile(pattern(), 0,
         &errormsg, &eoffset, NULL);
     if (!code)
     {
@@ -96,7 +96,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     if (fmt.flags & alt_flag)
     {
         StreamBuffer subst;
-        debug("check for subst in \"%s\"\n", StreamBuffer(source).expand()());        
+        debug("check for subst in \"%s\"\n", StreamBuffer(source).expand()());
         while (*source != '/')
         {
             if (!*source) {
@@ -115,9 +115,9 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     return string_format;
 }
 
-long RegexpConverter::
+ssize_t RegexpConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, unsigned long& size)
+    char* value, size_t& size)
 {
     int ovector[30];
     int rc;
@@ -126,10 +126,10 @@ scanString(const StreamFormat& fmt, const char* input,
     pcre* code = extract<pcre*>(info);
     int length = fmt.width > 0 ? fmt.width : strlen(input);
     int subexpr = fmt.prec > 0 ? fmt.prec : 0;
-    
+
     debug("input = \"%s\"\n", input);
     debug("length=%d\n", length);
-    
+
     rc = pcre_exec(code, NULL, input, length, 0, 0, ovector, 30);
     debug("pcre_exec match \"%.*s\" result = %d\n", length, input, rc);
     if ((subexpr && rc <= subexpr) || rc < 0)
@@ -152,7 +152,7 @@ scanString(const StreamFormat& fmt, const char* input,
     memcpy(value, input + ovector[subexpr*2], l);
     value[l] = '\0';
     size = l+1; // update number of bytes written to value
-    return ovector[1]; // consume input until end of match 
+    return ovector[1]; // consume input until end of match
 }
 
 static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
@@ -172,14 +172,14 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
 
     debug("regsubst buffer=\"%s\", start=%ld, length=%ld, subst = \"%s\"\n",
         buffer.expand()(), start, length, subst);
-    
+
     for (c = 0, n = 1; c < length; n++)
     {
         rc = pcre_exec(code, NULL, buffer(start+c), length-c, 0, 0, ovector, 30);
         debug("pcre_exec match \"%.*s\" result = %d\n", (int)(length-c), buffer(start+c), rc);
-        if (rc < 0) // no match 
+        if (rc < 0) // no match
             return;
-            
+
         if (!(fmt.flags & sign_flag) && n < fmt.prec) // without + flag
         {
             // do not yet replace this match
@@ -229,8 +229,8 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
     }
 }
 
-long RegexpConverter::
-scanPseudo(const StreamFormat& fmt, StreamBuffer& input, long& cursor)
+ssize_t RegexpConverter::
+scanPseudo(const StreamFormat& fmt, StreamBuffer& input, ssize_t& cursor)
 {
     /* re-write input buffer */
     regsubst(fmt, input, cursor);
