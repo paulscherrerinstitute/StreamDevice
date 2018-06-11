@@ -55,6 +55,10 @@ extern "C" {
 #include "dbAccess.h"
 #include <stdio.h>
 
+#if defined(_WIN32) && !defined(ssize_t)
+#define ssize_t ptrdiff_t
+#endif
+
 #if defined(__cplusplus) && defined(EPICS_3_13)
 }
 #endif
@@ -74,16 +78,16 @@ extern const char StreamVersion [];
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
-epicsShareFunc long streamInit(int after);
-epicsShareFunc long streamInitRecord(dbCommon *record,
+long streamInit(int after);
+long streamInitRecord(dbCommon *record,
     const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData);
-epicsShareFunc long streamReport(int interest);
-epicsShareFunc long streamReadWrite(dbCommon *record);
-epicsShareFunc long streamGetIointInfo(int cmd,
+long streamReport(int interest);
+long streamReadWrite(dbCommon *record);
+long streamGetIointInfo(int cmd,
     dbCommon *record, IOSCANPVT *ppvt);
-epicsShareFunc long streamPrintf(dbCommon *record, format_t *format, ...);
-epicsShareFunc long streamScanfN(dbCommon *record, format_t *format,
+long streamPrintf(dbCommon *record, format_t *format, ...);
+ssize_t streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
 
 /* backward compatibility stuff */

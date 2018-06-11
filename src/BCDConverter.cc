@@ -27,7 +27,7 @@ class BCDConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    long scanLong(const StreamFormat&, const char*, long&);
+    ssize_t scanLong(const StreamFormat&, const char*, long&);
 };
 
 int BCDConverter::
@@ -41,7 +41,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
 {
     unsigned char bcd;
     bool neg = false;
-    long i;
+    ssize_t i;
     unsigned long prec = fmt.prec < 0 ? 2 * sizeof(value) : fmt.prec; // number of nibbles
     unsigned long width = (prec + (fmt.flags & sign_flag ? 2 : 1)) / 2;
     if (fmt.width > width) width = fmt.width;
@@ -73,7 +73,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     {
         // most significant byte first (big endian)
         output.append('\0', width);
-        if (neg) output[-width] |= 0xf0;
+        if (neg) output[-(long)width] |= 0xf0;
         i = 0;
         while (width-- && prec)
         {
@@ -91,10 +91,10 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-long BCDConverter::
+ssize_t BCDConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
-    long length = 0;
+    ssize_t consumed = 0;
     long val = 0;
     unsigned char bcd1, bcd10;
     long width = fmt.width;
@@ -105,7 +105,7 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         int shift = 1;
         while (width--)
         {
-            bcd1 = bcd10 = (unsigned char) input[length++];
+            bcd1 = bcd10 = input[consumed++];
             bcd1 &= 0x0F;
             bcd10 >>= 4;
             if (bcd1 > 9 || shift * bcd1 < bcd1) break;
@@ -128,10 +128,10 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         while (width--)
         {
             long temp;
-            bcd1 = bcd10 = (unsigned char) input[length];
+            bcd1 = bcd10 = input[consumed];
             bcd1 &= 0x0F;
             bcd10 >>= 4;
-            if (length == 0 && fmt.flags & sign_flag && bcd10)
+            if (consumed == 0 && fmt.flags & sign_flag && bcd10)
             {
                 sign = -1;
                 bcd10 = 0;
@@ -140,17 +140,17 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
             temp = val * 100 + (bcd1 + 10 * bcd10);
             if (temp < val)
             {
-                length = 0;
+                consumed = 0;
                 break;
             }
             val = temp;
-            length++;
+            consumed++;
         }
         val *= sign;
     }
-    if (length == 0) return -1;
+    if (consumed == 0) return -1;
     value = val;
-    return length;
+    return consumed;
 }
 
 RegisterConverter (BCDConverter, "D");

@@ -196,7 +196,7 @@ parse(const char* filename, const char* _protocolname)
 {
     protocolname = _protocolname;
     // extract substitutions from protocolname "name(sub1,sub2)"
-    int i = protocolname.find('(');
+    ssize_t i = protocolname.find('(');
     if (i >= 0)
     {
         while (i >= 0)
@@ -635,7 +635,7 @@ formatOutput()
     char command;
     const char* fieldName = NULL;
     const char* formatstring;
-    int formatstringlen;
+    size_t formatstringlen;
 
     outputLine.clear();
     while ((command = *commandIndex++) != StreamProtocolParser::eos)
@@ -1019,8 +1019,8 @@ readCallback(StreamIoStatus status,
 
     // prepare to parse the input
     const char *commandStart = commandIndex;
-    long end = -1;
-    long termlen = 0;
+    ssize_t end = -1;
+    size_t termlen = 0;
 
     if (inTerminator)
     {
@@ -1029,7 +1029,7 @@ readCallback(StreamIoStatus status,
         // do not parse old chunks again or performance decreases to O(n^2)
         // but make sure to get all terminators in multi-line input
 
-        long start;
+        ssize_t start;
         if (unparsedInput)
         {
             // multi-line input sets 'unparsedInput' and removes the line
@@ -1092,7 +1092,7 @@ readCallback(StreamIoStatus status,
                 name());
             flags |= AcceptInput;
             if (maxInput)
-                return maxInput - inputBuffer.length();
+                return (long)(maxInput - inputBuffer.length());
             else
                 return -1;
         }
@@ -1197,7 +1197,7 @@ matchInput()
             {
                 fieldAddress.clear();
 normal_format:
-                int consumed;
+                ssize_t consumed;
                 // code layout:
                 // formatstring <eos> StreamFormat [info]
                 formatstring.clear();
@@ -1215,7 +1215,7 @@ normal_format:
                 {
                     long ldummy;
                     double ddummy;
-                    long unsigned size=0;
+                    size_t size=0;
                     switch (fmt.type)
                     {
                         case unsigned_format:
@@ -1388,7 +1388,7 @@ normal_format:
                 consumedInput++;
         }
     }
-    long surplus = inputLine.length()-consumedInput;
+    size_t surplus = inputLine.length()-consumedInput;
     if (surplus > 0 && !(flags & IgnoreExtraInput))
     {
         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
@@ -1430,8 +1430,8 @@ matchSeparator()
         flags |= Separator;
         return true;
     }
-    long i;
-    long j = consumedInput;
+    size_t i;
+    size_t j = consumedInput;
     for (i = 0; i < separator.length(); i++)
     {
         switch (separator[i])
@@ -1459,7 +1459,7 @@ matchSeparator()
     return true;
 }
 
-long StreamCore::
+ssize_t StreamCore::
 scanValue(const StreamFormat& fmt, long& value)
 {
     if (fmt.type != unsigned_format && fmt.type != signed_format && fmt.type != enum_format)
@@ -1470,7 +1470,7 @@ scanValue(const StreamFormat& fmt, long& value)
     }
     flags |= ScanTried;
     if (!matchSeparator()) return -1;
-    long consumed = StreamFormatConverter::find(fmt.conv)->
+    ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanLong(fmt, inputLine(consumedInput), value);
     debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput)());
@@ -1484,14 +1484,14 @@ scanValue(const StreamFormat& fmt, long& value)
         else return -1;
     }
     if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
-    if (consumed > inputLine.length()-consumedInput) return -1;
+    if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %li\n",
         name(), value);
     flags |= GotValue;
     return consumed;
 }
 
-long StreamCore::
+ssize_t StreamCore::
 scanValue(const StreamFormat& fmt, double& value)
 {
     if (fmt.type != double_format)
@@ -1502,7 +1502,7 @@ scanValue(const StreamFormat& fmt, double& value)
     }
     flags |= ScanTried;
     if (!matchSeparator()) return -1;
-    long consumed = StreamFormatConverter::find(fmt.conv)->
+    ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanDouble(fmt, inputLine(consumedInput), value);
     debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\"\n",
         name(), fmt.conv, inputLine.expand(consumedInput, 20)());
@@ -1515,16 +1515,16 @@ scanValue(const StreamFormat& fmt, double& value)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && ((unsigned long)consumed != (fmt.width + fmt.prec + 1))) return -1;
-    if (consumed > inputLine.length()-consumedInput) return -1;
+    if (fmt.flags & fix_width_flag && (consumed != (fmt.width + fmt.prec + 1))) return -1;
+    if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %#g\n",
         name(), value);
     flags |= GotValue;
     return consumed;
 }
 
-long StreamCore::
-scanValue(const StreamFormat& fmt, char* value, unsigned long& size)
+ssize_t StreamCore::
+scanValue(const StreamFormat& fmt, char* value, size_t& size)
 {
     if (fmt.type != string_format)
     {
@@ -1534,7 +1534,7 @@ scanValue(const StreamFormat& fmt, char* value, unsigned long& size)
     }
     flags |= ScanTried;
     if (!matchSeparator()) return -1;
-    long consumed = StreamFormatConverter::find(fmt.conv)->
+    ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanString(fmt, inputLine(consumedInput), value, size);
     debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%ld) input=\"%s\"\n",
         name(), fmt.conv, size, inputLine.expand(consumedInput)());
@@ -1548,7 +1548,7 @@ scanValue(const StreamFormat& fmt, char* value, unsigned long& size)
         else return -1;
     }
     if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
-    if (consumed > inputLine.length()-consumedInput) return -1;
+    if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",
         name(), StreamBuffer(value, size).expand()());

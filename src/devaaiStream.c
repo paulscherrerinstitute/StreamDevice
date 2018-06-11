@@ -113,8 +113,10 @@ static long readData(dbCommon *record, format_t *format)
                         break;
                     case DBF_CHAR:
                     case DBF_UCHAR:
+                    {
+                        ssize_t length;
                         aai->nord = 0;
-                        if ((lval = streamScanfN(record, format,
+                        if ((length = streamScanfN(record, format,
                             (char *)aai->bptr, aai->nelm)) == ERROR)
                         {
                             memset(aai->bptr, 0, aai->nelm);
@@ -129,8 +131,9 @@ static long readData(dbCommon *record, format_t *format)
                         {
                             ((char*)aai->bptr)[aai->nelm-1] = 0;
                         }
-                        aai->nord = lval;
+                        aai->nord = (long)length;
                         return OK;
+				    }
                     default:
                         errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from string to %s\n",

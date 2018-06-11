@@ -56,14 +56,14 @@ public:
         StreamBuffer& output, const char* value);
     virtual bool printPseudo(const StreamFormat& fmt,
         StreamBuffer& output);
-    virtual long scanLong(const StreamFormat& fmt,
+    virtual ssize_t scanLong(const StreamFormat& fmt,
         const char* input, long& value);
-    virtual long scanDouble(const StreamFormat& fmt,
+    virtual ssize_t scanDouble(const StreamFormat& fmt,
         const char* input, double& value);
-    virtual long scanString(const StreamFormat& fmt,
-        const char* input, char* value, unsigned long& size);
-    virtual long scanPseudo(const StreamFormat& fmt,
-        StreamBuffer& inputLine, long& cursor);
+    virtual ssize_t scanString(const StreamFormat& fmt,
+        const char* input, char* value, size_t& size);
+    virtual ssize_t scanPseudo(const StreamFormat& fmt,
+        StreamBuffer& inputLine, size_t& cursor);
 };
 
 inline StreamFormatConverter* StreamFormatConverter::

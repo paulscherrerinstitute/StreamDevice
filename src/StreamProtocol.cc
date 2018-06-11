@@ -446,7 +446,7 @@ terminated and the line number is stored for later use.
 Each time newline is read, line is incremented.
 */
     if (!specialchars) specialchars = specialChars;
-    long token = buffer.length();
+    size_t token = buffer.length();
     int l = line;
 
     int c = readChar();
@@ -580,7 +580,7 @@ parseAssignment(const char* name, Protocol& protocol)
 bool StreamProtocolParser::
 parseValue(StreamBuffer& buffer, bool lazy)
 {
-    long token;
+    size_t token;
     int c;
 
     do c = readChar(); while (c == ' '); // skip leading spaces
@@ -594,7 +594,7 @@ parseValue(StreamBuffer& buffer, bool lazy)
         c = buffer[token];
         if (c == '$') // a variable
         {
-            long varname = token+1;
+            size_t varname = token+1;
             if (buffer[varname] == '"') varname++; // quoted variable
             if (lazy || (buffer[varname] >= '0' && buffer[varname] <= '9'))
             {
@@ -1066,7 +1066,7 @@ compileString(StreamBuffer& buffer, const char*& source,
     bool escaped = false;
     int newline = 0;
     StreamBuffer formatbuffer;
-    int formatpos = buffer.length();
+    size_t formatpos = buffer.length();
     line = getLineNumber(source);
 
     debug("StreamProtocolParser::Protocol::compileString "
@@ -1116,7 +1116,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                                 formatbuffer());
                             return false;
                         }
-                        int formatlen = p - buffer(formatpos);
+                        size_t formatlen = p - buffer(formatpos);
                         buffer.replace(formatpos, formatlen, formatbuffer);
                         debug("StreamProtocolParser::Protocol::compileString "
                             "replaced by: \"%s\"\n", buffer.expand(formatpos)());
@@ -1392,7 +1392,7 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
 */
     const char* source = formatstr;
     StreamFormat streamFormat;
-    int fieldname = 0;
+    size_t fieldname = 0;
     // look for fieldname
     if (source[1] == '(')
     {
@@ -1432,12 +1432,12 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
         buffer.append(format);
     }
     const char* formatstart = source + 1;
-    
+
     // parse format and get info string
     StreamBuffer infoString;
     int type = StreamFormatConverter::parseFormat(source,
         formatType, streamFormat, infoString);
-        
+
     if (!type)
     {
         // parsing failed

@@ -41,17 +41,17 @@ static long readData(dbCommon *record, format_t *format)
                 if ((&mbbi->zrvl)[i])
                 {
                     if (mbbi->mask) val &= mbbi->mask;
-                    mbbi->rval = val;
+                    mbbi->rval = (epicsEnum16)val;
                     return OK;
                 }
             }
-            mbbi->val = val;
+            mbbi->val = (epicsEnum16)val;
             return DO_NOT_CONVERT;
         }
         case DBF_ENUM:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
-            mbbi->val = val;
+            mbbi->val = (epicsEnum16)val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
@@ -63,7 +63,7 @@ static long readData(dbCommon *record, format_t *format)
             {
                 if (strcmp ((&mbbi->zrst)[val], buffer) == 0)
                 {
-                    mbbi->val = val;
+                    mbbi->val = (epicsEnum16)val;
                     return DO_NOT_CONVERT;
                 }
             }

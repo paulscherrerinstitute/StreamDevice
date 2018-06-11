@@ -116,7 +116,7 @@ class Stream : protected StreamCore
 #endif
     int status;
     int convert;
-    long currentValueLength;
+    ssize_t currentValueLength;
     IOSCANPVT ioscanpvt;
     CALLBACK commandCallback;
     CALLBACK processCallback;
@@ -155,7 +155,7 @@ class Stream : protected StreamCore
     long initRecord(const char* filename, const char* protocol,
         const char* busname, int addr, const char* busparam);
     bool print(format_t *format, va_list ap);
-    long scan(format_t *format, void* pvalue, size_t maxStringSize);
+    ssize_t scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
 
 // device support functions
@@ -165,7 +165,7 @@ class Stream : protected StreamCore
     friend long streamGetIointInfo(int cmd, dbCommon *record,
         IOSCANPVT *ppvt);
     friend long streamPrintf(dbCommon *record, format_t *format, ...);
-    friend long streamScanfN(dbCommon *record, format_t *format,
+    friend ssize_t streamScanfN(dbCommon *record, format_t *format,
         void*, size_t maxStringSize);
     friend long streamReload(const char* recordname);
 
@@ -282,9 +282,9 @@ struct drvet stream = {
 epicsExportAddress(drvet, stream);
 
 #ifdef EPICS_3_13
-void streamEpicsPrintTimestamp(char* buffer, int size)
+void streamEpicsPrintTimestamp(char* buffer, size_t size)
 {
-    int tlen;
+    size_t tlen;
     char* c;
     TS_STAMP tm;
     tsLocalTime (&tm);
@@ -297,12 +297,12 @@ void streamEpicsPrintTimestamp(char* buffer, int size)
     sprintf(buffer+tlen, " %.*s", size-tlen-2, taskName(0));
 }
 #else // !EPICS_3_13
-void streamEpicsPrintTimestamp(char* buffer, int size)
+void streamEpicsPrintTimestamp(char* buffer, size_t size)
 {
-    int tlen;
+    size_t tlen;
     epicsTime tm = epicsTime::getCurrent();
     tlen = tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%06f");
-    sprintf(buffer+tlen, " %.*s", size-tlen-2, epicsThreadGetNameSelf());
+    sprintf(buffer+tlen, " %.*s", (int)(size-tlen-2), epicsThreadGetNameSelf());
 }
 #endif // !EPICS_3_13
 
@@ -540,10 +540,10 @@ long streamPrintf(dbCommon *record, format_t *format, ...)
     return success ? OK : ERROR;
 }
 
-long streamScanfN(dbCommon* record, format_t *format,
+ssize_t streamScanfN(dbCommon* record, format_t *format,
     void* value, size_t maxStringSize)
 {
-    long size;
+    ssize_t size;
     debug("streamScanfN(%s,format=%%%c,maxStringSize=%ld)\n",
         record->name, format->priv->conv, (long)maxStringSize);
     Stream* pstream = (Stream*)record->dpvt;
@@ -791,12 +791,12 @@ print(format_t *format, va_list ap)
     return false;
 }
 
-long Stream::
+ssize_t Stream::
 scan(format_t *format, void* value, size_t maxStringSize)
 {
     // called by streamScanfN
 
-    unsigned long size = maxStringSize;
+    size_t size = maxStringSize;
     // first remove old value from inputLine (if we are scanning arrays)
     consumedInput += currentValueLength;
     currentValueLength = 0;
@@ -1145,14 +1145,14 @@ bool Stream::
 matchValue(const StreamFormat& format, const void* fieldaddress)
 {
     // this function must increase consumedInput
-    long consumed = 0;
+    ssize_t consumed = 0;
     long lval;
     double dval;
     char* buffer;
     int status;
     const char* putfunc;
     format_s fmt;
-    unsigned long stringsize = MAX_STRING_SIZE;
+    size_t stringsize = MAX_STRING_SIZE;
 
     fmt.type = dbfMapping[format.type];
     fmt.priv = &format;
@@ -1163,8 +1163,8 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
         StreamBuffer fieldBuffer;
         DBADDR* pdbaddr = (DBADDR*)fieldaddress;
         size_t size;
-        unsigned long nord;
-        unsigned long nelem = pdbaddr->no_elements;
+        size_t nord;
+        size_t nelem = pdbaddr->no_elements;
         if (format.type == string_format &&
             (pdbaddr->field_type == DBF_CHAR || pdbaddr->field_type == DBF_UCHAR))
         {
@@ -1320,7 +1320,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             // write into own record, thus don't process it
             // in @init we must not process other record
             putfunc = "dbPut";
-            status = dbPut(pdbaddr, fmt.type, buffer, nord);
+            status = dbPut(pdbaddr, fmt.type, buffer, (long)nord);
             if (INIT_RUN && pdbaddr->precord != record)
             {
                 // clean error status of other record in @init
@@ -1334,7 +1334,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
             // write into other record, thus process it
             putfunc = "dbPutField";
             status = dbPutField(pdbaddr, fmt.type,
-                buffer, nord);
+                buffer, (long)nord);
         }
         debug("Stream::matchValue(%s): %s(%s.%s, %s, %s) status=0x%x\n",
             name(), putfunc,

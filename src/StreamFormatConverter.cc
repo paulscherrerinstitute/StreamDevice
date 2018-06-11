@@ -205,7 +205,7 @@ printPseudo(const StreamFormat& fmt, StreamBuffer&)
     return false;
 }
 
-long StreamFormatConverter::
+ssize_t StreamFormatConverter::
 scanLong(const StreamFormat& fmt, const char*, long&)
 {
     error("Unimplemented scanLong method for %%%c format\n",
@@ -213,7 +213,7 @@ scanLong(const StreamFormat& fmt, const char*, long&)
     return -1;
 }
 
-long StreamFormatConverter::
+ssize_t StreamFormatConverter::
 scanDouble(const StreamFormat& fmt, const char*, double&)
 {
     error("Unimplemented scanDouble method for %%%c format\n",
@@ -221,16 +221,16 @@ scanDouble(const StreamFormat& fmt, const char*, double&)
     return -1;
 }
 
-long StreamFormatConverter::
-scanString(const StreamFormat& fmt, const char*, char*, unsigned long&)
+ssize_t StreamFormatConverter::
+scanString(const StreamFormat& fmt, const char*, char*, size_t&)
 {
     error("Unimplemented scanString method for %%%c format\n",
         fmt.conv);
     return -1;
 }
 
-long StreamFormatConverter::
-scanPseudo(const StreamFormat& fmt, StreamBuffer&, long&)
+ssize_t StreamFormatConverter::
+scanPseudo(const StreamFormat& fmt, StreamBuffer&, size_t&)
 {
     error("Unimplemented scanPseudo method for %%%c format\n",
         fmt.conv);
@@ -255,15 +255,15 @@ static void copyFormatString(StreamBuffer& info, const char* source)
 
 // Standard Long Converter for 'diouxX'
 
-static long prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
+static size_t prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
 {
-    long consumed = 0;
+    size_t consumed = 0;
     neg = false;
     while (isspace(*input)) { input++; consumed++; }
     if (fmt.width)
     {
         // take local copy because strto* don't have width parameter
-        int width = fmt.width;
+        size_t width = fmt.width;
         if (fmt.flags & space_flag)
         {
             // normally whitespace does not count to width
@@ -297,7 +297,7 @@ class StdLongConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat& fmt, StreamBuffer& output, const char*& value, bool scanFormat);
     bool printLong(const StreamFormat& fmt, StreamBuffer& output, long value);
-    long scanLong(const StreamFormat& fmt, const char* input, long& value);
+    ssize_t scanLong(const StreamFormat& fmt, const char* input, long& value);
 };
 
 int StdLongConverter::
@@ -334,11 +334,11 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-long StdLongConverter::
+ssize_t StdLongConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     char* end;
-    long consumed;
+    ssize_t consumed;
     bool neg;
     int base;
     long v;
@@ -379,7 +379,7 @@ class StdDoubleConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printDouble(const StreamFormat&, StreamBuffer&, double);
-    virtual long scanDouble(const StreamFormat&, const char*, double&);
+    virtual ssize_t scanDouble(const StreamFormat&, const char*, double&);
 };
 
 int StdDoubleConverter::
@@ -411,11 +411,11 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     return true;
 }
 
-long StdDoubleConverter::
+ssize_t StdDoubleConverter::
 scanDouble(const StreamFormat& fmt, const char* input, double& value)
 {
     char* end;
-    long consumed;
+    ssize_t consumed;
     bool neg;
 
     consumed = prepareval(fmt, input, neg);
@@ -435,7 +435,7 @@ class StdStringConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printString(const StreamFormat&, StreamBuffer&, const char*);
-    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
+    virtual ssize_t scanString(const StreamFormat&, const char*, char*, size_t&);
 };
 
 int StdStringConverter::
@@ -483,13 +483,13 @@ printString(const StreamFormat& fmt, StreamBuffer& output, const char* value)
     return true;
 }
 
-long StdStringConverter::
+ssize_t StdStringConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, unsigned long &size)
+    char* value, size_t& size)
 {
-    long consumed = 0;
-    long space_left = size;
-    int width = fmt.width;
+    ssize_t consumed = 0;
+    size_t space_left = size;
+    ssize_t width = fmt.width;
 
     if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
@@ -547,7 +547,7 @@ class StdCharsConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     virtual bool printLong(const StreamFormat&, StreamBuffer&, long);
-    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
+    virtual ssize_t scanString(const StreamFormat&, const char*, char*, size_t&);
 };
 
 int StdCharsConverter::
@@ -583,13 +583,13 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-long StdCharsConverter::
+ssize_t StdCharsConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, unsigned long& size)
+    char* value, size_t& size)
 {
-    long consumed = 0;
-    long width = fmt.width;
-    long space_left = size;
+    size_t consumed = 0;
+    size_t width = fmt.width;
+    size_t space_left = size;
 
     if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
@@ -623,7 +623,7 @@ RegisterConverter (StdCharsConverter, "c");
 class StdCharsetConverter : public StreamFormatConverter
 {
     virtual int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
-    virtual long scanString(const StreamFormat&, const char*, char*, unsigned long&);
+    virtual ssize_t scanString(const StreamFormat&, const char*, char*, size_t&);
     // no print method, %[ is readonly
 };
 
@@ -702,13 +702,13 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     return string_format;
 }
 
-long StdCharsetConverter::
+ssize_t StdCharsetConverter::
 scanString(const StreamFormat& fmt, const char* input,
-    char* value, unsigned long& size)
+    char* value, size_t& size)
 {
-    long consumed = 0;
-    long width = fmt.width;
-    long space_left = size;
+    ssize_t consumed = 0;
+    ssize_t width = fmt.width;
+    size_t space_left = size;
 
     if ((fmt.flags & skip_flag) || value == NULL) space_left = 0;
 
