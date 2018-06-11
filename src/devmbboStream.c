@@ -46,13 +46,13 @@ static long readData(dbCommon *record, format_t *format)
                     return OK;
                 }
             }
-            mbbo->val = val;
+            mbbo->val = (epicsEnum16)val;
             return DO_NOT_CONVERT;
         }
         case DBF_ENUM:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
-            mbbo->val = val;
+            mbbo->val = (epicsEnum16)val;
             return DO_NOT_CONVERT;
         }
         case DBF_STRING:
@@ -64,7 +64,7 @@ static long readData(dbCommon *record, format_t *format)
             {
                 if (strcmp ((&mbbo->zrst)[val], buffer) == 0)
                 {
-                    mbbo->val = val;
+                    mbbo->val = (epicsEnum16)val;
                     return DO_NOT_CONVERT;
                 }
             }

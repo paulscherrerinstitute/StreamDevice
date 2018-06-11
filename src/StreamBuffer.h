@@ -28,7 +28,7 @@
 #define __attribute__(x)
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(ssize_t)
 #define ssize_t ptrdiff_t
 #endif
 
@@ -94,11 +94,11 @@ public:
         {return len>0;}
 
     // length: get current data length
-    ssize_t length() const
+    size_t length() const
         {return len;}
 
     // capacity: get current max data length (spare one byte for end)
-    ssize_t capacity() const
+    size_t capacity() const
         {return cap-1;}
 
     // end: get pointer to byte after last data byte
@@ -205,10 +205,7 @@ public:
                 c, start<0?-start:len-start)))?
             p-(buffer+offs) : -1;}
 
-    ssize_t find(const void* s, size_t size, ssize_t start=0) const;
-
-    ssize_t find(const char* s, ssize_t start=0) const
-        {return find(s, s?strlen(s):0, start);}
+    ssize_t find(const char* s, size_t size=0, ssize_t start=0) const;
 
     ssize_t find(const StreamBuffer& s, ssize_t start=0) const
         {return find(s.buffer+s.offs, s.len, start);}

@@ -114,13 +114,14 @@ static long readData(dbCommon *record, format_t *format)
                     case DBF_CHAR:
                     case DBF_UCHAR:
                         wf->nord = 0;
-                        if ((lval = streamScanfN(record, format,
+                        ssize_t length;
+                        if ((length = streamScanfN(record, format,
                             (char *)wf->bptr, wf->nelm)) == ERROR)
                         {
                             memset(wf->bptr, 0, wf->nelm);
                             return ERROR;
                         }
-                        if ((size_t)lval < wf->nelm)
+                        if (length < wf->nelm)
                         {
                             memset(((char*)wf->bptr)+lval , 0, wf->nelm-lval);
                             lval++;

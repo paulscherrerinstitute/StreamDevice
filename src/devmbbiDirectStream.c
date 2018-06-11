@@ -39,7 +39,7 @@ static long readData(dbCommon *record, format_t *format)
         else
         {
             /* No MASK, (NOBT = 0): use VAL field */
-            mbbiD->val = val;
+            mbbiD->val = val; /* no cast because we cannot be sure about type of VAL */
             return DO_NOT_CONVERT;
         }
     }

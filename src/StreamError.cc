@@ -41,20 +41,20 @@ FILE *StreamDebugFile = NULL;
    by setting the StreamPrintTimestampFunction variable
    to your own function.
 */
-static void printTimestamp(char* buffer, int size)
+static void printTimestamp(char* buffer, size_t size)
 {
     time_t t;
     struct tm tm;
     time(&t);
 #ifdef _WIN32
     tm = *localtime(&t);
-#else    
+#else
     localtime_r(&t, &tm);
 #endif
     strftime(buffer, size, "%Y/%m/%d %H:%M:%S", &tm);
 }
 
-void (*StreamPrintTimestampFunction)(char* buffer, int size) = printTimestamp;
+void (*StreamPrintTimestampFunction)(char* buffer, size_t size) = printTimestamp;
 
 void StreamError(const char* fmt, ...)
 {

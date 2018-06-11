@@ -29,10 +29,10 @@
 /* timezone in UNIX contains the seconds between UTC and local time,
 but not in Free-BSD! Here timezone() is a function delivering
 the time zone abbreviation (e.g. CET). Alternatively, the timezone
-value can also be gained from tm_gmtoff of the tm-structure. 
+value can also be gained from tm_gmtoff of the tm-structure.
                                                     HJK, 4.4.14 */
 /* The same seems to be true for other BSDs. DZ. */
-                                                    
+
 #if defined(__FreeBSD__) || \
     defined(__NetBSD__) || \
     defined(__OpenBSD__) || \
@@ -75,7 +75,7 @@ class TimestampConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printDouble(const StreamFormat&, StreamBuffer&, double);
-    long scanDouble(const StreamFormat&, const char*, double&);
+    ssize_t scanDouble(const StreamFormat&, const char*, double&);
 };
 
 int TimestampConverter::
@@ -151,10 +151,10 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     struct tm brokenDownTime;
     char buffer [40];
     char fracbuffer [15];
-    int length;
+    size_t length;
     time_t sec;
     double frac;
-    int i, n;
+    size_t i, n;
     char* c;
     char* p;
 
@@ -172,7 +172,7 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
         n = strtol(output(i+1), &c, 10);
         if (*c++ != 'f') return false;
         /* print fractional part */
-        sprintf(fracbuffer, "%.*f", n, frac);
+        sprintf(fracbuffer, "%.*f", (int)n, frac);
         p = strchr(fracbuffer, '.')+1;
         output.replace(i, c-output(i), p);
     }
@@ -516,7 +516,7 @@ startover:
     return input;
 }
 
-long TimestampConverter::
+ssize_t TimestampConverter::
 scanDouble(const StreamFormat& format, const char* input, double& value)
 {
     struct tm brokenDownTime;

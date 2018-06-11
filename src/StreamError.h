@@ -29,7 +29,7 @@
 
 extern int streamDebug;
 extern int streamError;
-extern void (*StreamPrintTimestampFunction)(char* buffer, int size);
+extern void (*StreamPrintTimestampFunction)(char* buffer, size_t size);
 
 void StreamError(int line, const char* file, const char* fmt, ...)
 __attribute__((__format__(__printf__,3,4)));

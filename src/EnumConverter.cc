@@ -29,7 +29,7 @@ class EnumConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    long scanLong(const StreamFormat&, const char*, long&);
+    ssize_t scanLong(const StreamFormat&, const char*, long&);
 };
 
 // info format: <numEnums><index><string>0<index><string>0...
@@ -45,10 +45,10 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         return false;
     }
     long numEnums = 0;
-    int n = info.length(); // put numEnums here later
+    size_t n = info.length(); // put numEnums here later
     info.append(&numEnums, sizeof(numEnums));
     long index = 0;
-    int i = 0;
+    size_t i = 0;
     i = info.length(); // put index here later
     info.append(&index, sizeof(index));
     while (*source)
@@ -56,7 +56,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         if (*source == '=' && (fmt.flags & alt_flag))
         {
             char* p;
-            
+
             if (*++source == '?')
             {
                 // default choice
@@ -78,7 +78,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
                     -numEnums, info.expand()());
                 return enum_format;
             }
-            
+
             index = strtol(source, &p, 0);
             if (p == source || (*p != '|' && *p != '}'))
             {
@@ -93,7 +93,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         {
             numEnums++;
             info.append('\0');
-            
+
             if (*source++ == '}')
             {
                 memcpy(info(n), &numEnums, sizeof(numEnums));
@@ -101,7 +101,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
                     numEnums, info.expand()());
                 return enum_format;
             }
-            index ++;
+            index++;
             i = info.length();
             info.append(&index, sizeof(index));
         }
@@ -123,8 +123,8 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     long numEnums = extract<long>(s);
     long index = extract<long>(s);
     bool noDefault = numEnums >= 0;
-    
-    if (numEnums < 0) numEnums=-numEnums-1;    
+
+    if (numEnums < 0) numEnums=-numEnums-1;
     while (numEnums-- && (value != index))
     {
         while(*s)
@@ -148,7 +148,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     return true;
 }
 
-long EnumConverter::
+ssize_t EnumConverter::
 scanLong(const StreamFormat& fmt, const char* input, long& value)
 {
     debug("EnumConverter::scanLong(%%%c, \"%s\")\n",
@@ -156,31 +156,31 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
     const char* s = fmt.info;
     long numEnums = extract<long>(s);
     long index;
-    long length;
-
+    ssize_t consumed;
     bool match;
+
     while (numEnums--)
     {
         index = extract<long>(s);
         debug("EnumConverter::scanLong: check #%ld \"%s\"\n", index, s);
-        length = 0;
+        consumed = 0;
         match = true;
         while(*s)
         {
             if (*s == StreamProtocolParser::skip)
             {
                 s++;
-                length++;
+                consumed++;
                 continue;
             }
             if (*s == esc) s++;
-            if (*s++ != input[length++]) match = false;
+            if (*s++ != input[consumed++]) match = false;
         }
         if (match)
         {
             debug("EnumConverter::scanLong: value %ld matches\n", index);
             value = index;
-            return length;
+            return consumed;
         }
         s++;
     }

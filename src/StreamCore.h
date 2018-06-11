@@ -135,10 +135,10 @@ protected:
     bool printValue(const StreamFormat& format, long value);
     bool printValue(const StreamFormat& format, double value);
     bool printValue(const StreamFormat& format, char* value);
-    long scanValue(const StreamFormat& format, long& value);
-    long scanValue(const StreamFormat& format, double& value);
-    long scanValue(const StreamFormat& format, char* value, unsigned long& size);
-    long scanValue(const StreamFormat& format);
+    ssize_t scanValue(const StreamFormat& format, long& value);
+    ssize_t scanValue(const StreamFormat& format, double& value);
+    ssize_t scanValue(const StreamFormat& format, char* value, size_t& size);
+    ssize_t scanValue(const StreamFormat& format);
 
     StreamBuffer protocolname;
     unsigned long lockTimeout;
@@ -163,7 +163,7 @@ protected:
     StreamBuffer outputLine;
     StreamBuffer inputBuffer;
     StreamBuffer inputLine;
-    long consumedInput;
+    size_t consumedInput;
     ProtocolResult runningHandler;
     StreamBuffer fieldAddress;
 
