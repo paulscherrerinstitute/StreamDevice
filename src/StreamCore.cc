@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#define P PRINTF_SIZE_T_PREFIX
+#define Z PRINTF_SIZE_T_PREFIX
 
 enum Commands { end_cmd, in_cmd, out_cmd, wait_cmd, event_cmd, exec_cmd,
     connect_cmd, disconnect_cmd };
@@ -900,7 +900,7 @@ bool StreamCore::
 evalIn()
 {
     flags |= AcceptInput;
-    long expectedInput;
+    ssize_t expectedInput;
 
     expectedInput = maxInput;
     if (unparsedInput)
@@ -935,9 +935,9 @@ evalIn()
     return true;
 }
 
-long StreamCore::
+ssize_t StreamCore::
 readCallback(StreamIoStatus status,
-    const void* input, long size)
+    const void* input, size_t size)
 // returns number of bytes to read additionally
 
 {
@@ -951,7 +951,7 @@ readCallback(StreamIoStatus status,
     lastInputStatus = status;
 
 #ifndef NO_TEMPORARY
-    debug("StreamCore::readCallback(%s, status=%s input=\"%s\", size=%ld)\n",
+    debug("StreamCore::readCallback(%s, status=%s input=\"%s\", size=%" Z "u)\n",
         name(), StreamIoStatusStr[status],
         StreamBuffer(input, size).expand()(), size);
 #endif
@@ -998,7 +998,7 @@ readCallback(StreamIoStatus status,
             finishProtocol(ReplyTimeout);
             return 0;
         case StreamIoFault:
-            error("%s: I/O error after reading %" P "d byte%s: \"%s%s\"\n",
+            error("%s: I/O error after reading %" Z "d byte%s: \"%s%s\"\n",
                 name(),
                 inputBuffer.length(), inputBuffer.length()==1 ? "" : "s",
                 inputBuffer.length() > 20 ? "..." : "",
@@ -1007,7 +1007,7 @@ readCallback(StreamIoStatus status,
             return 0;
     }
     inputBuffer.append(input, size);
-    debug("StreamCore::readCallback(%s) inputBuffer=\"%s\", size %" P "d\n",
+    debug("StreamCore::readCallback(%s) inputBuffer=\"%s\", size %" Z "u\n",
         name(), inputBuffer.expand()(), inputBuffer.length());
     if (*activeCommand != in_cmd)
     {
@@ -1049,7 +1049,7 @@ readCallback(StreamIoStatus status,
         if (end >= 0)
         {
             termlen = inTerminator.length();
-            debug("StreamCore::readCallback(%s) inTerminator %s at position %" P "d\n",
+            debug("StreamCore::readCallback(%s) inTerminator %s at position %" Z "u\n",
                 name(), inTerminator.expand()(), end);
         } else {
             debug("StreamCore::readCallback(%s) inTerminator %s not found\n",
@@ -1066,8 +1066,8 @@ readCallback(StreamIoStatus status,
     if (maxInput && end < 0 && maxInput <= inputBuffer.length())
     {
         // no terminator but maxInput bytes read
-        debug("StreamCore::readCallback(%s) maxInput size reached\n",
-            name());
+        debug("StreamCore::readCallback(%s) maxInput size %lu reached\n",
+            name(), maxInput);
         end = maxInput;
     }
     if (maxInput && end > (ssize_t)maxInput)
@@ -1092,7 +1092,7 @@ readCallback(StreamIoStatus status,
                 name());
             flags |= AcceptInput;
             if (maxInput)
-                return (long)(maxInput - inputBuffer.length());
+                return maxInput - inputBuffer.length();
             else
                 return -1;
         }
@@ -1110,7 +1110,7 @@ readCallback(StreamIoStatus status,
         }
         else
         {
-            error("%s: Timeout after reading %" P "d byte%s \"%s%s\"\n",
+            error("%s: Timeout after reading %" Z "d byte%s \"%s%s\"\n",
                 name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
                 inputBuffer.expand(-20)());
         }
@@ -1366,7 +1366,7 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s\" mismatch after %" P "d byte%s: %c != %c\n",
+                        error("%s: Input \"%s%s\" mismatch after %" Z "d byte%s: %c != %c\n",
                             name(),
                             consumedInput > 10 ? "..." : "",
                             inputLine.expand(consumedInput > 10 ?
@@ -1393,18 +1393,18 @@ normal_format:
     {
         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
         {
-            error("%s: %" P "d byte%s surplus input \"%s%s\"\n",
+            error("%s: %" Z "d byte%s surplus input \"%s%s\"\n",
                 name(), surplus, surplus==1 ? "" : "s",
                 inputLine.expand(consumedInput, 20)(),
                 surplus > 20 ? "..." : "");
 
             if (consumedInput>20)
-                error("%s: after %" P "d byte%s \"...%s\"\n",
+                error("%s: after %" Z "d byte%s \"...%s\"\n",
                     name(), consumedInput,
                     consumedInput==1 ? "" : "s",
                     inputLine.expand(consumedInput-20, 20)());
             else
-                error("%s: after %" P "d byte%s: \"%s\"\n",
+                error("%s: after %" Z "d byte%s: \"%s\"\n",
                     name(), consumedInput,
                     consumedInput==1 ? "" : "s",
                     inputLine.expand(0, consumedInput)());
@@ -1536,7 +1536,7 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
     if (!matchSeparator()) return -1;
     ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanString(fmt, inputLine(consumedInput), value, size);
-    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" P "d) input=\"%s\"\n",
+    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\"\n",
         name(), fmt.conv, size, inputLine.expand(consumedInput)());
     if (consumed < 0)
     {

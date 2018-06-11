@@ -70,7 +70,7 @@ printDouble(const StreamFormat& fmt, StreamBuffer& output, double value)
     // Have to divide value into mantissa and exponent
     // precision field is number of characters in mantissa
     // number of characters in exponent is at least 2
-    size_t spaces;
+    ssize_t spaces;
     StreamBuffer buf;
     int prec = fmt.prec;
 

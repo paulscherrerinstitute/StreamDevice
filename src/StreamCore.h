@@ -194,8 +194,8 @@ protected:
 // StreamBusInterface::Client methods
     void lockCallback(StreamIoStatus status);
     void writeCallback(StreamIoStatus status);
-    long readCallback(StreamIoStatus status,
-        const void* input, long size);
+    ssize_t readCallback(StreamIoStatus status,
+        const void* input, size_t size);
     void eventCallback(StreamIoStatus status);
     void execCallback(StreamIoStatus status);
     void connectCallback(StreamIoStatus status);

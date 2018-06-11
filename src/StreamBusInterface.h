@@ -51,8 +51,8 @@ public:
         friend class StreamBusInterface;
         virtual void lockCallback(StreamIoStatus status) = 0;
         virtual void writeCallback(StreamIoStatus status);
-        virtual long readCallback(StreamIoStatus status,
-            const void* input, long size);
+        virtual ssize_t readCallback(StreamIoStatus status,
+            const void* input, size_t size);
         virtual void eventCallback(StreamIoStatus status);
         virtual void connectCallback(StreamIoStatus status);
         virtual void disconnectCallback(StreamIoStatus status);
@@ -88,7 +88,7 @@ public:
             return businterface && businterface->writeRequest(output, size, timeout_ms);
         }
         bool busReadRequest(unsigned long replytimeout_ms,
-            unsigned long readtimeout_ms, long expectedLength,
+            unsigned long readtimeout_ms, size_t expectedLength,
             bool async) {
             return businterface && businterface->readRequest(replytimeout_ms,
                     readtimeout_ms, expectedLength, async);
@@ -123,8 +123,8 @@ protected:
         { client->lockCallback(status); }
     void writeCallback(StreamIoStatus status)
         { client->writeCallback(status); }
-    long readCallback(StreamIoStatus status,
-        const void* input = NULL, long size = 0)
+    ssize_t readCallback(StreamIoStatus status,
+        const void* input = NULL, size_t size = 0)
         { return client->readCallback(status, input, size); }
     void eventCallback(StreamIoStatus status)
         { client->eventCallback(status); }
@@ -143,7 +143,7 @@ protected:
     virtual bool writeRequest(const void* output, size_t size,
         unsigned long timeout_ms);
     virtual bool readRequest(unsigned long replytimeout_ms,
-        unsigned long readtimeout_ms, long expectedLength,
+        unsigned long readtimeout_ms, size_t expectedLength,
         bool async);
     virtual bool supportsEvent(); // defaults to false
     virtual bool supportsAsyncRead(); // defaults to false

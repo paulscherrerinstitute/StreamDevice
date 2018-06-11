@@ -106,7 +106,7 @@ writeRequest(const void*, size_t, unsigned long)
 }
 
 bool StreamBusInterface::
-readRequest(unsigned long, unsigned long, long, bool)
+readRequest(unsigned long, unsigned long, size_t, bool)
 {
     return false;
 }
@@ -126,8 +126,8 @@ writeCallback(StreamIoStatus)
 {
 }
 
-long StreamBusInterface::Client::
-readCallback(StreamIoStatus, const void*, long)
+ssize_t StreamBusInterface::Client::
+readCallback(StreamIoStatus, const void*, size_t)
 {
     return 0;
 }

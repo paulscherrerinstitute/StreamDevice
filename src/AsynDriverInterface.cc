@@ -41,6 +41,8 @@ extern "C" {
 #include "asynUInt32Digital.h"
 #include "asynGpibDriver.h"
 
+#define Z PRINTF_SIZE_T_PREFIX
+
 /* How things are implemented:
 
 synchonous io:
@@ -157,13 +159,13 @@ class AsynDriverInterface : StreamBusInterface
     double writeTimeout;
     double readTimeout;
     double replyTimeout;
-    long expectedLength;
+    size_t expectedLength;
     unsigned long eventMask;
     unsigned long receivedEvent;
     StreamBuffer inputBuffer;
     const char* outputBuffer;
     size_t outputSize;
-    int peeksize;
+    size_t peeksize;
 #ifdef EPICS_3_13
     WDOG_ID timer;
     CALLBACK timeoutCallback;
@@ -182,7 +184,7 @@ class AsynDriverInterface : StreamBusInterface
     bool writeRequest(const void* output, size_t size,
         unsigned long writeTimeout_ms);
     bool readRequest(unsigned long replyTimeout_ms,
-        unsigned long readTimeout_ms, long expectedLength, bool async);
+        unsigned long readTimeout_ms, size_t expectedLength, bool async);
     bool acceptEvent(unsigned long mask, unsigned long replytimeout_ms);
     bool supportsEvent();
     bool supportsAsyncRead();
@@ -680,8 +682,8 @@ writeHandler()
             if (status == asynError || received == 0) break;
 #ifndef NO_TEMPORARY
             if (received) debug("AsynDriverInterface::writeHandler(%s): "
-                "flushing %ld bytes: \"%s\"\n",
-                clientName(), (long)received, StreamBuffer(buffer, received).expand()());
+                "flushing %" Z "u bytes: \"%s\"\n",
+                clientName(), received, StreamBuffer(buffer, received).expand()());
 #endif
         } while (status == asynSuccess);
     }
@@ -722,11 +724,11 @@ writeHandler()
         outputBuffer, outputSize, &written);
 #ifndef NO_TEMPORARY
     debug("AsynDriverInterface::writeHandler(%s): "
-        "write(..., \"%s\", outputSize=%ld, written=%ld) "
+        "write(..., \"%s\", outputSize=%" Z "u, written=%" Z "u) "
         "[timeout=%g sec] = %s (%s)\n",
         clientName(), 
         StreamBuffer(outputBuffer, outputSize).expand()(), 
-        (long)outputSize, (long)written,
+        outputSize, written,
         pasynUser->timeout, asynStatusStr[status],
         pasynUser->errorMessage);
 #endif
@@ -809,10 +811,10 @@ writeHandler()
 // interface function: we want to read something
 bool AsynDriverInterface::
 readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
-    long _expectedLength, bool async)
+    size_t _expectedLength, bool async)
 {
     debug("AsynDriverInterface::readRequest(%s, %ld msec reply, "
-        "%ld msec read, expect %ld bytes, async=%s)\n",
+        "%ld msec read, expect %" Z "u bytes, async=%s)\n",
         clientName(), replyTimeout_ms, readTimeout_ms,
         _expectedLength, async?"yes":"no");
         
@@ -892,13 +894,13 @@ readHandler()
             oldeoslen = -1;
         } else do {
             // device (e.g. GPIB) might not accept full eos length
-            if ((int)deveoslen == oldeoslen && strcmp(deveos, oldeos) == 0)
+            if (deveoslen == (size_t)oldeoslen && strcmp(deveos, oldeos) == 0)
             {
                 // nothing to do: old and new eos are the same
                 break;
             }
             if (pasynOctet->setInputEos(pvtOctet, pasynUser,
-                deveos, deveoslen) == asynSuccess)
+                deveos, (int)deveoslen) == asynSuccess)
             {
 #ifndef NO_TEMPORARY
                 if (ioAction != AsyncRead)
@@ -921,8 +923,8 @@ readHandler()
         } while (deveoslen);
     }
 
-    long bytesToRead = peeksize;
-    long buffersize;
+    size_t bytesToRead = peeksize;
+    size_t buffersize;
 
     if (expectedLength > 0)
     {
@@ -954,7 +956,7 @@ readHandler()
     size_t received;
     int eomReason;
     asynStatus status;
-    long readMore;
+    ssize_t readMore;
     int connected;
 
     while (1)
@@ -965,17 +967,18 @@ readHandler()
         pasynUser->errorMessage[0] = 0;
         
         debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
-            "read(..., bytesToRead=%ld, ...) "
+            "read(..., bytesToRead=%" Z "u, ...) "
             "[timeout=%g sec]\n",
             clientName(), ioActionStr[ioAction],
             bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
+        // Even though received is size_t I have seen (size_t)-1 here!
 #ifndef NO_TEMPORARY
         debug("AsynDriverInterface::readHandler(%s): "
-            "read returned %s: ioAction=%s received=%ld, eomReason=%s, buffer=\"%s\"\n",
+            "read returned %s: ioAction=%s received=%" Z "d, eomReason=%s, buffer=\"%s\"\n",
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
-            (long)received,eomReasonStr[eomReason&0x7],
+            received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
 #endif
         pasynManager->isConnected(pasynUser, &connected);
@@ -1003,9 +1006,9 @@ readHandler()
                 {
 #ifndef NO_TEMPORARY
                     debug("AsynDriverInterface::readHandler(%s): "
-                        "AsyncRead poll: received %ld of %ld bytes \"%s\" "
+                        "AsyncRead poll: received %" Z "d of %" Z "u bytes \"%s\" "
                         "eomReason=%s [data ignored]\n",
-                        clientName(), (long)received, bytesToRead,
+                        clientName(), received, bytesToRead,
                         StreamBuffer(buffer, received).expand()(),
                         eomReasonStr[eomReason&0x7]);
 #endif
@@ -1018,9 +1021,9 @@ readHandler()
                 }
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
-                        "received %ld of %ld bytes \"%s\" "
+                        "received %" Z "d of %" Z "u bytes \"%s\" "
                         "eomReason=%s\n",
-                    clientName(), (long)received, bytesToRead,
+                    clientName(), received, bytesToRead,
                     StreamBuffer(buffer, received).expand()(),
                     eomReasonStr[eomReason&0x7]);
 #endif
@@ -1041,7 +1044,7 @@ readHandler()
                     size_t i;
                     for (i = 0; i < deveoslen; i++, received++)
                     {
-                        if ((int)received >= 0) buffer[received] = deveos[i];
+                        if ((ssize_t)received >= 0) buffer[received] = deveos[i];
                         // It is safe to add to buffer here, because
                         // the terminator was already there before
                         // asynOctet->read() had cut it.
@@ -1081,9 +1084,9 @@ readHandler()
 #ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
                         "ioAction=%s, timeout [%g sec] "
-                        "after %ld of %ld bytes \"%s\"\n",
+                        "after %" Z "d of %" Z "u bytes \"%s\"\n",
                     clientName(), ioActionStr[ioAction], pasynUser->timeout,
-                    (long)received, bytesToRead,
+                    received, bytesToRead,
                     StreamBuffer(buffer, received).expand()());
 #endif
                 if (ioAction == AsyncRead || ioAction == AsyncReadMore)
@@ -1144,7 +1147,7 @@ readHandler()
             bytesToRead = inputBuffer.capacity();
         }
         debug("AsynDriverInterface::readHandler(%s) "
-            "readMore=%ld bytesToRead=%ld\n",
+            "readMore=%" Z "d bytesToRead=%" Z "u\n",
             clientName(), readMore, bytesToRead);
         pasynUser->timeout = readTimeout;
         waitForReply = false;
@@ -1204,7 +1207,7 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
 #endif
 
     ioAction = None;
-    long readMore = 1;
+    ssize_t readMore = 1;
     if (received)
     {
         // At the moment, it seems that asynDriver does not cut off
@@ -1281,7 +1284,7 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
         ioAction = AsyncReadMore;
         startTimer(readTimeout);
     }
-    debug("AsynDriverInterface::asynReadHandler(%s) readMore=%li, ioAction=%s \n",
+    debug("AsynDriverInterface::asynReadHandler(%s) readMore=%" Z "d, ioAction=%s \n",
         clientName(), readMore, ioActionStr[ioAction]);
 }
 

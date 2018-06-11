@@ -22,6 +22,9 @@
 #include "StreamError.h"
 #include "string.h"
 #include "pcre.h"
+#include <limits.h>
+
+#define Z PRINTF_SIZE_T_PREFIX
 
 // Perl regular expressions (PCRE) %/regexp/ and  %#/regexp/subst/
 
@@ -121,17 +124,19 @@ scanString(const StreamFormat& fmt, const char* input,
 {
     int ovector[30];
     int rc;
-    unsigned int l;
+    size_t l;
     const char* info = fmt.info;
     pcre* code = extract<pcre*>(info);
-    int length = fmt.width > 0 ? fmt.width : strlen(input);
+    size_t length = fmt.width > 0 ? fmt.width : strlen(input);
     int subexpr = fmt.prec > 0 ? fmt.prec : 0;
 
+    if (length > INT_MAX)
+        length = INT_MAX;
     debug("input = \"%s\"\n", input);
-    debug("length=%d\n", length);
+    debug("length=%" Z "u\n", length);
 
-    rc = pcre_exec(code, NULL, input, length, 0, 0, ovector, 30);
-    debug("pcre_exec match \"%.*s\" result = %d\n", length, input, rc);
+    rc = pcre_exec(code, NULL, input, (int)length, 0, 0, ovector, 30);
+    debug("pcre_exec match \"%.*s\" result = %d\n", (int)length, input, rc);
     if ((subexpr && rc <= subexpr) || rc < 0)
     {
         // error or no match or not enough sub-expressions
@@ -142,9 +147,9 @@ scanString(const StreamFormat& fmt, const char* input,
     l = ovector[subexpr*2+1] - ovector[subexpr*2];
     if (l >= size) {
         if (!(fmt.flags & sign_flag)) {
-            error("Regexp: Matching string \"%s\" too long (%d>%ld bytes). You may want to try the + flag: \"%%+/.../\"\n",
+            error("Regexp: Matching string \"%s\" too long (%" Z "u>%" Z "u bytes). You may want to try the + flag: \"%%+/.../\"\n",
                 StreamBuffer(input + ovector[subexpr*2],l).expand()(),
-                l, (long)size-1);
+                l, size-1);
             return -1;
         }
         l = size-1;
@@ -155,11 +160,11 @@ scanString(const StreamFormat& fmt, const char* input,
     return ovector[1]; // consume input until end of match
 }
 
-static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
+static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start)
 {
     const char* subst = fmt.info;
     pcre* code = extract<pcre*>(subst);
-    unsigned long length, c;
+    size_t length, c;
     int rc, l, r, rl, n;
     int ovector[30];
     StreamBuffer s;
@@ -167,15 +172,17 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
     length = buffer.length() - start;
     if (fmt.width && fmt.width < length)
         length = fmt.width;
+    if (length > INT_MAX)
+        length = INT_MAX;
     if (fmt.flags & sign_flag)
         start = buffer.length() - length;
 
-    debug("regsubst buffer=\"%s\", start=%ld, length=%ld, subst = \"%s\"\n",
+    debug("regsubst buffer=\"%s\", start=%" Z "u, length=%" Z "u, subst = \"%s\"\n",
         buffer.expand()(), start, length, subst);
 
     for (c = 0, n = 1; c < length; n++)
     {
-        rc = pcre_exec(code, NULL, buffer(start+c), length-c, 0, 0, ovector, 30);
+        rc = pcre_exec(code, NULL, buffer(start+c), (int)(length-c), 0, 0, ovector, 30);
         debug("pcre_exec match \"%.*s\" result = %d\n", (int)(length-c), buffer(start+c), rc);
         if (rc < 0) // no match
             return;
