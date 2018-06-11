@@ -463,7 +463,7 @@ struct checksum
     checksumFunc func;
     unsigned int init;
     unsigned int xorout;
-    signed char bytes;
+    unsigned char bytes;
 };
 
 static checksum checksumMap[] =
@@ -562,7 +562,7 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
         }
     }
 
-    error ("Unknown checksum algorithm \"%.*s\"\n", len, source);
+    error ("Unknown checksum algorithm \"%.*s\"\n", (int)len, source);
     return false;
 }
 
@@ -677,12 +677,12 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input checksum is 0x%0*X\n",
         checksumMap[fnum].name, 2*checksumMap[fnum].bytes, sum);
 
-    int i, j;
     unsigned int inchar;
 
     if (format.flags & sign_flag) // decimal
     {
         unsigned int sumin = 0;
+        size_t i;
         for (i = 0; i < expectedLength; i++)
         {
             inchar = input[cursor+i];
@@ -692,13 +692,14 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         if (sumin != sum)
         {
             debug("ChecksumConverter %s: Input %0*u does not match checksum %0*u\n",
-                checksumMap[fnum].name, i, sumin, expectedLength, sum);
+                checksumMap[fnum].name, (int)i, sumin, (int)expectedLength, sum);
             return -1;
         }
     }
     else
     if (format.flags & alt_flag) // lsb first (little endian)
     {
+        size_t i;
         for (i = 0; i < checksumMap[fnum].bytes; i++)
         {
             if (format.flags & zero_flag) // ASCII
@@ -741,11 +742,13 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     }
     else // msb first (big endian)
     {
+        ssize_t i;
+        size_t j;
         for (i = checksumMap[fnum].bytes-1, j = 0; i >= 0; i--, j++)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                sscanf(input(cursor+2*i), "%2x", &inchar);
+                sscanf(input(cursor+2*i), "%2X", &inchar);
             }
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F

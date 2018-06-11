@@ -54,6 +54,7 @@ extern "C" {
 #include "devSup.h"
 #include "dbAccess.h"
 #include <stdio.h>
+#include <sys/types.h>
 
 #if defined(_WIN32) && !defined(ssize_t)
 #define ssize_t ptrdiff_t

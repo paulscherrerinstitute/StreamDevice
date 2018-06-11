@@ -136,12 +136,8 @@ append(const void* s, ssize_t size)
 }
 
 ssize_t StreamBuffer::
-find(const char* m, size_t size, ssize_t start) const
+find(const void* m, size_t size, ssize_t start) const
 {
-	if (m && size == 0)
-	{
-		size = strlen(m);
-	}
     if (start < 0)
     {
         start += len;

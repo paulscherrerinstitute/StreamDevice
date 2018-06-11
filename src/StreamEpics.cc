@@ -80,6 +80,8 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #include <sysSymTbl.h>
 #endif
 
+#define P PRINTF_SIZE_T_PREFIX
+
 enum MoreFlags {
     // 0x00FFFFFF used by StreamCore
     InDestructor  = 0x0100000,
@@ -294,7 +296,7 @@ void streamEpicsPrintTimestamp(char* buffer, size_t size)
         c[4] = 0;
     }
     tlen = strlen(buffer);
-    sprintf(buffer+tlen, " %.*s", size-tlen-2, taskName(0));
+    sprintf(buffer+tlen, " %.*s", (int)(size-tlen-2), taskName(0));
 }
 #else // !EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, size_t size)
@@ -1184,7 +1186,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsUInt32*)buffer)[nord] = lval;
-                    debug("Stream::matchValue(%s): %s.%s[%li] = %lu\n",
+                    debug("Stream::matchValue(%s): %s.%s[%" P "u] = %lu\n",
                             name(), pdbaddr->precord->name,
                             ((dbFldDes*)pdbaddr->pfldDes)->name,
                             nord, lval);
@@ -1194,7 +1196,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 {
                     consumed = scanValue(format, lval);
                     if (consumed >= 0) ((epicsInt32*)buffer)[nord] = lval;
-                    debug("Stream::matchValue(%s): %s.%s[%li] = %li\n",
+                    debug("Stream::matchValue(%s): %s.%s[%" P "u] = %li\n",
                             name(), pdbaddr->precord->name,
                             ((dbFldDes*)pdbaddr->pfldDes)->name,
                             nord, lval);
@@ -1205,7 +1207,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     consumed = scanValue(format, lval);
                     if (consumed >= 0)
                         ((epicsUInt16*)buffer)[nord] = (epicsUInt16)lval;
-                    debug("Stream::matchValue(%s): %s.%s[%li] = %li\n",
+                    debug("Stream::matchValue(%s): %s.%s[%" P "u] = %li\n",
                             name(), pdbaddr->precord->name,
                             ((dbFldDes*)pdbaddr->pfldDes)->name,
                             nord, lval);
@@ -1221,7 +1223,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     if (consumed >= 0)
                         memcpy(((epicsFloat64*)buffer)+nord,
                             &f64, sizeof(f64));
-                    debug("Stream::matchValue(%s): %s.%s[%li] = %#g %#g\n",
+                    debug("Stream::matchValue(%s): %s.%s[%" P "u] = %#g %#g\n",
                             name(), pdbaddr->precord->name,
                             ((dbFldDes*)pdbaddr->pfldDes)->name,
                             nord, dval,
@@ -1247,7 +1249,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                         stringsize = MAX_STRING_SIZE;
                         consumed = scanValue(format,
                             buffer+MAX_STRING_SIZE*nord, stringsize);
-                        debug("Stream::matchValue(%s): %s.%s[%li] = \"%.*s\"\n",
+                        debug("Stream::matchValue(%s): %s.%s[%" P "u] = \"%.*s\"\n",
                                 name(), pdbaddr->precord->name,
                                 ((dbFldDes*)pdbaddr->pfldDes)->name,
                                 nord, (int)stringsize, buffer+MAX_STRING_SIZE*nord);
@@ -1351,14 +1353,14 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                 case DBF_ULONG:
                 case DBF_LONG:
                 case DBF_ENUM:
-                    error("%s: %s(%s.%s, %s, %li, %lu) failed\n",
+                    error("%s: %s(%s.%s, %s, %li, %" P "u) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,
                         lval, nord);
                     return false;
                 case DBF_DOUBLE:
-                    error("%s: %s(%s.%s, %s, %#g, %lu) failed\n",
+                    error("%s: %s(%s.%s, %s, %#g, %" P "u) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,
@@ -1366,7 +1368,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
                     return false;
                 case DBF_STRING:
                 case DBF_CHAR:
-                    error("%s: %s(%s.%s, %s, \"%.*s\", %lu) failed\n",
+                    error("%s: %s(%s.%s, %s, \"%.*s\", %" P "u) failed\n",
                         name(), putfunc, pdbaddr->precord->name,
                         ((dbFldDes*)pdbaddr->pfldDes)->name,
                         pamapdbfType[fmt.type].strvalue,

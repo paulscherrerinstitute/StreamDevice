@@ -38,7 +38,7 @@
 class RegexpConverter : public StreamFormatConverter
 {
     int parse (const StreamFormat& fmt, StreamBuffer&, const char*&, bool);
-    ssize_t scanString(const StreamFormat& fmt, const char*, char*, unsigned long&);
+    ssize_t scanString(const StreamFormat& fmt, const char*, char*, size_t&);
     ssize_t scanPseudo(const StreamFormat& fmt, StreamBuffer& input, size_t& cursor);
     bool printPseudo(const StreamFormat& fmt, StreamBuffer& output);
 };
@@ -195,7 +195,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
         debug("rest  = \"%s\"\n", buffer(start+c+ovector[1]));
         s = subst;
         debug("subs = \"%s\"\n", s.expand()());
-        for (r = 0; r < s.length(); r++)
+        for (r = 0; r < (int)s.length(); r++)
         {
             debug("check \"%s\"\n", s.expand(r)());
             if (s[r] == esc)
@@ -230,7 +230,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
 }
 
 ssize_t RegexpConverter::
-scanPseudo(const StreamFormat& fmt, StreamBuffer& input, ssize_t& cursor)
+scanPseudo(const StreamFormat& fmt, StreamBuffer& input, size_t& cursor)
 {
     /* re-write input buffer */
     regsubst(fmt, input, cursor);

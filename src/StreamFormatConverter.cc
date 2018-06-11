@@ -255,7 +255,7 @@ static void copyFormatString(StreamBuffer& info, const char* source)
 
 // Standard Long Converter for 'diouxX'
 
-static size_t prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
+static ssize_t prepareval(const StreamFormat& fmt, const char*& input, bool& neg)
 {
     size_t consumed = 0;
     neg = false;

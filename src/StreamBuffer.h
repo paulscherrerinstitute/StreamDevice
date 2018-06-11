@@ -205,7 +205,10 @@ public:
                 c, start<0?-start:len-start)))?
             p-(buffer+offs) : -1;}
 
-    ssize_t find(const char* s, size_t size=0, ssize_t start=0) const;
+    ssize_t find(const void* s, size_t size, ssize_t start=0) const;
+
+    ssize_t find(const char* s, ssize_t start=0) const
+        {return find(s, s?strlen(s):0, start);}
 
     ssize_t find(const StreamBuffer& s, ssize_t start=0) const
         {return find(s.buffer+s.offs, s.len, start);}

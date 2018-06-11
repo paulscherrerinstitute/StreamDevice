@@ -154,7 +154,8 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     size_t length;
     time_t sec;
     double frac;
-    size_t i, n;
+    ssize_t i;
+    size_t n;
     char* c;
     char* p;
 

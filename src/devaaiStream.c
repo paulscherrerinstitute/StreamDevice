@@ -122,7 +122,7 @@ static long readData(dbCommon *record, format_t *format)
                             memset(aai->bptr, 0, aai->nelm);
                             return ERROR;
                         }
-                        if ((size_t)lval < aai->nelm)
+                        if (lval < (ssize_t)aai->nelm)
                         {
                             memset(((char*)aai->bptr)+lval , 0, aai->nelm-lval);
                             lval++;

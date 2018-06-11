@@ -728,7 +728,7 @@ printSeparator()
         return;
     }
     if (!separator) return;
-    long i = 0;
+    size_t i = 0;
     for (; i < separator.length(); i++)
     {
         switch (separator[i])
@@ -1049,7 +1049,7 @@ readCallback(StreamIoStatus status,
         if (end >= 0)
         {
             termlen = inTerminator.length();
-            debug("StreamCore::readCallback(%s) inTerminator %s at position %ld\n",
+            debug("StreamCore::readCallback(%s) inTerminator %s at position %" P "d\n",
                 name(), inTerminator.expand()(), end);
         } else {
             debug("StreamCore::readCallback(%s) inTerminator %s not found\n",
@@ -1063,14 +1063,14 @@ readCallback(StreamIoStatus status,
             name());
         end = inputBuffer.length();
     }
-    if (maxInput && end < 0 && (long)maxInput <= inputBuffer.length())
+    if (maxInput && end < 0 && maxInput <= inputBuffer.length())
     {
         // no terminator but maxInput bytes read
         debug("StreamCore::readCallback(%s) maxInput size reached\n",
             name());
         end = maxInput;
     }
-    if (maxInput && end > (long)maxInput)
+    if (maxInput && end > (ssize_t)maxInput)
     {
         // limit input length to maxInput (ignore terminator)
         end = maxInput;
@@ -1110,7 +1110,7 @@ readCallback(StreamIoStatus status,
         }
         else
         {
-            error("%s: Timeout after reading %ld byte%s \"%s%s\"\n",
+            error("%s: Timeout after reading %" P "d byte%s \"%s%s\"\n",
                 name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
                 inputBuffer.expand(-20)());
         }
@@ -1366,7 +1366,7 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s\" mismatch after %ld byte%s: %c != %c\n",
+                        error("%s: Input \"%s%s\" mismatch after %" P "d byte%s: %c != %c\n",
                             name(),
                             consumedInput > 10 ? "..." : "",
                             inputLine.expand(consumedInput > 10 ?
@@ -1393,18 +1393,18 @@ normal_format:
     {
         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
         {
-            error("%s: %ld byte%s surplus input \"%s%s\"\n",
+            error("%s: %" P "d byte%s surplus input \"%s%s\"\n",
                 name(), surplus, surplus==1 ? "" : "s",
                 inputLine.expand(consumedInput, 20)(),
                 surplus > 20 ? "..." : "");
 
             if (consumedInput>20)
-                error("%s: after %ld byte%s \"...%s\"\n",
+                error("%s: after %" P "d byte%s \"...%s\"\n",
                     name(), consumedInput,
                     consumedInput==1 ? "" : "s",
                     inputLine.expand(consumedInput-20, 20)());
             else
-                error("%s: after %ld byte%s: \"%s\"\n",
+                error("%s: after %" P "d byte%s: \"%s\"\n",
                     name(), consumedInput,
                     consumedInput==1 ? "" : "s",
                     inputLine.expand(0, consumedInput)());
@@ -1515,7 +1515,7 @@ scanValue(const StreamFormat& fmt, double& value)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && (consumed != (fmt.width + fmt.prec + 1))) return -1;
+    if (fmt.flags & fix_width_flag && (consumed != (ssize_t)(fmt.width + fmt.prec + 1))) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
     debug("StreamCore::scanValue(%s) scanned %#g\n",
         name(), value);
@@ -1536,7 +1536,7 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
     if (!matchSeparator()) return -1;
     ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanString(fmt, inputLine(consumedInput), value, size);
-    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%ld) input=\"%s\"\n",
+    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" P "d) input=\"%s\"\n",
         name(), fmt.conv, size, inputLine.expand(consumedInput)());
     if (consumed < 0)
     {
@@ -1547,7 +1547,7 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
         }
         else return -1;
     }
-    if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
+    if (fmt.flags & fix_width_flag && consumed != (ssize_t)fmt.width) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
 #ifndef NO_TEMPORARY
     debug("StreamCore::scanValue(%s) scanned \"%s\"\n",

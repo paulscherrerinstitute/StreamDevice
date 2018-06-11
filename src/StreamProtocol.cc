@@ -978,7 +978,7 @@ replaceVariable(StreamBuffer& buffer, const char* varname)
     }
     // quoted
     buffer.append('"');
-    long i;
+    size_t i;
     bool escaped = false;
     for (i = 0; i < v->value.length(); i++)
     {
