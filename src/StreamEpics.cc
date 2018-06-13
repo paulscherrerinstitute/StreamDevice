@@ -73,12 +73,12 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 
 #endif // !EPICS_3_13
 
-#include "devStream.h"
-
 #if defined(__vxworks) || defined(vxWorks)
 #include <symLib.h>
 #include <sysSymTbl.h>
 #endif
+
+#include "devStream.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
 
@@ -179,8 +179,10 @@ public:
 
 
 // shell functions ///////////////////////////////////////////////////////
+extern "C" { // needed for Windows
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
+}
 
 // for subroutine record
 long streamReloadSub()
@@ -271,7 +273,9 @@ static void streamRegistrar ()
         (REGISTRYFUNCTION)streamReloadSub);
 }
 
+extern "C" {
 epicsExportRegistrar(streamRegistrar);
+}
 #endif // !EPICS_3_13
 
 // driver support ////////////////////////////////////////////////////////
@@ -281,7 +285,9 @@ struct drvet stream = {
     (DRVSUPFUN) Stream::report,
     (DRVSUPFUN) Stream::drvInit
 };
+extern "C" {
 epicsExportAddress(drvet, stream);
+}
 
 #ifdef EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, size_t size)
