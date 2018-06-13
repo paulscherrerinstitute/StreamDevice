@@ -1,10 +1,10 @@
 #/bin/sh
 if ! wkhtmltopdf -V >/dev/null 2>&1
 then
-    echo "wkhtmltopdf not installed."
-    echo "See https://wkhtmltopdf.org"
+    echo "wkhtmltopdf not installed." >&2
+    echo "See https://wkhtmltopdf.org" >&2
     exit 1
-fi >&2
+fi
 
 PAGES="
 index.html
