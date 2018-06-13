@@ -18,9 +18,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <math.h>
 #include "epicsMath.h"
-#include "menuConvert.h"
 #include "aiRecord.h"
 #include "devStream.h"
 

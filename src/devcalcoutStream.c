@@ -17,7 +17,6 @@
 *                                                              *
 ***************************************************************/
 
-#include "postfix.h"
 #include "calcoutRecord.h"
 #include "devStream.h"
 
