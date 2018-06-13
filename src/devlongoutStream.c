@@ -1,7 +1,6 @@
 /***************************************************************
 * Stream Device record interface for long output records       *
 *                                                              *
-*                                                              *
 * (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
 * (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *

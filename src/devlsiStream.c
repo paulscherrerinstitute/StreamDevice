@@ -1,8 +1,7 @@
 /***************************************************************
-* Stream Device record interface for string input records      *
+* Stream Device record interface for long string input records *
 *                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
+* (C) 2018 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *
 * This is an EPICS record Interface for StreamDevice.          *
 * Please refer to the HTML files in ../doc/ for a detailed     *

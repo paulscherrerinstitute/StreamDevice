@@ -1,5 +1,5 @@
 /***************************************************************
-* Stream Device record interface for scalcout records          *
+* Stream Device record interface for string calcout records    *
 *                                                              *
 * (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *
