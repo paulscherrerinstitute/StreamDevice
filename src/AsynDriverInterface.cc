@@ -17,7 +17,6 @@
 *                                                              *
 ***************************************************************/
 
-#include "devStream.h"
 #include "StreamBusInterface.h"
 #include "StreamError.h"
 #include "StreamBuffer.h"
@@ -40,6 +39,8 @@ extern "C" {
 #include "asynInt32.h"
 #include "asynUInt32Digital.h"
 #include "asynGpibDriver.h"
+
+#include "devStream.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
 
