@@ -72,7 +72,7 @@ typedef const struct format_s {
 } format_t;
 
 epicsShareExtern FILE* StreamDebugFile;
-epicsShareExtern const char StreamVersion [];
+extern const char StreamVersion [];
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
