@@ -21,13 +21,16 @@
 #ifndef devStream_h
 #define devStream_h
 
+#include <stdio.h>
+#include <sys/types.h>
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #define STREAM_MAJOR 2
 #define STREAM_MINOR 8
 #define STREAM_PATCHLEVEL 0
-
-#if defined(__vxworks) || defined(vxWorks)
-#include <vxWorks.h>
-#endif
 
 #ifndef OK
 #define OK 0
@@ -45,23 +48,22 @@
 #define EPICS_3_13
 #endif
 
-#if defined(__cplusplus) && defined(EPICS_3_13)
-extern "C" {
+#ifdef epicsExportSharedSymbols
+#   define devStream_epicsExportSharedSymbols
+#   undef epicsExportSharedSymbols
 #endif
 
 #include "dbCommon.h"
 #include "dbScan.h"
 #include "devSup.h"
 #include "dbAccess.h"
-#include <stdio.h>
-#include <sys/types.h>
 
-#if defined(_WIN32) && !defined(ssize_t)
-#define ssize_t ptrdiff_t
+#ifdef devStream_epicsExportSharedSymbols
+#   define epicsExportSharedSymbols
 #endif
 
-#if defined(__cplusplus) && defined(EPICS_3_13)
-}
+#if defined(_WIN32)
+typedef ptrdiff_t ssize_t;
 #endif
 
 typedef const struct format_s {
@@ -69,13 +71,8 @@ typedef const struct format_s {
     const struct StreamFormat* priv;
 } format_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 epicsShareExtern FILE* StreamDebugFile;
-
-extern const char StreamVersion [];
+epicsShareExtern const char StreamVersion [];
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
@@ -92,32 +89,20 @@ ssize_t streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
 
 /* backward compatibility stuff */
-#define devStreamIoFunction streamIoFunction
-#define devStreamInit streamInit
-#define devStreamInitRecord streamInitRecord
-#define devStreamReport streamReport
-#define devStreamRead streamReadWrite
-#define devStreamWrite streamReadWrite
-#define devStreamGetIointInfo streamGetIointInfo
-#define devStreamPrintf streamPrintf
-#define devStreamPrintSep(record) (0)
-#define devStreamScanSep (0)
-#define devStreamScanf(record, format, value) \
-    streamScanfN(record, format, value, MAX_STRING_SIZE)
 #define streamScanf(record, format, value) \
     streamScanfN(record, format, value, MAX_STRING_SIZE)
 #define streamRead streamReadWrite
 #define streamWrite streamReadWrite
 #define streamReport NULL
 
-#ifdef __cplusplus
-}
+#ifdef EPICS_3_13
+#define epicsExportAddress(a,b) extern int dummy
+#else
+#include "epicsExport.h"
 #endif
 
-#ifndef EPICS_3_13
-#include "epicsExport.h"
-#else
-#define epicsExportAddress(a,b) extern int dummy
+#ifdef __cplusplus
+}
 #endif
 
 #endif
