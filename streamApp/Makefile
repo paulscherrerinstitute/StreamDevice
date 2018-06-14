@@ -18,7 +18,9 @@ streamApp_DBD += base.dbd
 
 # In 3.14.12 aaiRecord.dbd and aaoRecord.dbd are part of base.dbd
 # In earlier versions, these records are buggy and not included by default
+ifndef BASE_3_15
 streamApp_DBD += aaiRecord.dbd aaoRecord.dbd
+endif
 
 PROD_SRCS += streamApp_registerRecordDeviceDriver.cpp
 PROD_SRCS_DEFAULT = streamAppMain.cc
@@ -62,9 +64,16 @@ PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 # If unset output goes to stdout
 CPPFLAGS += -DDEBUGFILE=StreamDebug.log
 
+# switch off annoying rset warnings in 3.16+
+CPPFLAGS += -DUSE_TYPED_RSET
+
 include $(TOP)/configure/RULES
 
+ifdef BASE_3_15
+clean:
+else
 clean::
+endif
 	$(RM) core* StreamDebug.log
 
 endif

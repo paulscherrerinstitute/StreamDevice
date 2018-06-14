@@ -70,6 +70,9 @@ LIB_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 INC += devStream.h
 
+# switch off annoying rset warnings in 3.16+
+CPPFLAGS += -DUSE_TYPED_RSET
+
 include $(TOP)/configure/RULES
 
 # Update version string (contains __DATE__ and __TIME__)
