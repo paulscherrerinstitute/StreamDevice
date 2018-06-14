@@ -5,3 +5,4 @@ lib
 dbd
 include
 *.pdf
+*.*log
