@@ -23,3 +23,6 @@ spybin {
     extraInput=ignore;
     in "%r";
 }
+checksum {
+    out "%s %0.1<\$1>";
+}

@@ -1,0 +1,7 @@
+record (stringout, "DZ:checksums")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@checksums.proto write terminal")
+    field (VAL,  "123456789")
+    field (PINI, "YES")
+}

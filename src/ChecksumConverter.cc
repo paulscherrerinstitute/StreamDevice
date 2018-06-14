@@ -2,7 +2,7 @@
 * StreamDevice Support                                         *
 *                                                              *
 * (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
+* (C) 2006-2018 Dirk Zimoch (dirk.zimoch@psi.ch)               *
 *                                                              *
 * This is the checksum pseudo-converter of StreamDevice.       *
 * Please refer to the HTML files in ../doc/ for a detailed     *
@@ -457,6 +457,36 @@ static unsigned int hexsum(const unsigned char* data, size_t len, unsigned int s
     return sum;
 }
 
+// Special TRIUMF version for the CPI RF Amplifier
+static unsigned int CPI(const unsigned char * data, size_t len, unsigned int init)
+{
+    unsigned long  i = len * 32;
+    while (len--)
+    {
+        init += *data++;
+    } 
+    init -= i;
+    init %= 95;
+    init += 32;
+    return init;
+}
+
+// Leybold Graphix uses a strange sum (= notsum + fix):
+// "CRC = 255 - [(Byte sum of all preceding characters) mod 256]
+//  If this value is lower than 32 (control character of the ASCII code),
+//  then 32 must be added."
+
+static unsigned int leybold(const unsigned char* data, size_t len, unsigned int sum)
+{
+    while (len--)
+    {
+        sum += *data++;
+    }
+    sum = ~sum;
+    if (sum < 32) sum+=32;
+    return sum;
+}
+
 struct checksum
 {
     const char* name;
@@ -491,7 +521,9 @@ static checksum checksumMap[] =
     {"crc32r",  crc_0x04C11DB7_r, 0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xCBF43926
     {"jamcrc",  crc_0x04C11DB7_r, 0xFFFFFFFF, 0x00000000, 4}, // 0x340BC6D9
     {"adler32", adler32,          0x00000001, 0x00000000, 4}, // 0x091E01DE
-    {"hexsum8", hexsum,           0x00,       0x00,       1}  // 0x2D
+    {"hexsum8", hexsum,           0x00,       0x00,       1}, // 0x2D
+    {"cpi",     CPI,              0x00,       0x00,       1}, // 0x7E
+    {"leybold", leybold,          0x00,       0x00,       1}, // 0x22
 };
 
 static unsigned int mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};

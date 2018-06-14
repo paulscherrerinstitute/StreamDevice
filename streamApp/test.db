@@ -20,6 +20,11 @@ record (stringout, "$(P):request")
 record (stringin, "$(P):reply")
 {
 }
+record (stringout, "$(P):checksum")
+{
+    field (DTYP, "stream")
+    field (OUT,  "@test.proto checksum($(CHKSUM=sum)) terminal")
+}
 record (stringin, "$(P):spy")
 {
     field (DTYP, "stream")
@@ -134,3 +139,4 @@ record (waveform, "$(P):spybin")
     field (NELM, "2000")
     field (SCAN, "I/O Intr")
 }
+

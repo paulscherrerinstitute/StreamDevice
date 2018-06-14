@@ -1,0 +1,37 @@
+Terminator = NL;
+
+# Output string, checksum name and checksum value
+# Format checksums as ascii hex (%0 flag)
+# Ignore the 12 chars (.12) between the sting (%s) and the checksum (%<...)
+
+write {
+    out "%s  sum       %0.12<sum>";
+    out "%s  sum8      %0.12<sum8>";
+    out "%s  ~sum      %0.12<~sum>";
+    out "%s  notsum    %0.12<notsum>";
+    out "%s  -sum      %0.12<-sum>";
+    out "%s  negsum    %0.12<negsum>";
+    out "%s  sum16     %0.12<sum16>";
+    out "%s  sum32     %0.12<sum32>";
+    out "%s  xor       %0.12<xor>";
+    out "%s  xor8      %0.12<xor8>";
+    out "%s  xor7      %0.12<xor7>";
+    out "%s  crc8      %0.12<crc8>";
+    out "%s  ccitt8    %0.12<ccitt8>";
+    out "%s  crc16     %0.12<crc16>";
+    out "%s  crc16r    %0.12<crc16r>";
+    out "%s  modbus    %0.12<modbus>";
+    out "%s  ccitt16   %0.12<ccitt16>";
+    out "%s  ccitt16a  %0.12<ccitt16a>";
+    out "%s  ccitt16x  %0.12<ccitt16x>";
+    out "%s  crc16c    %0.12<crc16c>";
+    out "%s  xmodem    %0.12<xmodem>";
+    out "%s  crc32     %0.12<crc32>";
+    out "%s  crc32r    %0.12<crc32r>";
+    out "%s  jamcrc    %0.12<jamcrc>";
+    out "%s  adler32   %0.12<adler32>";
+    out "%s  adler32b  %0.12<adler32b>";
+    out "%s  hexsum8   %0.12<hexsum8>";
+    out "%s  cpi       %0.12<cpi>";
+    out "%s  leybold   %0.12<leybold>";
+}
