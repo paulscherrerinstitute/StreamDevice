@@ -14,7 +14,10 @@ drvAsynIPPortConfigure "L0", "localhost:40000"
 #load the records
 dbLoadRecords "simple.db","P=DZ,BUS=L0 28"
 
+#log debug output to file
+#streamSetLogfile StreamDebug.log
+
 iocInit
 
 #enable debug output
-var streamDebug 1
+#var streamDebug 1

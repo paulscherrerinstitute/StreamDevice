@@ -60,10 +60,6 @@ endif
 
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-# Write StreamDevice debug output to this file
-# If unset output goes to stdout
-CPPFLAGS += -DDEBUGFILE=StreamDebug.log
-
 # switch off annoying rset warnings in 3.16+
 CPPFLAGS += -DUSE_TYPED_RSET
 
@@ -74,6 +70,6 @@ clean:
 else
 clean::
 endif
-	$(RM) core* StreamDebug.log
+	$(RM) core* *.log
 
 endif

@@ -8,6 +8,9 @@ drvAsynIPPortConfigure web epics.web.psi.ch:80 0 1
 
 dbLoadRecords regexp.db
 
+#log debug output to file
+#streamSetLogfile StreamDebug.log
+
 iocInit
 #var streamDebug 1
 

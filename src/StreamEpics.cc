@@ -18,6 +18,7 @@
 *                                                              *
 ***************************************************************/
 
+#include <errno.h>
 #include "StreamCore.h"
 #include "StreamError.h"
 
@@ -237,6 +238,24 @@ long streamReload(const char* recordname)
     return OK;
 }
 
+long streamSetLogfile(const char* filename)
+{
+    FILE *oldfile, *newfile = NULL;
+    if (filename)
+    {
+        newfile = fopen(filename, "w");
+        if (!newfile)
+        {
+            fprintf(stderr, "Opening file %s failed: %s\n", filename, strerror(errno));
+            return ERROR;
+        }
+    }
+    oldfile = StreamDebugFile;
+    StreamDebugFile = newfile;
+    if (oldfile) fclose(oldfile);
+    return OK;
+}
+
 #ifndef EPICS_3_13
 static const iocshArg streamReloadArg0 =
     { "recordname", iocshArgString };
@@ -262,10 +281,23 @@ void streamReportRecordFunc (const iocshArgBuf *args)
     streamReportRecord(args[0].sval);
 }
 
+static const iocshArg streamSetLogfileArg0 =
+    { "filename", iocshArgString };
+static const iocshArg * const streamSetLogfileArgs[] =
+    { &streamSetLogfileArg0 };
+static const iocshFuncDef streamSetLogfileDef =
+    { "streamSetLogfile", 1, streamSetLogfileArgs };
+
+void streamSetLogfileFunc (const iocshArgBuf *args)
+{
+    streamSetLogfile(args[0].sval);
+}
+
 static void streamRegistrar ()
 {
     iocshRegister(&streamReloadDef, streamReloadFunc);
     iocshRegister(&streamReportRecordDef, streamReportRecordFunc);
+    iocshRegister(&streamSetLogfileDef, streamSetLogfileFunc);
     // make streamReload available for subroutine records
     registryFunctionAdd("streamReload",
         (REGISTRYFUNCTION)streamReloadSub);
@@ -276,6 +308,8 @@ static void streamRegistrar ()
 extern "C" {
 epicsExportRegistrar(streamRegistrar);
 }
+
+
 #endif // !EPICS_3_13
 
 // driver support ////////////////////////////////////////////////////////

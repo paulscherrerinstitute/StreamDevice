@@ -32,6 +32,9 @@ asynOctetSetOutputEos "terminal",0,"\r\n"
 #load the records
 dbLoadRecords "example.db","PREFIX=DZ"
 
+#log debug output to file
+#streamSetLogfile StreamDebug.log
+
 #lots(!) of debug output before iocInit
 #var streamDebug 1
 
