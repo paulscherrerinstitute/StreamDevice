@@ -1,3 +1,5 @@
+#!/bin/sh
+exec O.$EPICS_HOST_ARCH/streamApp $0
 dbLoadDatabase "O.Common/streamApp.dbd"
 streamApp_registerRecordDeviceDriver
 
@@ -19,6 +21,8 @@ epicsEnvSet "STREAM_PROTOCOL_PATH", ".:protocols:../protocols/"
 
 #example telnet style IP port setup
 drvAsynIPPortConfigure "terminal", "localhost:40000"
+
+# Either set terminators here or in the protocol
 asynOctetSetInputEos "terminal",0,"\r\n"
 asynOctetSetOutputEos "terminal",0,"\r\n"
 
@@ -27,12 +31,11 @@ asynOctetSetOutputEos "terminal",0,"\r\n"
 
 #load the records
 dbLoadRecords "example.db","PREFIX=DZ"
-#dbLoadRecords "scalcout.db","PREFIX=DZ"
 
-#lots! of debug output
+#lots(!) of debug output before iocInit
 #var streamDebug 1
 
 iocInit
 
 #enable debug output
-var streamDebug 1
+#var streamDebug 1

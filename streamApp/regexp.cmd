@@ -1,3 +1,5 @@
+#!/bin/sh
+exec O.$EPICS_HOST_ARCH/streamApp $0
 dbLoadDatabase "O.Common/streamApp.dbd"
 streamApp_registerRecordDeviceDriver
 
@@ -7,4 +9,6 @@ drvAsynIPPortConfigure web epics.web.psi.ch:80 0 1
 dbLoadRecords regexp.db
 
 iocInit
-# var streamDebug 1
+#var streamDebug 1
+
+dbgf DZ:regexp
