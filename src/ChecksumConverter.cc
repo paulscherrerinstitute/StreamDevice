@@ -21,6 +21,18 @@
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 #include <ctype.h>
+#if defined(__vxworks) || defined(vxWorks)
+#define PRIX32 "lX"
+#define PRIu32 "lu"
+#define PRIX8  "X"
+#define SCNx8  "hhx"
+#define uint_fast8_t uint8_t
+#define int_fast8_t int8_t
+#else
+#define __STDC_FORMAT_MACROS
+#include <stdint.h>
+#include <inttypes.h>
+#endif
 
 #if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no strncasecmp
@@ -39,9 +51,9 @@ static int strncasecmp(const char *s1, const char *s2, size_t n)
 #endif
 #endif
 
-typedef unsigned int (*checksumFunc)(const unsigned char* data, size_t len,  unsigned int init);
+typedef uint32_t (*checksumFunc)(const uint8_t* data, size_t len,  uint32_t init);
 
-static unsigned int sum(const unsigned char* data, size_t len, unsigned int sum)
+static uint32_t sum(const uint8_t* data, size_t len, uint32_t sum)
 {
     while (len--)
     {
@@ -50,7 +62,7 @@ static unsigned int sum(const unsigned char* data, size_t len, unsigned int sum)
     return sum;
 }
 
-static unsigned int xor8(const unsigned char* data, size_t len, unsigned int sum)
+static uint32_t xor8(const uint8_t* data, size_t len, uint32_t sum)
 {
     while (len--)
     {
@@ -59,15 +71,15 @@ static unsigned int xor8(const unsigned char* data, size_t len, unsigned int sum
     return sum;
 }
 
-static unsigned int xor7(const unsigned char* data, size_t len, unsigned int sum)
+static uint32_t xor7(const uint8_t* data, size_t len, uint32_t sum)
 {
     return xor8(data, len, sum) & 0x7F;
 }
 
-static unsigned int crc_0x07(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x07(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^8 + x^2 + x^1 + x^0 (0x07)
-    const static unsigned char table[256] = {
+    const uint8_t table[256] = {
         0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15,
         0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
         0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65,
@@ -105,10 +117,10 @@ static unsigned int crc_0x07(const unsigned char* data, size_t len, unsigned int
     return crc;
 }
 
-static unsigned int crc_0x31(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x31(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^8 + x^5 + x^4 + x^0 (0x31)
-    const static unsigned char table[256] = {
+    const uint8_t table[256] = {
         0x00, 0x5e, 0xbc, 0xe2, 0x61, 0x3f, 0xdd, 0x83,
         0xc2, 0x9c, 0x7e, 0x20, 0xa3, 0xfd, 0x1f, 0x41,
         0x9d, 0xc3, 0x21, 0x7f, 0xfc, 0xa2, 0x40, 0x1e,
@@ -146,10 +158,10 @@ static unsigned int crc_0x31(const unsigned char* data, size_t len, unsigned int
     return crc;
 }
 
-static unsigned int crc_0x8005(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x8005(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^16 + x^15 + x^2 + x^0  (0x8005)
-    const static unsigned short table[256] = {
+    const uint16_t table[256] = {
         0x0000, 0x8005, 0x800f, 0x000a, 0x801b, 0x001e, 0x0014, 0x8011,
         0x8033, 0x0036, 0x003c, 0x8039, 0x0028, 0x802d, 0x8027, 0x0022,
         0x8063, 0x0066, 0x006c, 0x8069, 0x0078, 0x807d, 0x8077, 0x0072,
@@ -187,11 +199,11 @@ static unsigned int crc_0x8005(const unsigned char* data, size_t len, unsigned i
     return crc;
 }
 
-static unsigned int crc_0x8005_r(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x8005_r(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^16 + x^15 + x^2 + x^0  (0x8005)
     // reflected
-    const static unsigned short table[256] = {
+    const uint16_t table[256] = {
         0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
         0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
         0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
@@ -229,10 +241,10 @@ static unsigned int crc_0x8005_r(const unsigned char* data, size_t len, unsigned
     return crc;
 }
 
-static unsigned int crc_0x1021(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x1021(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^16 + x^12 + x^5 + x^0 (0x1021)
-    const static unsigned short table[256] = {
+    const uint16_t table[256] = {
       0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50A5, 0x60C6, 0x70E7,
       0x8108, 0x9129, 0xA14A, 0xB16B, 0xC18C, 0xD1AD, 0xE1CE, 0xF1EF,
       0x1231, 0x0210, 0x3273, 0x2252, 0x52B5, 0x4294, 0x72F7, 0x62D6,
@@ -270,11 +282,11 @@ static unsigned int crc_0x1021(const unsigned char* data, size_t len, unsigned i
     return crc;
 }
 
-static unsigned int crc_0x04C11DB7(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x04C11DB7(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
-    const static unsigned int table[] = {
+    const uint32_t table[] = {
         0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,
         0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,
         0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
@@ -344,12 +356,12 @@ static unsigned int crc_0x04C11DB7(const unsigned char* data, size_t len, unsign
     return crc;
 }
 
-static unsigned int crc_0x04C11DB7_r(const unsigned char* data, size_t len, unsigned int crc)
+static uint32_t crc_0x04C11DB7_r(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^32 + x^26 + x^23 + x^22 + x^16 + x^12 + x^11 + x^10 +
     //    x^8 + x^7 + x^5 + x^4 + x^2 + x^1 + x^0  (0x04C11DB7)
     // reflected
-    const static unsigned int table[] = {
+    const uint32_t table[] = {
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,
         0x076dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
         0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -419,10 +431,10 @@ static unsigned int crc_0x04C11DB7_r(const unsigned char* data, size_t len, unsi
     return crc;
 }
 
-static unsigned int adler32(const unsigned char* data, size_t len, unsigned int init)
+static uint32_t adler32(const uint8_t* data, size_t len, uint32_t init)
 {
-    unsigned int a = init & 0xFFFF;
-    unsigned int b = (init >> 16) & 0xFFFF;
+    uint32_t a = init & 0xFFFF;
+    uint32_t b = (init >> 16) & 0xFFFF;
 
     while (len) {
         size_t tlen = len > 5550 ? 5550 : len;
@@ -433,17 +445,17 @@ static unsigned int adler32(const unsigned char* data, size_t len, unsigned int 
         } while (--tlen);
         a = (a & 0xFFFF) + (a >> 16) * 15;
         b = (b & 0xFFFF) + (b >> 16) * 15;
-   }
-   if (a >= 65521) a -= 65521;
-   b = (b & 0xFFFF) + (b >> 16) * 15;
-   if (b >= 65521) b -= 65521;
-   return b << 16 | a;
+    }
+    if (a >= 65521) a -= 65521;
+    b = (b & 0xFFFF) + (b >> 16) * 15;
+    if (b >= 65521) b -= 65521;
+    return b << 16 | a;
 }
 
-static unsigned int hexsum(const unsigned char* data, size_t len, unsigned int sum)
+static uint32_t hexsum(const uint8_t* data, size_t len, uint32_t sum)
 {
     // Add all hex digits, ignore all other bytes.
-    unsigned int d;
+    uint32_t d;
     while (len--)
     {
         d = toupper(*data++);
@@ -458,14 +470,13 @@ static unsigned int hexsum(const unsigned char* data, size_t len, unsigned int s
 }
 
 // Special TRIUMF version for the CPI RF Amplifier
-static unsigned int CPI(const unsigned char * data, size_t len, unsigned int init)
+static uint32_t CPI(const uint8_t * data, size_t len, uint32_t init)
 {
-    unsigned long  i = len * 32;
+    init -= (uint32_t)len<<5;
     while (len--)
     {
         init += *data++;
     } 
-    init -= i;
     init %= 95;
     init += 32;
     return init;
@@ -476,7 +487,7 @@ static unsigned int CPI(const unsigned char * data, size_t len, unsigned int ini
 //  If this value is lower than 32 (control character of the ASCII code),
 //  then 32 must be added."
 
-static unsigned int leybold(const unsigned char* data, size_t len, unsigned int sum)
+static uint32_t leybold(const uint8_t* data, size_t len, uint32_t sum)
 {
     while (len--)
     {
@@ -491,9 +502,9 @@ struct checksum
 {
     const char* name;
     checksumFunc func;
-    unsigned int init;
-    unsigned int xorout;
-    unsigned char bytes;
+    uint32_t init;
+    uint32_t xorout;
+    uint8_t bytes;
 };
 
 static checksum checksumMap[] =
@@ -526,7 +537,7 @@ static checksum checksumMap[] =
     {"leybold", leybold,          0x00,       0x00,       1}, // 0x22
 };
 
-static unsigned int mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
+static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
 
 class ChecksumConverter : public StreamFormatConverter
 {
@@ -567,9 +578,9 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
         source+=3;
         notflag = true;
     }
-    unsigned char fnum;
+    uint8_t fnum;
     size_t len = p-source;
-    unsigned int init, xorout;
+    uint32_t init, xorout;
     for (fnum = 0; fnum < sizeof(checksumMap)/sizeof(checksum); fnum++)
     {
         if ((strncasecmp(source, checksumMap[fnum].name, len) == 0) ||
@@ -601,11 +612,11 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
 bool ChecksumConverter::
 printPseudo(const StreamFormat& format, StreamBuffer& output)
 {
-    unsigned int sum;
+    uint32_t sum;
     const char* info = format.info;
-    unsigned int init = extract<unsigned int>(info);
-    unsigned int xorout = extract<unsigned int>(info);
-    unsigned char fnum = extract<unsigned char>(info);
+    uint32_t init = extract<uint32_t>(info);
+    uint32_t xorout = extract<uint32_t>(info);
+    uint_fast8_t fnum = extract<uint8_t>(info);
 
     size_t start = format.width;
     size_t length = output.length()-format.width;
@@ -615,21 +626,21 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
         checksumMap[fnum].name, output.expand(start,length)());
 
     sum = (xorout ^ checksumMap[fnum].func(
-        reinterpret_cast<unsigned char*>(output(start)), length, init))
+        reinterpret_cast<uint8_t*>(output(start)), length, init))
         & mask[checksumMap[fnum].bytes];
 
-    debug("ChecksumConverter %s: output checksum is 0x%X\n",
+    debug("ChecksumConverter %s: output checksum is 0x%" PRIX32 "\n",
         checksumMap[fnum].name, sum);
 
-    int i;
-    unsigned outchar;
+    uint_fast8_t i;
+    uint_fast8_t outchar;
 
     if (format.flags & sign_flag) // decimal
     {
-        // get number of decimal digits from number of bytes: ceil(xbytes*2.5)
+        // get number of decimal digits from number of bytes: ceil(bytes*2.5)
         i = (checksumMap[fnum].bytes+1)*25/10-2;
-        output.print("%0*d", i, sum);
-        debug("ChecksumConverter %s: decimal appending %0*d\n",
+        output.print("%0*" PRIu32, i, sum);
+        debug("ChecksumConverter %s: decimal appending %0*" PRIu32 "\n",
             checksumMap[fnum].name, i, sum);
     }
     else
@@ -638,10 +649,10 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
         for (i = 0; i < checksumMap[fnum].bytes; i++)
         {
             outchar = sum & 0xff;
-            debug("ChecksumConverter %s: little endian appending 0x%X\n",
+            debug("ChecksumConverter %s: little endian appending 0x%02" PRIX8 "\n",
                 checksumMap[fnum].name, outchar);
             if (format.flags & zero_flag) // ASCII
-                output.print("%02X", outchar);
+                output.print("%02" PRIX8, outchar);
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F
                 output.print("%c%c",
@@ -657,10 +668,10 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
         for (i = 0; i < checksumMap[fnum].bytes; i++)
         {
             outchar = (sum >> 24) & 0xff;
-            debug("ChecksumConverter %s: big endian appending 0x%X\n",
+            debug("ChecksumConverter %s: big endian appending 0x02%" PRIX8 "\n",
                 checksumMap[fnum].name, outchar);
             if (format.flags & zero_flag) // ASCII
-                output.print("%02X", outchar);
+                output.print("%02" PRIX8, outchar);
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F
                 output.print("%c%c",
@@ -676,12 +687,12 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
 ssize_t ChecksumConverter::
 scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
 {
-    unsigned int sum;
+    uint32_t sum;
     const char* info = format.info;
-    unsigned int init = extract<unsigned int>(info);
-    unsigned int xorout = extract<unsigned int>(info);
+    uint32_t init = extract<uint32_t>(info);
+    uint32_t xorout = extract<uint32_t>(info);
     size_t start = format.width;
-    unsigned char fnum = extract<unsigned char>(info);
+    uint_fast8_t fnum = extract<uint8_t>(info);
     size_t length = cursor-format.width;
 
     if (format.prec > 0) length -= format.prec;
@@ -689,7 +700,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input to check: \"%s\n",
         checksumMap[fnum].name, input.expand(start,length)());
 
-    size_t expectedLength =
+    uint_fast8_t expectedLength =
         // get number of decimal digits from number of bytes: ceil(bytes*2.5)
         format.flags & sign_flag ? (checksumMap[fnum].bytes + 1) * 25 / 10 - 2 :
         format.flags & (zero_flag|left_flag) ? 2 * checksumMap[fnum].bytes :
@@ -703,17 +714,17 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     }
 
     sum = (xorout ^ checksumMap[fnum].func(
-        (unsigned char*)input(start), length, init))
+        (uint8_t*)input(start), length, init))
         & mask[checksumMap[fnum].bytes];
 
-    debug("ChecksumConverter %s: input checksum is 0x%0*X\n",
+    debug("ChecksumConverter %s: input checksum is 0x%0*" PRIX32 "\n",
         checksumMap[fnum].name, 2*checksumMap[fnum].bytes, sum);
 
-    unsigned int inchar;
+    uint_fast8_t inchar;
 
     if (format.flags & sign_flag) // decimal
     {
-        unsigned int sumin = 0;
+        uint32_t sumin = 0;
         size_t i;
         for (i = 0; i < expectedLength; i++)
         {
@@ -723,7 +734,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         }
         if (sumin != sum)
         {
-            debug("ChecksumConverter %s: Input %0*u does not match checksum %0*u\n",
+            debug("ChecksumConverter %s: Input %0*" PRIu32 " does not match checksum %0*" PRIu32 "\n",
                 checksumMap[fnum].name, (int)i, sumin, (int)expectedLength, sum);
             return -1;
         }
@@ -731,12 +742,12 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     else
     if (format.flags & alt_flag) // lsb first (little endian)
     {
-        size_t i;
+        uint_fast8_t i;
         for (i = 0; i < checksumMap[fnum].bytes; i++)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                if (sscanf(input(cursor+2*i), "%2X", &inchar) != 1)
+                if (sscanf(input(cursor+2*i), "%2" SCNx8, &inchar) != 1)
                 {
                     debug("ChecksumConverter %s: Input byte '%s' is not a hex byte\n",
                         checksumMap[fnum].name, input.expand(cursor+2*i,2)());
@@ -748,13 +759,13 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
             {
                 if ((input[cursor+2*i] & 0xf0) != 0x30)
                 {
-                    debug("ChecksumConverter %s: Input byte 0x%02X is not in range 0x30 - 0x3F\n",
+                    debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " is not in range 0x30 - 0x3F\n",
                         checksumMap[fnum].name, input[cursor+2*i]);
                     return -1;
                 }
                 if ((input[cursor+2*i+1] & 0xf0) != 0x30)
                 {
-                    debug("ChecksumConverter %s: Input byte 0x%02X is not in range 0x30 - 0x3F\n",
+                    debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " is not in range 0x30 - 0x3F\n",
                         checksumMap[fnum].name, input[cursor+2*i+1]);
                     return -1;
                 }
@@ -766,7 +777,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
             }
             if (inchar != ((sum >> 8*i) & 0xff))
             {
-                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*X\n",
+                debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " does not match checksum 0x%0*" PRIX32 "\n",
                     checksumMap[fnum].name, inchar, 2*checksumMap[fnum].bytes, sum);
                 return -1;
             }
@@ -774,26 +785,26 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     }
     else // msb first (big endian)
     {
-        ssize_t i;
-        size_t j;
+        int_fast8_t i;
+        uint_fast8_t j;
         for (i = checksumMap[fnum].bytes-1, j = 0; i >= 0; i--, j++)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                sscanf(input(cursor+2*i), "%2X", &inchar);
+                sscanf(input(cursor+2*i), "%2" SCNx8, &inchar);
             }
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F
             {
                 if ((input[cursor+2*i] & 0xf0) != 0x30)
                 {
-                    debug("ChecksumConverter %s: Input byte 0x%02X is not in range 0x30 - 0x3F\n",
+                    debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " is not in range 0x30 - 0x3F\n",
                         checksumMap[fnum].name, input[cursor+2*i]);
                     return -1;
                 }
                 if ((input[cursor+2*i+1] & 0xf0) != 0x30)
                 {
-                    debug("ChecksumConverter %s: Input byte 0x%02X is not in range 0x30 - 0x3F\n",
+                    debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " is not in range 0x30 - 0x3F\n",
                         checksumMap[fnum].name, input[cursor+2*i+1]);
                     return -1;
                 }
@@ -805,7 +816,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
             }
             if (inchar != ((sum >> 8*j) & 0xff))
             {
-                debug("ChecksumConverter %s: Input byte 0x%02X does not match checksum 0x%0*X\n",
+                debug("ChecksumConverter %s: Input byte 0x%02" PRIX8 " does not match checksum 0x%0*" PRIX32 "\n",
                     checksumMap[fnum].name, inchar, 2*checksumMap[fnum].bytes, sum);
                 return -1;
             }
