@@ -44,50 +44,51 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     ssize_t i;
     unsigned long prec = fmt.prec < 0 ? 2 * sizeof(value) : fmt.prec; // number of nibbles
     unsigned long width = (prec + (fmt.flags & sign_flag ? 2 : 1)) / 2;
+    unsigned long val = value;
+    
     if (fmt.width > width) width = fmt.width;
     if (fmt.flags & sign_flag && value < 0 && prec > 0)
     {
         neg = true;
-        value = -value;
+        val = -value;
     }
+    output.append('\0', width);
     if (fmt.flags & alt_flag)
     {
         // least significant byte first (little endian)
+        i = -width;
         while (width && prec)
         {
             width--;
-            bcd = value%10;
+            bcd = val%10;
             if (--prec)
             {
                 --prec;
-                value /= 10;
-                bcd |= (value%10)<<4;
-                value /= 10;
+                val /= 10;
+                bcd |= (val%10)<<4;
+                val /= 10;
             }
-            output.append(bcd);
+            output[i++] = bcd;
         }
-        if (width)
-            output.append('\0', width);
         if (neg) output[-1] |= 0xf0;
     }
     else
     {
         // most significant byte first (big endian)
-        output.append('\0', width);
-        if (neg) output[-(long)width] |= 0xf0;
+        if (neg) output[-(long)width] = 0xf0;
         i = 0;
         while (width && prec)
         {
             width--;
-            bcd = value%10;
+            bcd = val%10;
             if (--prec)
             {
                 --prec;
-                value /= 10;
-                bcd |= (value%10)<<4;
-                value /= 10;
+                val /= 10;
+                bcd |= (val%10)<<4;
+                val /= 10;
             }
-            output[--i]=bcd;
+            output[--i] |= bcd;
         }
     }
     return true;
