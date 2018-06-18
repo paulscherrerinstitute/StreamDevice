@@ -53,8 +53,9 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     if (fmt.flags & alt_flag)
     {
         // least significant byte first (little endian)
-        while (width-- && prec)
+        while (width && prec)
         {
+            width--;
             bcd = value%10;
             if (--prec)
             {
@@ -75,8 +76,9 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         output.append('\0', width);
         if (neg) output[-(long)width] |= 0xf0;
         i = 0;
-        while (width-- && prec)
+        while (width && prec)
         {
+            width--;
             bcd = value%10;
             if (--prec)
             {
