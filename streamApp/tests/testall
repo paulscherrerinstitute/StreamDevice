@@ -4,9 +4,9 @@ do
     if [ $i != testall -a -x $i ]
     then
         echo $i "$@"
-        if ! $i "$@"
+        if ! ./$i "$@"
         then
-            echo -e "\033[31;7mFailed.\033[0m"
+            echo -e "\033[31;7m$i failed.\033[0m"
             (( fail+=1 ))
         fi
     fi
