@@ -14,4 +14,6 @@ dbLoadRecords regexp.db
 iocInit
 #var streamDebug 1
 
+#let's see the title of the PSI EPICS web site
+epicsThreadSleep 1
 dbgf DZ:regexp
