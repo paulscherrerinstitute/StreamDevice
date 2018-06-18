@@ -317,7 +317,7 @@ dump() const
     for (i = 0; i < cap; i++)
     {
         if (i == offs) result.append("\033[34m[\033[0m");
-        if ((buffer[i] & 0x7f) < 0x20 || (buffer[i] & 0x7f) == 0x7f)
+        if (buffer[i] < 0x20 || buffer[i] >= 0x7f)
         {
             if (i < offs || i >= offs+len)
             result.print(

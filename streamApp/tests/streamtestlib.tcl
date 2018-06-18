@@ -61,6 +61,7 @@ proc startioc {} {
         puts $fd "dbLoadDatabase ../O.Common/streamApp.dbd"
         puts $fd "streamApp_registerRecordDeviceDriver"
     }
+    puts $fd "streamSetLogfile StreamDebug.log"
     puts $fd "epicsEnvSet STREAM_PROTOCOL_PATH ."
     puts $fd "drvAsynIPPortConfigure device localhost:$port"
     puts $fd "dbLoadRecords test.db"
@@ -172,7 +173,7 @@ proc escape {string} {
             append result "\\r"
         } elseif {$n == 10} {
             append result "\\n"
-        } elseif {($n & 127) < 32} {
+        } elseif {$n < 32 || $n >= 127} {
             append result [format "<%02x>" $n]
         } else {
             append result $c
