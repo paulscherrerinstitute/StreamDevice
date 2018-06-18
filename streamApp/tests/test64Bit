@@ -81,8 +81,9 @@ ioccmd {dbpf DZ:mbbo -1}
 assure "mbbo 4294967295 ffffffff 11111111111111111111111111111111\n"
 ioccmd {dbpf DZ:mbboDirect.B0 1}
 assure "mbboDirect 1 1 1\n"
-ioccmd {dbpf DZ:mbboDirect -1}
-assure "mbboDirect 65535 ffff 1111111111111111\n"
+#Writing to mbboDirect.VAL is not supported by EPICS
+#ioccmd {dbpf DZ:mbboDirect -1}
+#assure "mbboDirect 65535 ffff 1111111111111111\n"
 ioccmd {dbpf DZ:ai.PROC 1}
 assure "ai?\n"
 send "-1\n"
