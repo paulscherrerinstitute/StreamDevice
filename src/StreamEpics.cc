@@ -586,19 +586,9 @@ ssize_t streamScanfN(dbCommon* record, format_t *format,
     void* value, size_t maxStringSize)
 {
     ssize_t size;
-    debug("streamScanfN(%s,format=%%%c,maxStringSize=%ld)\n",
-        record->name, format->priv->conv, (long)maxStringSize);
     Stream* pstream = (Stream*)record->dpvt;
     if (!pstream) return ERROR;
     size = pstream->scan(format, value, maxStringSize);
-    if (size == ERROR)
-    {
-        debug("streamScanfN(%s) failed\n", record->name);
-    }
-#ifndef NO_TEMPORARY
-    debug("streamScanfN(%s) success, value=\"%s\"\n",
-        record->name, StreamBuffer((char*)value).expand()());
-#endif
     return size;
 }
 
@@ -828,9 +818,11 @@ print(format_t *format, va_list ap)
             return printValue(*format->priv, va_arg(ap, double));
         case DBF_STRING:
             return printValue(*format->priv, va_arg(ap, char*));
+        default:
+            error("INTERNAL ERROR (%s): Illegal format type %d\n",
+                name(), format->type);
+            return false;
     }
-    error("INTERNAL ERROR (%s): Illegal format type\n", name());
-    return false;
 }
 
 ssize_t Stream::
@@ -839,7 +831,7 @@ scan(format_t *format, void* value, size_t maxStringSize)
     // called by streamScanfN
 
     size_t size = maxStringSize;
-    // first remove old value from inputLine (if we are scanning arrays)
+    // first remove old value from inputLine (in case we are scanning arrays)
     consumedInput += currentValueLength;
     currentValueLength = 0;
     switch (format->type)
@@ -853,16 +845,21 @@ scan(format_t *format, void* value, size_t maxStringSize)
             currentValueLength = scanValue(*format->priv, *(double*)value);
             break;
         case DBF_STRING:
-            currentValueLength  = scanValue(*format->priv, (char*)value,
-                size);
+            currentValueLength  = scanValue(*format->priv, (char*)value, size);
             break;
         default:
-            error("INTERNAL ERROR (%s): Illegal format type\n", name());
+            error("INTERNAL ERROR (%s): Illegal format type %d\n",
+                name(), format->type);
             return ERROR;
+    }
+    debug("Stream::scan() currentValueLength=%" Z "d\n", currentValueLength);
+    if (currentValueLength < 0) 
+    {
+        currentValueLength = 0; // important for arrays with less than NELM elements
+        return ERROR;
     }
     // Don't remove scanned value from inputLine yet, because
     // we might need the string in a later error message.
-    if (currentValueLength == ERROR) return ERROR;
     if (format->type == DBF_STRING) return size;
     return OK;
 }
@@ -1442,6 +1439,7 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
     }
     flags |= ValueReceived;
     consumedInput += currentValueLength;
+    debug("Stream::matchValue(%s): success, %" Z "d bytes consumed\n", name(), currentValueLength);
     return true;
 }
 
