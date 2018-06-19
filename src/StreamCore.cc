@@ -1449,12 +1449,16 @@ matchSeparator()
                 {
                     // no match
                     // don't complain here, just return false
+                    debug("StreamCore::matchSeparator(%s) separator \"%s\" not found\n",
+                        name(), separator.expand()());
                     return false;
                 }
-            j++;
+                j++;
         }
     }
     // separator successfully read
+    debug("StreamCore::matchSeparator(%s) separator \"%s\" found\n",
+        name(), separator.expand()());
     consumedInput = j;
     return true;
 }
@@ -1472,10 +1476,10 @@ scanValue(const StreamFormat& fmt, long& value)
     if (!matchSeparator()) return -1;
     ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanLong(fmt, inputLine(consumedInput), value);
-    debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\"\n",
-        name(), fmt.conv, inputLine.expand(consumedInput)());
     if (consumed < 0)
     {
+        debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\" failed\\n",
+            name(), fmt.conv, inputLine.expand(consumedInput)());
         if (fmt.flags & default_flag)
         {
             value = 0;
@@ -1483,10 +1487,10 @@ scanValue(const StreamFormat& fmt, long& value)
         }
         else return -1;
     }
+    debug("StreamCore::scanValue(%s, format=%%%c, long) input=\"%s\" value=%li\n",
+        name(), fmt.conv, inputLine.expand(consumedInput, consumed)(), value);
     if (fmt.flags & fix_width_flag && (unsigned long)consumed != fmt.width) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
-    debug("StreamCore::scanValue(%s) scanned %li\n",
-        name(), value);
     flags |= GotValue;
     return consumed;
 }
@@ -1504,10 +1508,10 @@ scanValue(const StreamFormat& fmt, double& value)
     if (!matchSeparator()) return -1;
     ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanDouble(fmt, inputLine(consumedInput), value);
-    debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\"\n",
-        name(), fmt.conv, inputLine.expand(consumedInput, 20)());
     if (consumed < 0)
     {
+        debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\" failed\n",
+            name(), fmt.conv, inputLine.expand(consumedInput)());
         if (fmt.flags & default_flag)
         {
             value = 0.0;
@@ -1515,10 +1519,10 @@ scanValue(const StreamFormat& fmt, double& value)
         }
         else return -1;
     }
+    debug("StreamCore::scanValue(%s, format=%%%c, double) input=\"%s\" value=%#g\n",
+        name(), fmt.conv, inputLine.expand(consumedInput, consumed)(), value);
     if (fmt.flags & fix_width_flag && (consumed != (ssize_t)(fmt.width + fmt.prec + 1))) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
-    debug("StreamCore::scanValue(%s) scanned %#g\n",
-        name(), value);
     flags |= GotValue;
     return consumed;
 }
@@ -1536,10 +1540,10 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
     if (!matchSeparator()) return -1;
     ssize_t consumed = StreamFormatConverter::find(fmt.conv)->
         scanString(fmt, inputLine(consumedInput), value, size);
-    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\"\n",
-        name(), fmt.conv, size, inputLine.expand(consumedInput)());
     if (consumed < 0)
     {
+        debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\" failed\n",
+            name(), fmt.conv, size, inputLine.expand(consumedInput)());
         if (fmt.flags & default_flag)
         {
             value[0] = 0;
@@ -1547,12 +1551,15 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
         }
         else return -1;
     }
+    debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\" value=\"%s\"\n",
+        name(), fmt.conv, size, inputLine.expand(consumedInput)(),
+#ifndef NO_TEMPORARY
+        StreamBuffer(value, size).expand()());
+#else
+        value);
+#endif
     if (fmt.flags & fix_width_flag && consumed != (ssize_t)fmt.width) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
-#ifndef NO_TEMPORARY
-    debug("StreamCore::scanValue(%s) scanned \"%s\"\n",
-        name(), StreamBuffer(value, size).expand()());
-#endif
     flags |= GotValue;
     return consumed;
 }
