@@ -7,40 +7,110 @@ source streamtestlib.tcl
 # Send commands to the ioc shell with ioccmd
 
 set records {
-    record (waveform, "DZ:test1")
+    record (waveform, "DZ:waveform1")
     {
         field (DTYP, "stream")
         field (FTVL, "DOUBLE")
         field (NELM, "3")
         field (INP,  "@test.proto testd device")
     }
-    record (waveform, "DZ:test2")
+    record (waveform, "DZ:waveform2")
     {
         field (DTYP, "stream")
         field (FTVL, "FLOAT")
         field (NELM, "3")
         field (INP,  "@test.proto testd device")
     }
-    record (waveform, "DZ:test3")
+    record (waveform, "DZ:waveform3")
     {
         field (DTYP, "stream")
         field (FTVL, "LONG")
         field (NELM, "3")
         field (INP,  "@test.proto testi device")
     }
-    record (waveform, "DZ:test4")
+    record (waveform, "DZ:waveform4")
     {
         field (DTYP, "stream")
         field (FTVL, "SHORT")
         field (NELM, "3")
         field (INP,  "@test.proto testi device")
     }
-    record (waveform, "DZ:test5")
+    record (waveform, "DZ:waveform5")
     {
         field (DTYP, "stream")
         field (FTVL, "STRING")
         field (NELM, "3")
         field (INP,  "@test.proto tests device")
+    }
+    record (aai, "DZ:aai1")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "DOUBLE")
+        field (NELM, "3")
+        field (INP,  "@test.proto testd device")
+    }
+    record (aai, "DZ:aai2")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "FLOAT")
+        field (NELM, "3")
+        field (INP,  "@test.proto testd device")
+    }
+    record (aai, "DZ:aai3")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "LONG")
+        field (NELM, "3")
+        field (INP,  "@test.proto testi device")
+    }
+    record (aai, "DZ:aai4")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "SHORT")
+        field (NELM, "3")
+        field (INP,  "@test.proto testi device")
+    }
+    record (aai, "DZ:aai5")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "STRING")
+        field (NELM, "3")
+        field (INP,  "@test.proto tests device")
+    }
+    record (aao, "DZ:aao1")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "DOUBLE")
+        field (NELM, "3")
+        field (OUT,  "@test.proto testd device")
+    }
+    record (aao, "DZ:aao2")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "FLOAT")
+        field (NELM, "3")
+        field (OUT,  "@test.proto testd device")
+    }
+    record (aao, "DZ:aao3")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "LONG")
+        field (NELM, "3")
+        field (OUT,  "@test.proto testi device")
+    }
+    record (aao, "DZ:aao4")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "SHORT")
+        field (NELM, "3")
+        field (OUT,  "@test.proto testi device")
+    }
+    record (aao, "DZ:aao5")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "STRING")
+        field (NELM, "3")
+        field (OUT,  "@test.proto tests device")
     }
 }
 
@@ -70,55 +140,56 @@ set debug 0
 
 startioc
 
-process DZ:test1
-send "text 1.0,2.0,3.0 end\n"
-assure "3 elements: 1.0,2.0,3.0\n"
-process DZ:test1
-send "text 3, 2,   1 end\n"
-assure "3 elements: 3.0,2.0,1.0\n"
-process DZ:test1
-send "text       7 end\n"
-assure "1 elements: 7.0\n"
+foreach recordtype {waveform aai aao} {
+    process DZ:${recordtype}1
+    send "text 1.0,2.0,3.0 end\n"
+    assure "3 elements: 1.0,2.0,3.0\n"
+    process DZ:${recordtype}1
+    send "text 3, 2,   1 end\n"
+    assure "3 elements: 3.0,2.0,1.0\n"
+    process DZ:${recordtype}1
+    send "text       7 end\n"
+    assure "1 elements: 7.0\n"
 
-process DZ:test2
-send "text 1.0,2.0,3.0 end\n"
-assure "3 elements: 1.0,2.0,3.0\n"
-process DZ:test2
-send "text 3, 2,   1 end\n"
-assure "3 elements: 3.0,2.0,1.0\n"
-process DZ:test2
-send "text       7 end\n"
-assure "1 elements: 7.0\n"
+    process DZ:${recordtype}2
+    send "text 1.0,2.0,3.0 end\n"
+    assure "3 elements: 1.0,2.0,3.0\n"
+    process DZ:${recordtype}2
+    send "text 3, 2,   1 end\n"
+    assure "3 elements: 3.0,2.0,1.0\n"
+    process DZ:${recordtype}2
+    send "text       7 end\n"
+    assure "1 elements: 7.0\n"
 
-process DZ:test3
-send "1 2 3\n"
-assure "3 elements: 1 2 3\n"
-process DZ:test3
-send "       3     2        1    \n"
-assure "3 elements: 3 2 1\n"
-process DZ:test3
-send "12345\n"
-assure "2 elements: 123 45\n"
+    process DZ:${recordtype}3
+    send "1 2 3\n"
+    assure "3 elements: 1 2 3\n"
+    process DZ:${recordtype}3
+    send "       3     2        1    \n"
+    assure "3 elements: 3 2 1\n"
+    process DZ:${recordtype}3
+    send "12345\n"
+    assure "2 elements: 123 45\n"
 
-process DZ:test4
-send "1 2 3\n"
-assure "3 elements: 1 2 3\n"
-process DZ:test4
-send "       3     2        1    \n"
-assure "3 elements: 3 2 1\n"
-process DZ:test4
-send "12345\n"
-assure "2 elements: 123 45\n"
+    process DZ:${recordtype}4
+    send "1 2 3\n"
+    assure "3 elements: 1 2 3\n"
+    process DZ:${recordtype}4
+    send "       3     2        1    \n"
+    assure "3 elements: 3 2 1\n"
+    process DZ:${recordtype}4
+    send "12345\n"
+    assure "2 elements: 123 45\n"
 
-process DZ:test5
-send "1...2...3\n"
-assure "1 elements: 1...2...3\n"
-process DZ:test5
-send "  3     ...   2  ...  1\n"
-assure "3 elements: 3 ... 2 ... 1\n"
-process DZ:test5
-send "       7 \n"
-assure "1 elements: 7\n"
-
+    process DZ:${recordtype}5
+    send "1...2...3\n"
+    assure "1 elements: 1...2...3\n"
+    process DZ:${recordtype}5
+    send "  3     ...   2  ...  1\n"
+    assure "3 elements: 3 ... 2 ... 1\n"
+    process DZ:${recordtype}5
+    send "       7 \n"
+    assure "1 elements: 7\n"
+}
 
 finish
