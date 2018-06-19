@@ -320,7 +320,9 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
         info.append('l');
         info.append(fmt.conv);
     }
-    if (fmt.conv == 'd' || fmt.conv == 'i') return signed_format;
+    if (fmt.conv == 'd' || fmt.conv == 'i'
+        || ((fmt.conv == 'x' || fmt.conv == 'o') && fmt.flags & (left_flag | sign_flag)))
+        return signed_format;
     return unsigned_format;
 }
 
