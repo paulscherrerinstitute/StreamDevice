@@ -2,7 +2,7 @@
 # Run "gnumake clean uninstall install" in the application
 # top directory each time this file is changed.
 #
-# NOTE: The build does not check dependancies on files
+# NOTE: The build does not check dependencies on files
 # external to this application. Thus you should run
 # "gnumake clean uninstall install" in the top directory
 # each time EPICS_BASE, SNCSEQ, or any other external
@@ -14,10 +14,24 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-EPICS_BASE=/usr/local/epics/base-3.14.12
-ASYN=~/top/asyn4-30
-CALC=~/top/SynApps/calc-2-8
-PCRE=~/top/pcre-7.2
+
+EPICS_BASE=/usr/local/epics/base-3.16.1
+ASYN=~/top-3.16/asyn4-30
+CALC=~/top-3.16/SynApps/calc-2-8
+PCRE=~/top-3.16/pcre-7-2
+PCRE_INCLUDE_SL6-x86=/usr/include
+PCRE_INCLUDE_SL6-x86_64=/usr/include
+PCRE_INCLUDE_SL6-x86_64-clang=/usr/include
+
+#EPICS_BASE=/usr/local/epics/base-3.15.5
+#ASYN=~/top-3.15/asyn4-30
+#CALC=~/top-3.15/SynApps/calc-2-8
+#PCRE=~/top-3.15/pcre-7-2
+
+#EPICS_BASE=/usr/local/epics/base-3.14.12
+#ASYN=~/top/asyn4-30
+#CALC=~/top/SynApps/calc-2-8
+#PCRE=~/top/pcre-7-2
 
 #3.14.8 does not understand ~
 #EPICS_BASE=/usr/local/epics/base-3.14.8
