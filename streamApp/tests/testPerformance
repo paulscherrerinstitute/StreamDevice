@@ -14,13 +14,29 @@ set records {
         field (NELM, "1048576")
         field (INP,  "@test.proto test1 device")
     }
+    record (waveform, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "LONG")
+        field (NELM, "1048576")
+        field (INP,  "@test.proto test2 device")
+    }
+    record (waveform, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (FTVL, "STRING")
+        field (NELM, "1048576")
+        field (INP,  "@test.proto test3 device")
+    }
 }
 
 set protocol {
     replyTimeout =600000;
     Terminator = LF;
-    Separator = ",";
+    Separator = " ";
     test1 {in "%f"; out "%(NORD)d";}
+    test2 {in "%i"; out "%(NORD)d";}
+    test3 {in "%s"; out "%(NORD)d";}
 }
 
 set startup {
@@ -28,27 +44,42 @@ set startup {
 
 set debug 0
 
-set message "3.1415"
+set message "314156"
 set size 1
 set timeout 600000
+set type(1) "double"
+set type(2) "long  "
+set type(3) "string"
 
 startioc
-    process DZ:test1
     send "$message\n"
+    process DZ:test1
+    assure "$size\n"
+    send "$message\n"
+    process DZ:test2
+    assure "$size\n"
+    send "$message\n"
+    process DZ:test3
     assure "$size\n"
 
 ioccmd {var streamDebug 0}
 for {set log 1} {$log <= 21} {incr log} {
-    set output "$message\n"
-    set starttime [clock clicks]
-    send $output
-    process DZ:test1
-    assure "$size\n"
-    set duration [expr [clock clicks] - $starttime]
-    set performance($size) [expr $duration*1.0/$size]
-    puts [format "size %7d     duration: %8d     time/element: %6.1f" $size $duration $performance($size)]
-    if {$performance($size) > $performance(1)} {incr faults}
-    set message "$message,$message"
+    foreach n { 1 2 3 } {
+        send "$message\n"
+
+        # make sure all output is available before we start
+        after 100
+
+        set starttime [clock clicks]
+        process DZ:test$n
+        assure "$size\n"
+        set duration [expr [clock clicks] - $starttime]
+
+        set performance($size) [expr $duration*1.0/$size]
+        puts [format "%7d %s %9d ticks %9.2f ticks/element" $size $type($n) $duration $performance($size)]
+        if {$performance($size) > $performance(1)} {incr faults}
+    }
+    set message "$message $message"
     set size [expr $size*2]    
 }
 
