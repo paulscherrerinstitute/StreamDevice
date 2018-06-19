@@ -47,7 +47,7 @@ static int timezone_bsd=0;
 #ifdef _WIN32
 #define tzset() _tzset()
 #define timezone _timezone
-#define localtime_r(timet,tm) localtime_s(tm,timet) /* Windows sucks */
+#define localtime_r(timet,tm) localtime_s(tm,timet)
 #endif
 
 #ifdef __rtems__

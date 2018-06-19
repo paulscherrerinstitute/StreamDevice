@@ -37,6 +37,10 @@ FILE *StreamDebugFile = NULL;
 #endif
 #endif
 
+#ifdef _WIN32
+#define localtime_r(timet,tm) localtime_s(tm,timet)
+#endif
+
 /* You can globally change the printTimestamp function
    by setting the StreamPrintTimestampFunction variable
    to your own function.
@@ -46,11 +50,7 @@ static void printTimestamp(char* buffer, size_t size)
     time_t t;
     struct tm tm;
     time(&t);
-#ifdef _WIN32
-    tm = *localtime(&t);
-#else
     localtime_r(&t, &tm);
-#endif
     strftime(buffer, size, "%Y/%m/%d %H:%M:%S", &tm);
 }
 
