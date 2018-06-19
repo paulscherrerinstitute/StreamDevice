@@ -32,9 +32,9 @@ set startup {
 set debug 0
 
 startioc
-ioccmd {dbpf DZ:test1 "string 1"}
+put DZ:test1 "string 1"
 assure "string 1A\n"
-ioccmd {dbpf DZ:test2 "string 2"}
+put DZ:test2 "string 2"
 assure "string 2S\r\n"
 
 finish

@@ -73,7 +73,7 @@ for {set i 1} {$i <= $rep} {incr i} {
     send "with number $i\n"
     after 100
 }
-ioccmd {dbpf "DZ:printresult.PROC" 1}
+process DZ:printresult
 assure "Last line received: $rep\n"
 assure "Line count: $rep\n"
 assure "Error count: 0\n"

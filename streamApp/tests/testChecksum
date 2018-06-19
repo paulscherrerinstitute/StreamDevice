@@ -242,7 +242,7 @@ set startup {
 set debug 0
 
 startioc
-ioccmd {dbpf DZ:test1 "123456789"}
+put DZ:test1 "123456789"
 assure "sum      123456789 \xDD\n"
 send   "sum      123456789 \xDD\n"
 assure "sum8     123456789 \xDD\n"

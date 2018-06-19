@@ -27,7 +27,7 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 1}
+put DZ:test1 1
 assure "%\0331\033\033%\n"
 
 finish

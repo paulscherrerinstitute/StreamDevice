@@ -26,17 +26,17 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 assure "Give input\r\n"
 send "abc\r\n"
 assure "abc\r\n"
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 assure "Give input\r\n"
 send "x\r\n"
 assure "x\r\n"
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 assure "Give input\r\n"
 send "\r\n"
 assure "\r\n"

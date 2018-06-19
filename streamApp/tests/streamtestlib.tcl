@@ -95,6 +95,14 @@ proc ioccmd {command} {
     puts $ioc $command
 }
 
+proc process {record} {
+    ioccmd "dbpf $record.PROC 1"
+}
+
+proc put {record value} {
+    ioccmd "dbpf $record \"$value\""
+}
+
 proc send {string} {
     global sock lastsent
     set lastsent $string

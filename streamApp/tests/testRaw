@@ -60,7 +60,7 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 0}
+put DZ:test1 0
 assure "\x00\n"
 assure "\x00\n"
 assure "\x00\x00\n"
@@ -92,7 +92,7 @@ assure "\x00\x00\x00\n"
 assure "\x00\x00\x00\x00\n"
 assure "\x00\x00\x00\x00\x00\n"
 
-ioccmd {dbpf DZ:test1 1}
+put DZ:test1 1
 assure "\x01\n"
 assure "\x01\n"
 assure "\x00\x01\n"
@@ -124,7 +124,7 @@ assure "\x01\x00\x00\n"
 assure "\x01\x00\x00\x00\n"
 assure "\x01\x00\x00\x00\x00\n"
 
-ioccmd {dbpf DZ:test1 -1}
+put DZ:test1 -1
 assure "\xff\n"
 assure "\xff\n"
 assure "\xff\xff\n"
@@ -156,7 +156,7 @@ assure "\xff\x00\x00\n"
 assure "\xff\x00\x00\x00\n"
 assure "\xff\x00\x00\x00\x00\n"
 
-ioccmd {dbpf DZ:test1 269554195}
+put DZ:test1 269554195
 assure "\x13\n"
 assure "\x13\n"
 assure "\x12\x13\n"
@@ -188,7 +188,7 @@ assure "\x13\x00\x00\n"
 assure "\x13\x00\x00\x00\n"
 assure "\x13\x00\x00\x00\x00\n"
 
-ioccmd {dbpf DZ:test1 -559038737}
+put DZ:test1 -559038737
 assure "\xef\n"
 assure "\xef\n"
 assure "\xbe\xef\n"
@@ -220,33 +220,33 @@ assure "\xef\x00\x00\n"
 assure "\xef\x00\x00\x00\n"
 assure "\xef\x00\x00\x00\x00\n"
 
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send   "\x01\x02\x03\x04"
 assure "01020304\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send   "\xde\xad\xbe\xef"
 assure "deadbeef\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send   "\x00\x00\x00\x00"
 assure "00000000\n"
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send   "\x04\x03\x02\x01"
 assure "00020304\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send   "\xde\xad\xbe\xef"
 assure "ffbeadde\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send   "\x00\x00\x00\x00"
 assure "00000000\n"
 
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send   "\x04\x03\x02\x01"
 assure "00020304\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send   "\xde\xad\xbe\xef"
 assure "00beadde\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send   "\x00\x00\x00\x00"
 assure "00000000\n"
 

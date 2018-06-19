@@ -31,7 +31,7 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 "X"}
+put DZ:test1 "X"
 assure "Escaped \"double\" quotes\n"
 assure "Escaped 'single' quotes\n"
 assure "Single 'quotes' in double quotes\n"

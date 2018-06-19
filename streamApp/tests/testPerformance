@@ -33,7 +33,7 @@ set size 1
 set timeout 600000
 
 startioc
-    ioccmd {dbpf DZ:test1.PROC 1}
+    process DZ:test1
     send "$message\n"
     assure "$size\n"
 
@@ -42,7 +42,7 @@ for {set log 1} {$log <= 21} {incr log} {
     set output "$message\n"
     set starttime [clock clicks]
     send $output
-    ioccmd {dbpf DZ:test1.PROC 1}
+    process DZ:test1
     assure "$size\n"
     set duration [expr [clock clicks] - $starttime]
     set performance($size) [expr $duration*1.0/$size]

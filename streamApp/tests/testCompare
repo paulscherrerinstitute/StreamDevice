@@ -27,15 +27,15 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 3.14}
+put DZ:test1 3.14
 assure "set 3.14\n"
 send "ack 3.14 X\n"
 assure "OK\n"
-ioccmd {dbpf DZ:test1 0}
+put DZ:test1 0
 assure "set 0.00\n"
 send "ack 0.00 X\n"
 assure "OK\n"
-ioccmd {dbpf DZ:test1 1}
+put DZ:test1 1
 assure "set 1.00\n"
 send "ack 1.0 X\n"
 assure "mismatch\n"

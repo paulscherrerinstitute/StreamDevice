@@ -33,42 +33,42 @@ set debug 0
 startioc
 
 # reply timeout
-ioccmd {dbpf DZ:readTimeout.PROC 1}
+process DZ:readTimeout
 assure "Give me input\n"
 after 1100
-ioccmd {dbpf DZ:echo.PROC 1}
+process DZ:echo
 ioccmd {dbpr DZ:echo 1}
 assure "Text:'' SEVR=3 STAT=10\n"
 
 # read timeout
-ioccmd {dbpf DZ:readTimeout.PROC 1}
+process DZ:readTimeout
 assure "Give me input\n"
 send "Trulala"
 after 200
-ioccmd {dbpf DZ:echo.PROC 1}
+process DZ:echo
 assure "Text:'Trulala' SEVR=3 STAT=1\n"
 
 # reply timeout again, old input stays
-ioccmd {dbpf DZ:readTimeout.PROC 1}
+process DZ:readTimeout
 assure "Give me input\n"
 after 1100
-ioccmd {dbpf DZ:echo.PROC 1}
+process DZ:echo
 assure "Text:'Trulala' SEVR=3 STAT=10\n"
 
 # mismatch, partially parsed
-ioccmd {dbpf DZ:readTimeout.PROC 1}
+process DZ:readTimeout
 assure "Give me input\n"
 send "bla extra\n"
 after 200
-ioccmd {dbpf DZ:echo.PROC 1}
+process DZ:echo
 assure "Text:'bla' SEVR=3 STAT=12\n"
 
 # success
-ioccmd {dbpf DZ:readTimeout.PROC 1}
+process DZ:readTimeout
 assure "Give me input\n"
 send "Input\n"
 after 200
-ioccmd {dbpf DZ:echo.PROC 1}
+process DZ:echo
 assure "Text:'Input' SEVR=0 STAT=0\n"
 
 

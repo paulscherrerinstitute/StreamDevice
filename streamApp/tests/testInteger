@@ -90,373 +90,373 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "-12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "   -12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send " 0x12345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send " 012345\n"
 assure "5349\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "-0x12345\n"
 assure "-74565\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "0xffffffff\n"
 assure "-1\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "-0xffffffff\n"
 assure "1\n"
 
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "-12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "   -12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send " 0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send " 012345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "-0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "0xffffffff\n"
 assure "0\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "-0xffffffff\n"
 assure "0\n"
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "-12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "   -12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send " 0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send " 012345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "-0x12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "0xffffffff\n"
 assure "0\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "-0xffffffff\n"
 assure "mismatch\n"
 
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "-12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "   -12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send " 0x12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send " 012345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "-0x12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "0xffffffff\n"
 assure "ffffffff\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "-0xffffffff\n"
 assure "mismatch\n"
 
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "-12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "   -12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send " 0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send " 012345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "-0x12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "0xffffffff\n"
 assure "0\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "-0xffffffff\n"
 assure "mismatch\n"
 
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "12345\n"
 assure "1234\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "-12345\n"
 assure "-123\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "   12345\n"
 assure "1234\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "   -12345\n"
 assure "-123\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send " 0x12345\n"
 assure "18\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send " 012345\n"
 assure "83\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "-0x12345\n"
 assure "-1\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "0xffffffff\n"
 assure "255\n"
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "-0xffffffff\n"
 assure "-15\n"
 
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "12345\n"
 assure "1234\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "-12345\n"
 assure "-123\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "   12345\n"
 assure "1\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "   -12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send " 0x12345\n"
 assure "1\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send " 012345\n"
 assure "10\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "-0x12345\n"
 assure "-1\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "0xffffffff\n"
 assure "255\n"
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "-0xffffffff\n"
 assure "-15\n"
 
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "-12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "   12345\n"
 assure "12345\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "   -12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "- 12345\n"
 assure "-12345\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send " 0x12345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send " 012345\n"
 assure "5349\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "-0x12345\n"
 assure "-74565\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "0xffffffff\n"
 assure "-1\n"
-ioccmd {dbpf DZ:test8.PROC 1}
+process DZ:test8
 send "-0xffffffff\n"
 assure "1\n"
 
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "12345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "-12345\n"
 assure "-74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "   12345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "   -12345\n"
 assure "-74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send " 0x12345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send " 012345\n"
 assure "74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "-0x12345\n"
 assure "-74565\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "0xffffffff\n"
 assure "-1\n"
-ioccmd {dbpf DZ:test9.PROC 1}
+process DZ:test9
 send "-0xffffffff\n"
 assure "1\n"
 
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "12345\n"
 assure "5349\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "-12345\n"
 assure "-5349\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "   12345\n"
 assure "5349\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "   -12345\n"
 assure "-5349\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "- 12345\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "\n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "   \n"
 assure "mismatch\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send " 0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send " 012345\n"
 assure "5349\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "-0x12345\n"
 assure "0\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "0xffffffff\n"
 assure "0\n"
-ioccmd {dbpf DZ:test10.PROC 1}
+process DZ:test10
 send "-0xffffffff\n"
 assure "0\n"
 

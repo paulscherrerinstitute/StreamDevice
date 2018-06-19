@@ -63,62 +63,62 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:testout 0}
+put DZ:testout 0
 assure "zerobla\n"
-ioccmd {dbpf DZ:testout 1}
+put DZ:testout 1
 assure "onebla\n"
-ioccmd {dbpf DZ:testout 2}
+put DZ:testout 2
 assure "twobla\n"
-ioccmd {dbpf DZ:testout1 0}
+put DZ:testout1 0
 assure "zerobla\n"
-ioccmd {dbpf DZ:testout1 1}
+put DZ:testout1 1
 assure "onebla\n"
-ioccmd {dbpf DZ:testout1 2}
+put DZ:testout1 2
 assure "twobla\n"
-ioccmd {dbpf DZ:testout2 -1}
+put DZ:testout2 -1
 assure "zerobla\n"
-ioccmd {dbpf DZ:testout2 0}
+put DZ:testout2 0
 assure "onebla\n"
-ioccmd {dbpf DZ:testout2 5}
+put DZ:testout2 5
 assure "twobla\n"
-ioccmd {dbpf DZ:testout2 17}
+put DZ:testout2 17
 assure "defaultbla\n"
 
-ioccmd {dbpf DZ:testin.PROC 1}
+process DZ:testin
 send "zerobla\n"
 assure "0\n"
-ioccmd {dbpf DZ:testin.PROC 1}
+process DZ:testin
 send "onebla\n"
 assure "1\n"
-ioccmd {dbpf DZ:testin.PROC 1}
+process DZ:testin
 send "twobla\n"
 assure "2\n"
-ioccmd {dbpf DZ:testin1.PROC 1}
+process DZ:testin1
 send "zerobla\n"
 assure "0\n"
-ioccmd {dbpf DZ:testin1.PROC 1}
+process DZ:testin1
 send "onebla\n"
 assure "1\n"
-ioccmd {dbpf DZ:testin1.PROC 1}
+process DZ:testin1
 send "twobla\n"
 assure "2\n"
-ioccmd {dbpf DZ:testin2.PROC 1}
+process DZ:testin2
 send "zerobla\n"
 assure "-1\n"
-ioccmd {dbpf DZ:testin2.PROC 1}
+process DZ:testin2
 send "onebla\n"
 assure "0\n"
-ioccmd {dbpf DZ:testin2.PROC 1}
+process DZ:testin2
 send "twobla\n"
 assure "5\n"
 
-ioccmd {dbpf DZ:testin3.PROC 1}
+process DZ:testin3
 send "\000bla\n"
 assure "0\n"
-ioccmd {dbpf DZ:testin3.PROC 1}
+process DZ:testin3
 send "\rbla\n"
 assure "1\n"
-ioccmd {dbpf DZ:testin3.PROC 1}
+process DZ:testin3
 send "bla\n"
 assure "2\n"
 

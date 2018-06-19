@@ -27,7 +27,7 @@ set startup {
 set debug 0
 
 startioc
-ioccmd {dbpf DZ:test1 "010304010001"}
+put DZ:test1 "010304010001"
 assure ":010304010001F6\r\n"
                 
 finish

@@ -64,18 +64,18 @@ set rep 500
 
 startioc
 
-ioccmd {dbpf "DZ:request.PROC" 1}
+process DZ:request
 assure "Give input\n"
 for {set i 1} {$i <= $rep} {incr i} {
     append output "This is line $i.\n"
 }
 send $output
 after 2000
-ioccmd {dbpf "DZ:echo.PROC" 1}
+process DZ:echo
 assure "This is line 253.\n"
-ioccmd {dbpf "DZ:stringout.PROC" 1}
+process DZ:stringout
 assure "This is line $rep.\n"
-ioccmd {dbpf "DZ:countout.PROC" 1}
+process DZ:countout
 assure "$rep\n"
 
 finish

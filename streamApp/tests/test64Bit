@@ -71,24 +71,24 @@ set startup {
 set debug 0
 
 startioc
-ioccmd {dbpf DZ:ao -1}
+put DZ:ao -1
 assure "ao -1.000 -1 -1.000 -1\n"
-ioccmd {dbpf DZ:longout -1}
+put DZ:longout -1
 assure "longout -1 -1\n"
-ioccmd {dbpf DZ:bo 1}
+put DZ:bo 1
 assure "bo 4294967295 ffffffff 11111111111111111111111111111111\n"
-ioccmd {dbpf DZ:mbbo -1}
+put DZ:mbbo -1
 assure "mbbo 4294967295 ffffffff 11111111111111111111111111111111\n"
-ioccmd {dbpf DZ:mbboDirect.B0 1}
+put DZ:mbboDirect.B0 1
 assure "mbboDirect 1 1 1\n"
 #Writing to mbboDirect.VAL is not supported by EPICS
-#ioccmd {dbpf DZ:mbboDirect -1}
+#put DZ:mbboDirect -1
 #assure "mbboDirect 65535 ffff 1111111111111111\n"
-ioccmd {dbpf DZ:ai.PROC 1}
+process DZ:ai
 assure "ai?\n"
 send "-1\n"
 assure "ai -1\n"
-ioccmd {dbpf DZ:longin.PROC 1}
+process DZ:longin
 assure "longin?\n"
 send "-1\n"
 assure "longin -1\n"

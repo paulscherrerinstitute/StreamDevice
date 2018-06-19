@@ -43,12 +43,12 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:sign.PROC 1}
+process DZ:sign
 assure "w\n"
 send " -  15.20 Kg\n"
 assure "-15.20\n"
 
-ioccmd {dbpf DZ:sign.PROC 1}
+process DZ:sign
 assure "w\n"
 send "    15.00 Kg\n"
 assure "15.00\n"

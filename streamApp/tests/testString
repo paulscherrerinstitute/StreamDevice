@@ -52,71 +52,71 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "foobar\n"
 assure "foobar|\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "  foobar  \n"
 assure "foobar|  \n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "  foo bar  \n"
 assure "foo| bar  \n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "    \n"
 assure "|\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "ThisIsAVeryLongInputStringThatExceedsFouryCharacters right?\n"
 assure "ThisIsAVeryLongInputStringThatExceedsFo| right?\n"
 
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "foobar\n"
 assure "foobar|\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "  foobar  \n"
 assure "  foobar|  \n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "  foo bar  \n"
 assure "  foo| bar  \n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "    \n"
 assure "    |\n"
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "foobar\n"
 assure "foobar|\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "  foobar  \n"
 assure "foobar  |\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "  foo bar  \n"
 assure "foo bar  |\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "    \n"
 assure "|\n"
 
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "foobar\n"
 assure "foobar|\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "  foobar  \n"
 assure "  foobar  |\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "  foo bar  \n"
 assure "  foo bar  |\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "    \n"
 assure "    |\n"
 
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "foobar\n"
 assure "foobar|\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "  foobar  \n"
 assure "  foobar  |\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "  foo bar  \n"
 assure "  foo bar  |\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "    \n"
 assure "    |\n"
 

@@ -27,9 +27,9 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 0}
+put DZ:test1 0
 assure "0 \x00 OFF"
-ioccmd {dbpf DZ:test1 1}
+put DZ:test1 1
 assure "1 \x01 ON"
 
 finish

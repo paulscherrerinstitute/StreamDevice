@@ -70,53 +70,53 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "text 1.0,2.0,3.0 end\n"
 assure "3 elements: 1.0,2.0,3.0\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "text 3, 2,   1 end\n"
 assure "3 elements: 3.0,2.0,1.0\n"
-ioccmd {dbpf DZ:test1.PROC 1}
+process DZ:test1
 send "text       7 end\n"
 assure "1 elements: 7.0\n"
 
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "text 1.0,2.0,3.0 end\n"
 assure "3 elements: 1.0,2.0,3.0\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "text 3, 2,   1 end\n"
 assure "3 elements: 3.0,2.0,1.0\n"
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "text       7 end\n"
 assure "1 elements: 7.0\n"
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "1 2 3\n"
 assure "3 elements: 1 2 3\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "       3     2        1    \n"
 assure "3 elements: 3 2 1\n"
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "12345\n"
 assure "2 elements: 123 45\n"
 
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "1 2 3\n"
 assure "3 elements: 1 2 3\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "       3     2        1    \n"
 assure "3 elements: 3 2 1\n"
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "12345\n"
 assure "2 elements: 123 45\n"
 
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "1...2...3\n"
 assure "1 elements: 1...2...3\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "  3     ...   2  ...  1\n"
 assure "3 elements: 3 ... 2 ... 1\n"
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "       7 \n"
 assure "1 elements: 7\n"
 

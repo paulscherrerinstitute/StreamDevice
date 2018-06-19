@@ -74,79 +74,79 @@ proc checkTS {pv timestamp} {
 
 startioc
 
-ioccmd {dbpf DZ:test1 1044068706.789}
+put DZ:test1 1044068706.789
 assure "01.02.2003 04:05:06.79 +0100\n"
 
-ioccmd {dbpf DZ:test1 1057025106.789}
+put DZ:test1 1057025106.789
 assure "01.07.2003 04:05:06.79 +0200\n"
 
-ioccmd {dbpf DZ:test2.PROC 1}
+process DZ:test2
 send "2003-02-01 04:05:06\n"
 assure "1044068706 2003-02-01 04:05:06\n";
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "1. February 2003 04:05:06.789 3.1415\n"
 assure "01.02.2003 04:05:06.79 +0100\n";
 checkTS DZ:test3 "02/01/03 04:05:06.789000000"
 
-ioccmd {dbpf DZ:test3.PROC 1}
+process DZ:test3
 send "1. July 2003 04:05:06.789123 3.1415\n"
 assure "01.07.2003 04:05:06.79 +0200\n";
 checkTS DZ:test3 "07/01/03 04:05:06.789123000"
 
-ioccmd {dbpf DZ:test4.PROC 1}
+process DZ:test4
 send "mon jan 2 04:05:06 2003 3.1415\n"
 assure "Thu 02.01.2003 04:05:06.00 +0100\n";
 checkTS DZ:test4 "01/02/03 04:05:06.000000000"
 
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "12 a\n"
 assure "00\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "01 a\n"
 assure "01\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "2 a\n"
 assure "02\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "11 a\n"
 assure "11\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "12 p\n"
 assure "12\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "01 p\n"
 assure "13\n";
-ioccmd {dbpf DZ:test5.PROC 1}
+process DZ:test5
 send "11 p\n"
 assure "23\n";
 
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "am 12\n"
 assure "00\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "Am 01\n"
 assure "01\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "aM 2\n"
 assure "02\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "AM 11\n"
 assure "11\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "p 12\n"
 assure "12\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "P 01\n"
 assure "13\n";
-ioccmd {dbpf DZ:test6.PROC 1}
+process DZ:test6
 send "PM 11\n"
 assure "23\n";
 
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "1.2.2010 12:56:32 +0000\n"
 assure "01.02.2010 13:56:32 +0100 1265028992.000000\n";
-ioccmd {dbpf DZ:test7.PROC 1}
+process DZ:test7
 send "1.7.2010 12:56:32 +0000\n"
 assure "01.07.2010 14:56:32 +0200 1277988992.000000\n";
 finish

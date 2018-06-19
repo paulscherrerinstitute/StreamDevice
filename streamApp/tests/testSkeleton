@@ -26,7 +26,7 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:test1 "string 1"}
+put DZ:test1 "string 1"
 assure "string 1\n"
 
 finish

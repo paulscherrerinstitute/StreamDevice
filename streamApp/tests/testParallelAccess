@@ -32,8 +32,8 @@ set debug 0
 
 startioc
 
-ioccmd {dbpf DZ:slow 1}
-ioccmd {dbpf DZ:fast 1}
+put DZ:slow 1
+put DZ:fast 1
 assure "slow start\n"
 assure "slow finished\n"
 assure "fast\n"
