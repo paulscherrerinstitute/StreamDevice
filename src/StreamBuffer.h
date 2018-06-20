@@ -28,8 +28,8 @@
 #define __attribute__(x)
 #endif
 
-#if defined(_WIN32) && !defined(ssize_t)
-#define ssize_t ptrdiff_t
+#if defined(_WIN32)
+typedef ptrdiff_t ssize_t;
 #endif
 
 class StreamBuffer
