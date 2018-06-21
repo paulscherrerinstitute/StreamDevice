@@ -51,8 +51,8 @@ $outfile = $ARGV[0];
 @apps   = (TOP);	# Provides the order of apps in RELEASE file
 
 # Read the RELEASE file(s)
-$relfile = "$top/config/RELEASE";
-die "Can't find config/RELEASE file" unless (-r $relfile);
+$relfile = "$top/configure/RELEASE";
+die "Can't find configure/RELEASE file" unless (-r $relfile);
 &readRelease($relfile, \%macros, \@apps);
 
 if ($hostarch) {

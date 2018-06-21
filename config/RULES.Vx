@@ -1,7 +1,0 @@
-#RULES.Vx
-include $(EPICS_BASE)/config/RULES.Vx
-inc:: $(INSTALL_INCREC)
-
-# Library should be rebuilt because LIBOBJS may have changed.
-$(LIBNAME): ../Makefile.Vx
-

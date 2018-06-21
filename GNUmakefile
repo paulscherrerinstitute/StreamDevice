@@ -1,5 +1,5 @@
-# If you are not using the PSI build environment, this file can be removed.
 ifeq ($(wildcard /ioc/tools/driver.makefile),)
+$(info If you are not using the PSI build environment, GNUmakefile can be removed.)
 include Makefile
 else
 include /ioc/tools/driver.makefile
@@ -30,6 +30,11 @@ HEADERS += StreamBuffer.h
 HEADERS += StreamError.h
 
 StreamCore.o StreamCore.d: streamReferences
+
+# Update version string (contains __DATE__ and __TIME__)
+# each time make runs.
+StreamVersion.o: FORCE
+FORCE:
 
 streamReferences:
 	$(PERL) ../src/makeref.pl Interface $(BUSSES) > $@

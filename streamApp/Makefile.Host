@@ -1,5 +1,7 @@
-TOP := ../../$(TOP)
+TOP = ../..
+ifneq ($(wildcard ../../../config),)
+TOP = ../../..
+endif
 
 include $(TOP)/config/CONFIG_APP
-
 include $(EPICS_BASE)/config/RULES.Host

@@ -18,32 +18,33 @@
 #                                                              #
 ################################################################
 
-TOP := ../../$(TOP)
+TOP = ../..
+ifneq ($(wildcard ../../../config),)
+TOP = ../../..
+endif
 
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
 
 LIBNAME = streamLib
 
-SRCS.cc += $(patsubst %,../%,$(filter %.cc,$(STREAM_SRCS)))
 SRCS.cc += $(BUSSES:%=../%Interface.cc)
 SRCS.cc += $(FORMATS:%=../%Converter.cc)
-SRCS.c += $(patsubst %,../%,$(filter %.c,$(STREAM_SRCS)))
-SRCS.c += $(patsubst %,../dev%Stream.c,$(RECORDTYPES)))
+SRCS.cc += $(filter %.cc,$(STREAM_SRCS:%=%../%))
+SRCS.c += $(RECORDTYPES:%=../dev%Stream.c)
+SRCS.c += $(filter %.c,$(STREAM_SRCS:%=%../%))
 
 LIBOBJS = $(patsubst ../%,%.o,$(basename $(SRCS.cc) $(SRCS.c)))
 
 include $(EPICS_BASE)/config/RULES.Vx
-include $(TOP)/config/RULES.munch
+include ../../config/RULES.munch
 
-build:: depends
-
+DEPENDS: depends
 -include DEPENDS
 
-# Update version string (contains __DATE__ and __TIME__)
-# each time make runs.
-StreamVersion.o: FORCE
-FORCE:
+# Update version string whenever something changes
+StreamVersion.o: ../*.c ../*.h ../*.cc ../CONFIG_STREAM
+$(LIBNAME): StreamVersion.o
 
 StreamCore.o: streamReferences
 

@@ -1,4 +1,7 @@
-TOP := ../../$(TOP)
+TOP = ../..
+ifneq ($(wildcard ../../../config),)
+TOP = ../../..
+endif
 
 include $(TOP)/config/CONFIG_APP
 
@@ -19,7 +22,7 @@ DBDEXPAND = streamAppInclude-3-13.dbd
 #CPPFLAGS += -DDEBUGFILE=StreamDebug.log
 
 include $(EPICS_BASE)/config/RULES.Vx
-include $(TOP)/config/RULES.munch
+include ../../config/RULES.munch
 
-# Rebuild when  LIBOBJS change
+# Rebuild when  LIBOBJS changes
 $(LIBNAME): ../base-3-13LIBOBJS

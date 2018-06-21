@@ -7,7 +7,7 @@ include $(TOP)/config/CONFIG_APP
 
 TARGETS = CONFIG_APP_INCLUDE
 
-include $(TOP)/config/RULES.Vx
+include $(EPICS_BASE)/config/RULES.Vx
 
 inc:: $(TARGETS)
 

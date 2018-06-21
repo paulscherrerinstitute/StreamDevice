@@ -18,19 +18,16 @@
 #                                                              #
 ################################################################
 
-TOP := ../../$(TOP)
+TOP = ../..
+ifneq ($(wildcard ../../../config),)
+TOP = ../../..
+endif
 
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
 
 DBDNAME = stream.dbd
-
 INC += devStream.h
-
-# This is the munch.pl taken from EPICS 3.14.8.2
-# Install script and rule.
-CONFIGS = RULES.munch
-SCRIPTS = munch.pl
 
 include $(EPICS_BASE)/config/RULES.Host
 

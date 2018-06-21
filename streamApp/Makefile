@@ -1,15 +1,13 @@
-TOP:=../$(TOP)
-
-# Look if we have EPICS R3.13 or R3.14+
-ifeq ($(wildcard $(TOP)/configure),)
-# EPICS R3.13
-include $(TOP)/config/CONFIG_APP
-# The real work is in Makefile.Vx
-include $(TOP)/config/RULES_ARCHS
+TOP = ../..
+ifneq ($(wildcard ../../configure),)
+  include $(TOP)/configure/CONFIG
+else ifneq ($(wildcard ../../config),)
+  include $(TOP)/config/CONFIG_APP
+  include $(TOP)/config/RULES_ARCHS
 else
-
-# EPICS R3.14+
-include $(TOP)/configure/CONFIG
+  TOP= ..
+  include $(TOP)/configure/CONFIG
+endif
 
 PROD = streamApp
 DBD  = streamApp.dbd
@@ -63,13 +61,11 @@ PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 # switch off annoying rset warnings in 3.16+
 CPPFLAGS += -DUSE_TYPED_RSET
 
-include $(TOP)/configure/RULES
+-include $(TOP)/configure/RULES
 
 ifdef BASE_3_15
 clean:
 else
 clean::
 endif
-	$(RM) core* *.log
-
-endif
+	$(RM) core* *.log tests/test.* tests/*log

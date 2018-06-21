@@ -1,23 +1,20 @@
 TOP = ..
-
-# Look if we have EPICS R3.13 or R3.14
-ifneq ($(wildcard $(TOP)/configure),)
-  # EPICS R3.14
-  DIRS = configure
+ifneq ($(wildcard ../configure),)
+  # We are in an EPICS R3.14+ <TOP> location
   include $(TOP)/configure/CONFIG
-else ifneq ($(wildcard $(TOP)/config),)
-  # EPICS R3.13
+else ifneq ($(wildcard ../config),)
+  # We are in an EPICS R3.13 <TOP> location
   CONFIG = $(TOP)/config
-  DIRS = config
   include $(TOP)/config/CONFIG_APP
 else
+  # Using our own local configuration
   TOP = .
-  DIRS = configure
+  DIRS = config configure 
+  src_DEPEND_DIRS := $(DIRS)
   include $(TOP)/configure/CONFIG
 endif
 
 DIRS += src
-src_DEPEND_DIRS = configure
 DIRS += streamApp
 streamApp_DEPEND_DIRS = src
 
@@ -26,4 +23,4 @@ include $(CONFIG)/RULES_TOP
 documentation/stream.pdf: documentation/*.html documentation/*.css documentation/*.png
 	cd documentation; makepdf
 
-install: documentation/stream.pdf
+pdf: documentation/stream.pdf
