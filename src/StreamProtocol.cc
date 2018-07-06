@@ -512,19 +512,30 @@ Each time newline is read, line is incremented.
                     buffer(token));
                 return false;
             }
-            if (c == '$' && buffer[-1] == '\\')
-            {
-                // quoted variable reference
-                // terminate string here and do variable in next pass
-                buffer[-1] = quote;
-                ungetc(c, file);
-                break;
-            }
             buffer.append(c);
-            if (c == quote && buffer[-2] != '\\')
+            if (c == quote)
             {
                 quote = false;
                 break;
+            }
+            if (c == '\\')
+            {
+                c = getc(file);
+                if (c == '$')
+                {
+                    // quoted variable reference
+                    // terminate string here and do variable in next pass
+                    buffer[-1] = quote;
+                    ungetc(c, file);
+                    break;
+                }
+                if (c == EOF || c == '\n')
+                {
+                    error(line, filename(), "Backslash at end of line: %s\n",
+                        buffer(token));
+                    return false;
+                }
+                buffer.append(c);
             }
             c = getc(file);
         }
