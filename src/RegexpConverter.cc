@@ -223,7 +223,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
         }
         buffer.replace(start+c+ovector[0], l, s);
         length += s.length() - l;
-        c += s.length();
+        c += ovector[0] + s.length();
         if (n == fmt.prec) // max match reached
             return;
     }
