@@ -564,8 +564,8 @@ in architecture specific RELEASE.Common.<em>arch</em> files.
 If the regular expression is not anchored, i.e. does not start with
 <code>^</code>, leading non-matching input is skipped. 
 A maximum of <em>width</em> bytes is matched, if specified.
-If <em>precision</em> is given, it specifies the sub-expression whose match
-is retuned.
+If <em>precision</em> is given, it specifies the sub-expression in <code>()</code>
+whose match is retuned.
 Otherwise the complete match is returned.
 In any case, the complete match is consumed from the input buffer.
 If the expression contains a <code>/</code> it must be escaped like <code>\/</code>.
@@ -586,12 +586,19 @@ as a post-processor for output.
 </p>
 <p>
 Matches of the <em>regex</em> are replaced by the string <em>subst</em> with all
-<code>&</code> or <code>\0</code> in <em>subst</em> replaced with the match itself and all
-<code>\1</code> through <code>\9</code> replaced with the match of the corresponding sub-expression.
+<code>&</code> in <em>subst</em> replaced with the match itself and all
+<code>\1</code> through <code>\9</code> replaced with the match of the corresponding
+sub-expression <span class="new"> if such a sub-expression exists.
+
+Due to limitations of the parser, <code>\1</code> and <code>\x01</code> are the same 
+which makes it difficult to use literal bytes with values lower than 10 in <em>subst</em>.
+Therefore <code>\0</code> aways means a literal byte (incompatible change from earlier version!)
+and <code>\1</code> through <code>\9</code> mean literal bytes if they are larger than
+the number of sub-expressions.
+</span>
+
 To get a literal <code>&</code> or <code>\</code> or <code>/</code> in the substitution write
 <code>\&</code> or <code>\\</code> or <code>\/</code>.
-There is no way to specify literal bytes with values less or equal to 9 in the
-substitution!
 </p>
 <p>
 If <em>width</em> is specified, it limits the number of characters processed.

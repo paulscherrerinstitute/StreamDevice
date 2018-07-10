@@ -32,7 +32,6 @@
    run-time leak.
  - A maximum of 9 subexpressions is supported. Only one of them can
    be the result of the match.
- - vxWorks and maybe other OS don't have a PCRE library. Provide one?
 */
 
 class RegexpConverter : public StreamFormatConverter
@@ -54,9 +53,9 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     if (fmt.prec > 9)
     {
-        error("Subexpression index %d too big (>9)\n", fmt.prec);
+        error("Sub-expression index %d too big (>9)\n", fmt.prec);
         return false;
-    }    
+    }
 
     StreamBuffer pattern;
     while (*source != '/')
@@ -81,14 +80,21 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     }
     source++;
     debug("regexp = \"%s\"\n", pattern.expand()());
-    
+
     const char* errormsg;
     int eoffset;
-    pcre* code = pcre_compile(pattern(), 0, 
-        &errormsg, &eoffset, NULL);
+    int nsubexpr;
+
+    pcre* code = pcre_compile(pattern(), 0, &errormsg, &eoffset, NULL);
     if (!code)
     {
         error("%s after \"%s\"\n", errormsg, pattern.expand(0, eoffset)());
+        return false;
+    }
+    pcre_fullinfo(code, NULL, PCRE_INFO_CAPTURECOUNT, &nsubexpr);
+    if (fmt.prec > nsubexpr)
+    {
+        error("Sub-expression index is %d but pattern has only %d sub-expression\n", fmt.prec, nsubexpr);
         return false;
     }
     info.append(&code, sizeof(code));
@@ -96,7 +102,8 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
     if (fmt.flags & alt_flag)
     {
         StreamBuffer subst;
-        debug("check for subst in \"%s\"\n", StreamBuffer(source).expand()());        
+
+        debug("check for subst in \"%s\"\n", StreamBuffer(source).expand()());
         while (*source != '/')
         {
             if (!*source) {
@@ -122,15 +129,15 @@ scanString(const StreamFormat& fmt, const char* input,
     int ovector[30];
     int rc;
     unsigned int l;
-    
+
     const char* info = fmt.info;
     pcre* code = extract<pcre*>(info);
     int length = fmt.width > 0 ? fmt.width : strlen(input);
     int subexpr = fmt.prec > 0 ? fmt.prec : 0;
-    
+
     debug("input = \"%s\"\n", input);
     debug("length=%d\n", length);
-    
+
     rc = pcre_exec(code, NULL, input, length, 0, 0, ovector, 30);
     debug("pcre_exec match \"%.*s\" result = %d\n", length, input, rc);
     if ((subexpr && rc <= subexpr) || rc < 0)
@@ -152,7 +159,7 @@ scanString(const StreamFormat& fmt, const char* input,
     }
     memcpy(value, input + ovector[subexpr*2], l);
     value[l] = '\0';
-    return ovector[1]; // consume input until end of match 
+    return ovector[1]; // consume input until end of match
 }
 
 static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
@@ -167,19 +174,19 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
     length = buffer.length() - start;
     if (fmt.width && fmt.width < length)
         length = fmt.width;
-    if (fmt.flags & sign_flag)
+    if (fmt.flags & left_flag)
         start = buffer.length() - length;
 
     debug("regsubst buffer=\"%s\", start=%ld, length=%ld, subst = \"%s\"\n",
-        buffer.expand()(), start, length, subst);
-    
+        buffer.expand()(), start, length, StreamBuffer(subst).expand()());
+
     for (c = 0, n = 1; c < length; n++)
     {
         rc = pcre_exec(code, NULL, buffer(start+c), length-c, 0, 0, ovector, 30);
-        debug("pcre_exec match \"%.*s\" result = %d\n", (int)length-c, buffer(start+c), rc);
-        if (rc < 0) // no match 
+        debug("pcre_exec match \"%s\" result = %d\n", buffer.expand(start+c, length-c)(), rc);
+        if (rc < 0) // no match
             return;
-            
+
         if (!(fmt.flags & sign_flag) && n < fmt.prec) // without + flag
         {
             // do not yet replace this match
@@ -188,24 +195,24 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
         }
         // replace & by match in subst
         l = ovector[1] - ovector[0];
-        debug("start = \"%s\"\n", buffer(start+c));
-        debug("match = \"%.*s\"\n", l, buffer(start+c+ovector[0]));
+        debug("before [%d]= \"%s\"\n", ovector[0], buffer.expand(start+c,ovector[0])());
+        debug("match  [%d]= \"%s\"\n", l, buffer.expand(start+c+ovector[0],l)());
         for (r = 1; r < rc; r++)
-            debug("sub%d = \"%.*s\"\n", r, ovector[r*2+1]-ovector[r*2], buffer(start+c+ovector[r*2]));
-        debug("rest  = \"%s\"\n", buffer(start+c+ovector[1]));
+            debug("sub%d = \"%s\"\n", r, buffer.expand(start+c+ovector[r*2], ovector[r*2+1]-ovector[r*2])());
+        debug("after     = \"%s\"\n", buffer.expand(start+c+ovector[1])());
         s = subst;
-        debug("subs = \"%s\"\n", s.expand()());
+        debug("subs      = \"%s\"\n", s.expand()());
         for (r = 0; r < s.length(); r++)
         {
             debug("check \"%s\"\n", s.expand(r)());
             if (s[r] == esc)
             {
                 unsigned char ch = s[r+1];
-                if (ch < 9) // escaped 0 - 9 : replace with subexpr
+                if (c != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
                 {
                     ch *= 2;
                     rl = ovector[ch+1] - ovector[ch];
-                    debug("replace \\%d: \"%.*s\"\n", ch/2, rl, buffer(start+c+ovector[ch]));
+                    debug("replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
                     s.replace(r, 2, buffer(start+c+ovector[ch]), rl);
                     r += rl - 1;
                 }
@@ -214,12 +221,12 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, long start)
             }
             else if (s[r] == '&') // unescaped & : replace with match
             {
-                debug("replace &: \"%.*s\"\n", l,  buffer(start+c+ovector[0]));
+                debug("replace &: \"%s\"\n", buffer.expand(start+c+ovector[0], l)());
                 s.replace(r, 1, buffer(start+c+ovector[0]), l);
                 r += l - 1;
             }
             else continue;
-            debug("subs = \"%s\"\n", s());
+            debug("subs = \"%s\"\n", s.expand()());
         }
         buffer.replace(start+c+ovector[0], l, s);
         length += s.length() - l;
