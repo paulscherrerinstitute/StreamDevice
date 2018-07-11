@@ -197,8 +197,12 @@ long streamReload(const char* recordname)
     dbCommon* record;
     long status;
 
+    int oldStreamError = streamError;
+    streamError = 1;
+
     if(!pdbbase) {
         error("No database has been loaded\n");
+        streamError = oldStreamError;
         return ERROR;
     }
     debug("streamReload(%s)\n", recordname);
@@ -235,6 +239,7 @@ long streamReload(const char* recordname)
     }
     dbFinishEntry(&dbentry);
     StreamProtocolParser::free();
+    streamError = oldStreamError;
     return OK;
 }
 
@@ -473,6 +478,7 @@ long streamInit(int after)
 {
     if (after)
     {
+        streamError = 0; // Switch off errors after init in order not to spam messages when a device is down.
         StreamProtocolParser::free();
     }
     return OK;
