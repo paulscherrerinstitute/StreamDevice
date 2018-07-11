@@ -1359,7 +1359,8 @@ compileString(StreamBuffer& buffer, const char*& source,
                         source);
                     return false;
                 }
-                if (formatType != NoFormat)
+                if (formatType != NoFormat &&
+                    i > 2 /* do not escape skip */)
                 {
                     buffer.append(esc);
                 }
