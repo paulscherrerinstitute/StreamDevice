@@ -741,16 +741,15 @@ process()
     debug("Stream::process(%s) start\n", name());
     status = NO_ALARM;
     convert = OK;
-    record->pact = true;
     if (!startProtocol(StreamCore::StartNormal))
     {
         debug("Stream::process(%s): could not start, status=%d\n",
             name(), status);
         (void) recGblSetSevr(record, status, INVALID_ALARM);
-        record->pact = false;
         return false;
     }
     debug("Stream::process(%s): protocol started\n", name());
+    record->pact = true;
     return true;
 }
 
