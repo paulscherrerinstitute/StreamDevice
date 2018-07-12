@@ -858,7 +858,7 @@ scan(format_t *format, void* value, size_t maxStringSize)
             return ERROR;
     }
     debug("Stream::scan() currentValueLength=%" Z "d\n", currentValueLength);
-    if (currentValueLength < 0) 
+    if (currentValueLength < 0)
     {
         currentValueLength = 0; // important for arrays with less than NELM elements
         return ERROR;

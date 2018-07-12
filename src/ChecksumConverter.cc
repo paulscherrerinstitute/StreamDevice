@@ -476,7 +476,7 @@ static uint32_t CPI(const uint8_t * data, size_t len, uint32_t init)
     while (len--)
     {
         init += *data++;
-    } 
+    }
     init %= 95;
     init += 32;
     return init;

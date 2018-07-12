@@ -129,7 +129,8 @@ static const char* ioActionStr[] = {
 };
 
 static const char* asynStatusStr[] = {
-    "asynSuccess", "asynTimeout", "asynOverflow", "asynError", "asynDisconnected", "asynDisabled"
+    "asynSuccess", "asynTimeout", "asynOverflow", "asynError",
+    "asynDisconnected", "asynDisabled"
 };
 
 static const char* eomReasonStr[] = {
@@ -279,7 +280,8 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
     callbackSetCallback(expire, &timeoutCallback);
     callbackSetUser(this, &timeoutCallback);
 #else
-    debug ("AsynDriverInterface(%s) epicsTimerQueueActive::allocate(true)\n", client->name());
+    debug ("AsynDriverInterface(%s) epicsTimerQueueActive::allocate(true)\n",
+        client->name());
     timerQueue = &epicsTimerQueueActive::allocate(true);
     assert(timerQueue);
     debug ("AsynDriverInterface(%s) timerQueue->createTimer()\n", client->name());
@@ -449,7 +451,7 @@ connectToBus(const char* portname, int addr)
     debug("%s: AsynDriverInterface::connectToBus(%s, %d): "
         "pasynManager->connectDevice(%p, %s, %d) = %s\n",
         clientName(), portname, addr,  pasynUser,portname, addr,
-            asynStatusStr[status]);    
+            asynStatusStr[status]);
     if (status != asynSuccess)
     {
         // asynDriver does not know this portname/address
@@ -515,7 +517,7 @@ bool AsynDriverInterface::
 lockRequest(unsigned long lockTimeout_ms)
 {
     asynStatus status;
-    
+
     debug("AsynDriverInterface::lockRequest(%s, %ld msec)\n",
         clientName(), lockTimeout_ms);
     lockTimeout = lockTimeout_ms ? lockTimeout_ms*0.001 : -1.0;
@@ -548,7 +550,7 @@ connectToAsynPort()
             clientName(), pasynUser->errorMessage);
         return false;
     }
-    // Is it really connected? 
+    // Is it really connected?
 
 /*  does not work because read(...,0,...) deletes 1 byte from input.
 
@@ -571,7 +573,7 @@ connectToAsynPort()
             clientName(),connected?"":"dis");
     }
 */
-        
+
     debug("AsynDriverInterface::connectToAsynPort(%s) is %s connected\n",
         clientName(), connected ? "already" : "not yet");
     if (!connected)
@@ -669,9 +671,10 @@ writeHandler()
     {
         // discard any early input, but forward it to potential async records
         // thus do not use pasynOctet->flush()
-        // unfortunately we cannot do this with GPIB because addressing a device as talker
-        // when it has nothing to say is an error. Also timeout=0 does not help here
-        // (would need a change in asynGPIB), thus use flush() for GPIB.
+        // unfortunately we cannot do this with GPIB because addressing a
+        // device as talker when it has nothing to say is an error.
+        // Also timeout=0 does not help here (would need a change in asynGPIB),
+        // thus use flush() for GPIB.
         do {
             char buffer [256];
             size_t received = 0;
@@ -694,15 +697,15 @@ writeHandler()
             clientName());
          pasynOctet->flush(pvtOctet, pasynUser);
     }
-        
+
     // discard any early events
     receivedEvent = 0;
-    
+
     pasynUser->timeout = writeTimeout;
-    
+
     // has stream already added a terminator or should
     // asyn do so?
-    
+
     size_t streameoslen;
     const char* streameos = getOutTerminator(streameoslen);
     int oldeoslen = -1;
@@ -727,8 +730,8 @@ writeHandler()
     debug("AsynDriverInterface::writeHandler(%s): "
         "write(..., \"%s\", outputSize=%" Z "u, written=%" Z "u) "
         "[timeout=%g sec] = %s (%s)\n",
-        clientName(), 
-        StreamBuffer(outputBuffer, outputSize).expand()(), 
+        clientName(),
+        StreamBuffer(outputBuffer, outputSize).expand()(),
         outputSize, written,
         pasynUser->timeout, asynStatusStr[status],
         pasynUser->errorMessage);
@@ -739,7 +742,7 @@ writeHandler()
         pasynOctet->setOutputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
     }
-    
+
     // Up to asyn 4.17 I can't see when the server has disconnected. Why?
     int connected;
     pasynManager->isConnected(pasynUser, &connected);
@@ -818,13 +821,13 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
         "%ld msec read, expect %" Z "u bytes, async=%s)\n",
         clientName(), replyTimeout_ms, readTimeout_ms,
         _expectedLength, async?"yes":"no");
-        
+
     asynStatus status;
     readTimeout = readTimeout_ms*0.001;
     replyTimeout = replyTimeout_ms*0.001;
     double queueTimeout;
     expectedLength = _expectedLength;
-    
+
     if (async)
     {
         ioAction = AsyncRead;
@@ -874,7 +877,7 @@ readHandler()
     const char* deveos;
     int oldeoslen = -1;
     char oldeos[16];
-    
+
     // Setup eos if required.
     streameos = getInTerminator(streameoslen);
     deveos = streameos;
@@ -966,7 +969,7 @@ readHandler()
         received = 0;
         eomReason = 0;
         pasynUser->errorMessage[0] = 0;
-        
+
         debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
             "read(..., bytesToRead=%" Z "u, ...) "
             "[timeout=%g sec]\n",
@@ -977,7 +980,8 @@ readHandler()
         // Even though received is size_t I have seen (size_t)-1 here!
 #ifndef NO_TEMPORARY
         debug("AsynDriverInterface::readHandler(%s): "
-            "read returned %s: ioAction=%s received=%" Z "d, eomReason=%s, buffer=\"%s\"\n",
+            "read returned %s: ioAction=%s received=%" Z "d, "
+            "eomReason=%s, buffer=\"%s\"\n",
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
             received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
@@ -985,18 +989,18 @@ readHandler()
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
             "device is now %sconnected\n",
-            clientName(),connected?"":"dis");        
+            clientName(),connected?"":"dis");
         // asyn 4.16 sets reason to ASYN_EOM_END when device disconnects.
         // What about earlier versions?
         if (!connected) eomReason |= ASYN_EOM_END;
-        
+
         if (status == asynTimeout &&
             pasynUser->timeout == 0.0 &&
             received > 0)
         {
             // Jens Eden (PTB) pointed out that polling asynInterposeEos
             // with timeout = 0.0 returns asynTimeout even when bytes
-            // have been received, but not yet the terminator.               
+            // have been received, but not yet the terminator.
             status = asynSuccess;
         }
 
@@ -1071,7 +1075,8 @@ readHandler()
                         // start next poll after timer expires
                         if (replyTimeout != 0.0) startTimer(replyTimeout);
                         // continues with:
-                        //    timerExpired() -> queueRequest() -> handleRequest() -> readHandler()
+                        //    timerExpired() -> queueRequest() ->
+                        //                 handleRequest() -> readHandler()
                         // or intrCallbackOctet() -> asynReadHandler()
                         break;
                     }
@@ -1153,9 +1158,10 @@ readHandler()
         pasynUser->timeout = readTimeout;
         waitForReply = false;
     }
-    
+
     // restore original EOS
-    if (oldeoslen >= 0 && oldeoslen != (int)deveoslen && strcmp(deveos, oldeos) != 0)
+    if (oldeoslen >= 0 && oldeoslen != (int)deveoslen &&
+        strcmp(deveos, oldeos) != 0)
     {
         pasynOctet->setInputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
@@ -1199,7 +1205,7 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
     // inside the read handler of some other asynUser in the port thread.
     // Thus, it is sufficient to mark the request as obsolete by
     // setting ioAction=None. See handleRequest().
-    
+
 #ifndef NO_TEMPORARY
     debug("AsynDriverInterface::asynReadHandler(%s, buffer=\"%s\", "
             "received=%ld eomReason=%s) ioAction=%s\n",
@@ -1214,21 +1220,21 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
         // At the moment, it seems that asynDriver does not cut off
         // terminators for interrupt users and never sets eomReason.
         // This may change in future releases of asynDriver.
-        
+
         asynStatus status;
         const char* streameos;
         size_t streameoslen;
         streameos = getInTerminator(streameoslen);
         char deveos[16]; // I guess that is sufficient
         int deveoslen;
-        
+
         if (eomReason & ASYN_EOM_EOS)
         {
             // Terminator was cut off.
             // If terminator is handled by stream, then we must
             // restore the terminator, because the "real" terminator
             // might be longer than what the octet driver supports.
-            
+
             if (!streameos)  // stream has not defined eos
             {
                 // Just handle eos as normal end condition
@@ -1426,7 +1432,7 @@ connectRequest(unsigned long connecttimeout_ms)
     double queueTimeout = connecttimeout_ms*0.001;
     asynStatus status;
     ioAction = Connect;
-    
+
     debug("AsynDriverInterface::connectRequest %s\n",
         clientName());
     status = pasynManager->queueRequest(pasynUser,
@@ -1449,7 +1455,7 @@ disconnectRequest()
 {
     asynStatus status;
     ioAction = Disconnect;
-    
+
     debug("AsynDriverInterface::disconnectRequest %s\n",
         clientName());
     status = pasynManager->queueRequest(pasynUser,

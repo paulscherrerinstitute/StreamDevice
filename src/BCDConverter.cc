@@ -44,7 +44,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     unsigned long prec = fmt.prec < 0 ? 2 * sizeof(value) : fmt.prec; // number of nibbles
     unsigned long width = (prec + (fmt.flags & sign_flag ? 2 : 1)) / 2;
     unsigned long val = value;
-    
+
     output.append('\0', width);
     if (fmt.width > width) width = fmt.width;
     if (fmt.flags & sign_flag && value < 0)
