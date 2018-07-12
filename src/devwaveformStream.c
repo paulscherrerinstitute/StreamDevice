@@ -192,6 +192,7 @@ static long writeData (dbCommon *record, format_t *format)
                     return ERROR;
                 break;
             }
+            case DBF_ULONG:
             case DBF_LONG:
             case DBF_ENUM:
             {
