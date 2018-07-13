@@ -458,6 +458,10 @@ connectToBus(const char* portname, int addr)
         return false;
     }
 
+    // disable asyn errors to avoid flooding when device is disconnected
+    // user can re-enable later
+    pasynTrace->setTraceMask(pasynUser, 0);
+    
     asynInterface* pasynInterface;
 
     // find the asynCommon interface
@@ -524,7 +528,7 @@ lockRequest(unsigned long lockTimeout_ms)
     ioAction = Lock;
     status = pasynManager->queueRequest(pasynUser,
         priority(), lockTimeout);
-    reportAsynStatus(status, "lockRequest: pasynManager->queueRequest");
+    reportAsynStatus(status, "lockRequest");
     return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> lockHandler() -> lockCallback()
@@ -582,7 +586,7 @@ connectToAsynPort()
         debug("AsynDriverInterface::connectToAsynPort(%s): "
                 "status=%s\n",
             clientName(), asynStatusStr[status]);
-        reportAsynStatus(status, "connectToAsynPort: pasynCommon->connect");
+        reportAsynStatus(status, "connectToAsynPort");
         return (status == asynSuccess);
     }
 //  We probably should set REN=1 prior to sending but this
@@ -648,7 +652,7 @@ writeRequest(const void* output, size_t size,
     ioAction = Write;
     status = pasynManager->queueRequest(pasynUser, priority(),
         writeTimeout);
-    reportAsynStatus(status, "writeRequest: pasynManager->queueRequest");
+    reportAsynStatus(status, "writeRequest");
     return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> writeHandler() -> lockCallback()
@@ -759,7 +763,7 @@ writeHandler()
             {
                 status = pasynManager->queueRequest(pasynUser,
                     priority(), lockTimeout);
-                reportAsynStatus(status, "writeHandler: pasynManager->queueRequest");
+                reportAsynStatus(status, "writeHandler");
                 if (status != asynSuccess)
                 {
                     writeCallback(StreamIoFault);
@@ -772,34 +776,34 @@ writeHandler()
             writeCallback(StreamIoSuccess);
             return;
         case asynTimeout:
-            error("%s: asynTimeout (%g sec) in write. Asyn driver says: \"%s\"\n",
+            error("%s: asynTimeout (%g sec) in write: %s\n",
                 clientName(), pasynUser->timeout, pasynUser->errorMessage);
             writeCallback(StreamIoTimeout);
             return;
         case asynOverflow:
-            error("%s: asynOverflow in write. Asyn driver says: \"%s\"\n",
+            error("%s: asynOverflow in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynError:
-            error("%s: asynError in write. Asyn driver says: \"%s\"\n",
+            error("%s: asynError in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #ifdef ASYN_VERSION // asyn >= 4.14
         case asynDisconnected:
-            error("%s: asynDisconnected in write. Asyn driver says: \"%s\"\n",
+            error("%s: asynDisconnected in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
         case asynDisabled:
-            error("%s: asynDisconnected in write. Asyn driver says: \"%s\"\n",
+            error("%s: asynDisabled in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
 #endif
         default:
-            error("%s: unknown asyn error in write. Asyn driver says: \"%s\"\n",
+            error("%s: unknown asyn error in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
@@ -843,7 +847,7 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
         status!=asynSuccess ? pasynUser->errorMessage : "");
     if (!async)
     {
-        reportAsynStatus(status, "readRequest: pasynManager->queueRequest");
+        reportAsynStatus(status, "readRequest");
     }
     if (status != asynSuccess)
     {
@@ -976,7 +980,6 @@ readHandler()
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
             received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
-
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
             "device is now %sconnected\n",
@@ -1101,29 +1104,29 @@ readHandler()
                 }
                 peeksize = inputBuffer.capacity();
                 // deliver whatever we could save
-                error("%s: asynOverflow in read. Asyn driver says: \"%s\"\n",
+                error("%s: asynOverflow in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
             case asynError:
-                error("%s: asynError in read. Asyn driver says: \"%s\"\n",
+                error("%s: asynError in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault, buffer, received);
                 break;
 #ifdef ASYN_VERSION // asyn >= 4.14
             case asynDisconnected:
-                error("%s: asynDisconnected in read. Asyn driver says: \"%s\"\n",
+                error("%s: asynDisconnected in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
             case asynDisabled:
-                error("%s: asynDisconnected in read. Asyn driver says: \"%s\"\n",
+                error("%s: asynDisabled in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
 #endif
             default:
-                error("%s: unknown asyn error in read. Asyn driver says: \"%s\"\n",
+                error("%s: unknown asyn error in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
@@ -1418,7 +1421,7 @@ connectRequest(unsigned long connecttimeout_ms)
         clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, queueTimeout);
-    reportAsynStatus(status, "connectRequest: pasynManager->queueRequest");
+    reportAsynStatus(status, "connectRequest");
     return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> connectHandler() -> connectCallback()
@@ -1441,7 +1444,7 @@ disconnectRequest()
         clientName());
     status = pasynManager->queueRequest(pasynUser,
         asynQueuePriorityConnect, 0.0);
-    reportAsynStatus(status, "disconnectRequest: pasynManager->queueRequest");
+    reportAsynStatus(status, "disconnectRequest");
     return (status == asynSuccess);
     // continues with:
     //    handleRequest() -> disconnectHandler()
