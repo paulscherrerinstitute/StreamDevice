@@ -63,9 +63,4 @@ StreamDebugObject(const char* file, int line)
 #define error StreamError
 #define debug (!streamDebug)?0:StreamDebugObject(__FILE__,__LINE__).print
 
-#if (__GNUC__ == 2 && __GNUC_MINOR__ == 7)
-/* Bug in cygnus-2.7.2 compiler: temporary objects crash the compiler */
-#define NO_TEMPORARY
-#endif
-
 #endif

@@ -674,10 +674,8 @@ normal_format:
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
-#ifndef NO_TEMPORARY
                 debug("StreamCore::formatOutput(%s): format = %%%s\n",
                     name(), StreamBuffer(formatstring, formatstringlen).expand()());
-#endif
 
                 if (fmt.type == pseudo_format)
                 {
@@ -950,22 +948,15 @@ readCallback(StreamIoStatus status,
     MutexLock lock(this);
     lastInputStatus = status;
 
-#ifndef NO_TEMPORARY
     debug("StreamCore::readCallback(%s, status=%s input=\"%s\", size=%" Z "u)\n",
         name(), StreamIoStatusStr[status],
         StreamBuffer(input, size).expand()(), size);
-#endif
 
     if (!(flags & AcceptInput))
     {
-#ifdef NO_TEMPORARY
-        error("StreamCore::readCallback(%s, %s) called unexpectedly\n",
-            name(), StreamIoStatusStr[status]);
-#else
         error("StreamCore::readCallback(%s, %s, \"%s\") called unexpectedly\n",
             name(), StreamIoStatusStr[status],
             StreamBuffer(input, size).expand()());
-#endif
         return 0;
     }
 ////    flags &= ~AcceptInput;
@@ -1206,10 +1197,8 @@ normal_format:
                 StreamFormat fmt = extract<StreamFormat>(commandIndex);
                 fmt.info = commandIndex; // point to info string
                 commandIndex += fmt.infolen;
-#ifndef NO_TEMPORARY
                 debug("StreamCore::matchInput(%s): format = \"%%%s\"\n",
                     name(), formatstring());
-#endif
 
                 if (fmt.flags & skip_flag || fmt.type == pseudo_format)
                 {
@@ -1277,11 +1266,9 @@ normal_format:
                                 name(), formatstring());
                         return false;
                     }
-#ifndef NO_TEMPORARY
                     debug("StreamCore::matchInput(%s): compare \"%s\" with \"%s\"\n",
                         name(), inputLine.expand(consumedInput,
                             outputLine.length())(), outputLine.expand()());
-#endif
                     if (inputLine.length() - consumedInput < outputLine.length())
                     {
                         if (!(flags & AsyncMode) && onMismatch[0] != in_cmd)
@@ -1353,10 +1340,8 @@ normal_format:
                             name(),
                             inputLine.length() > 20 ? "..." : "",
                             inputLine.expand(-20)());
-#ifndef NO_TEMPORARY
                         error("No match for \"%s\"\n",
                             StreamBuffer(commandIndex-1,i+1).expand()());
-#endif
                     }
                     return false;
                 }
@@ -1376,12 +1361,10 @@ normal_format:
                             command,
                             inputLine[consumedInput]);
 
-#ifndef NO_TEMPORARY
                         error("%s: got \"%s\" where \"%s\" was expected\n",
                             name(),
                             inputLine.expand(consumedInput, 20)(),
                             StreamBuffer(commandIndex-1,i+1).expand()());
-#endif
                     }
                     return false;
                 }
@@ -1553,11 +1536,7 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
     }
     debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\" value=\"%s\"\n",
         name(), fmt.conv, size, inputLine.expand(consumedInput)(),
-#ifndef NO_TEMPORARY
         StreamBuffer(value, size).expand()());
-#else
-        value);
-#endif
     if (fmt.flags & fix_width_flag && consumed != (ssize_t)fmt.width) return -1;
     if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
     flags |= GotValue;

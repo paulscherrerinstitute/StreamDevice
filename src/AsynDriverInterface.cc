@@ -637,11 +637,9 @@ bool AsynDriverInterface::
 writeRequest(const void* output, size_t size,
     unsigned long writeTimeout_ms)
 {
-#ifndef NO_TEMPORARY
     debug("AsynDriverInterface::writeRequest(%s, \"%s\", %ld msec)\n",
         clientName(), StreamBuffer(output, size).expand()(),
         writeTimeout_ms);
-#endif
 
     asynStatus status;
     outputBuffer = (char*)output;
@@ -684,11 +682,9 @@ writeHandler()
             status = pasynOctet->read(pvtOctet, pasynUser,
                 buffer, sizeof(buffer), &received, &eomReason);
             if (status == asynError || received == 0) break;
-#ifndef NO_TEMPORARY
             if (received) debug("AsynDriverInterface::writeHandler(%s): "
                 "flushing %" Z "u bytes: \"%s\"\n",
                 clientName(), received, StreamBuffer(buffer, received).expand()());
-#endif
         } while (status == asynSuccess);
     }
     else
@@ -726,7 +722,6 @@ writeHandler()
     pasynUser->errorMessage[0] = 0;
     status = pasynOctet->write(pvtOctet, pasynUser,
         outputBuffer, outputSize, &written);
-#ifndef NO_TEMPORARY
     debug("AsynDriverInterface::writeHandler(%s): "
         "write(..., \"%s\", outputSize=%" Z "u, written=%" Z "u) "
         "[timeout=%g sec] = %s (%s)\n",
@@ -735,7 +730,6 @@ writeHandler()
         outputSize, written,
         pasynUser->timeout, asynStatusStr[status],
         pasynUser->errorMessage);
-#endif
 
     if (oldeoslen >= 0) // restore asyn terminator
     {
@@ -906,7 +900,6 @@ readHandler()
             if (pasynOctet->setInputEos(pvtOctet, pasynUser,
                 deveos, (int)deveoslen) == asynSuccess)
             {
-#ifndef NO_TEMPORARY
                 if (ioAction != AsyncRead)
                 {
                     debug("AsynDriverInterface::readHandler(%s) "
@@ -915,7 +908,6 @@ readHandler()
                         StreamBuffer(oldeos, oldeoslen).expand()(),
                         StreamBuffer(deveos, deveoslen).expand()());
                 }
-#endif
                 break;
             }
             deveos++; deveoslen--;
@@ -978,14 +970,13 @@ readHandler()
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
         // Even though received is size_t I have seen (size_t)-1 here!
-#ifndef NO_TEMPORARY
         debug("AsynDriverInterface::readHandler(%s): "
             "read returned %s: ioAction=%s received=%" Z "d, "
             "eomReason=%s, buffer=\"%s\"\n",
             clientName(), asynStatusStr[status], ioActionStr[ioAction],
             received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
-#endif
+
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::readHandler(%s): "
             "device is now %sconnected\n",
@@ -1009,14 +1000,12 @@ readHandler()
             case asynSuccess:
                 if (ioAction != Read)
                 {
-#ifndef NO_TEMPORARY
                     debug("AsynDriverInterface::readHandler(%s): "
                         "AsyncRead poll: received %" Z "d of %" Z "u bytes \"%s\" "
                         "eomReason=%s [data ignored]\n",
                         clientName(), received, bytesToRead,
                         StreamBuffer(buffer, received).expand()(),
                         eomReasonStr[eomReason&0x7]);
-#endif
                     // ignore what we got from here.
                     // input was already handeled by asynReadHandler()
 
@@ -1024,14 +1013,12 @@ readHandler()
                     readMore = -1;
                     break;
                 }
-#ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
                         "received %" Z "d of %" Z "u bytes \"%s\" "
                         "eomReason=%s\n",
                     clientName(), received, bytesToRead,
                     StreamBuffer(buffer, received).expand()(),
                     eomReasonStr[eomReason&0x7]);
-#endif
                 // asynOctet->read() cuts off terminator, but:
                 // If stream has set a terminator which is longer
                 // than what the device (e.g. GPIB) can handle,
@@ -1087,14 +1074,12 @@ readHandler()
                     break;
                 }
                 // read timeout
-#ifndef NO_TEMPORARY
                 debug("AsynDriverInterface::readHandler(%s): "
                         "ioAction=%s, timeout [%g sec] "
                         "after %" Z "d of %" Z "u bytes \"%s\"\n",
                     clientName(), ioActionStr[ioAction], pasynUser->timeout,
                     received, bytesToRead,
                     StreamBuffer(buffer, received).expand()());
-#endif
                 if (ioAction == AsyncRead || ioAction == AsyncReadMore)
                 {
                     // we already got the data from asynReadHandler()
@@ -1165,12 +1150,10 @@ readHandler()
     {
         pasynOctet->setInputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
-#ifndef NO_TEMPORARY
         debug("AsynDriverInterface::readHandler(%s) "
             "input EOS restored to \"%s\"\n",
             clientName(),
             StreamBuffer(oldeos, oldeoslen).expand()());
-#endif
     }
 }
 
@@ -1206,12 +1189,10 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
     // Thus, it is sufficient to mark the request as obsolete by
     // setting ioAction=None. See handleRequest().
 
-#ifndef NO_TEMPORARY
     debug("AsynDriverInterface::asynReadHandler(%s, buffer=\"%s\", "
             "received=%ld eomReason=%s) ioAction=%s\n",
         clientName(), StreamBuffer(buffer, received).expand()(),
         (long)received, eomReasonStr[eomReason&0x7], ioActionStr[ioAction]);
-#endif
 
     ioAction = None;
     ssize_t readMore = 1;

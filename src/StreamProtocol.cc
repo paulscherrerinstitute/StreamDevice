@@ -1486,10 +1486,8 @@ compileFormat(StreamBuffer& buffer, const char*& formatstr,
     // add formatstr for debug purpose
     buffer.append(formatstart, source-formatstart).append(eos);
 
-#ifndef NO_TEMPORARY
     debug("StreamProtocolParser::Protocol::compileFormat: formatstring=\"%s\"\n",
         StreamBuffer(formatstart, source-formatstart).expand()());
-#endif
 
     // add streamFormat structure and info
     buffer.append(&streamFormat, sizeof(streamFormat));
