@@ -723,35 +723,29 @@ writeHandler()
         pasynOctet->setOutputEos(pvtOctet, pasynUser,
             NULL, 0);
     }
-    pasynUser->errorMessage[0] = 0;
-    status = pasynOctet->write(pvtOctet, pasynUser,
-        outputBuffer, outputSize, &written);
-    debug("AsynDriverInterface::writeHandler(%s): "
-        "write(..., \"%s\", outputSize=%" Z "u, written=%" Z "u) "
-        "[timeout=%g sec] = %s (%s)\n",
-        clientName(),
-        StreamBuffer(outputBuffer, outputSize).expand()(),
-        outputSize, written,
-        pasynUser->timeout, asynStatusStr[status],
-        pasynUser->errorMessage);
+    int writeTry = 0;
+    do {
+        pasynUser->errorMessage[0] = 0;
+        status = pasynOctet->write(pvtOctet, pasynUser,
+            outputBuffer, outputSize, &written);
+        debug("AsynDriverInterface::writeHandler(%s): "
+            "write(..., \"%s\", outputSize=%" Z "u, written=%" Z "u) "
+            "[timeout=%g sec] = %s (%s)\n",
+            clientName(),
+            StreamBuffer(outputBuffer, outputSize).expand()(),
+            outputSize, written,
+            pasynUser->timeout, asynStatusStr[status],
+            pasynUser->errorMessage);
+
+        // When devices goes offline, we get an error only at next write.
+        // Maybe the device has re-connected meanwhile?
+        // Let's try once.
+    } while (status == asynError && writeTry++ == 0 && connectToAsynPort());
 
     if (oldeoslen >= 0) // restore asyn terminator
     {
         pasynOctet->setOutputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
-    }
-
-    // Up to asyn 4.17 I can't see when the server has disconnected. Why?
-    int connected;
-    pasynManager->isConnected(pasynUser, &connected);
-    debug("AsynDriverInterface::writeHandler(%s): "
-        "device is %sconnected\n",
-        clientName(),connected?"":"dis");
-    if (!connected) {
-        error("%s: write failed because connection was closed by device\n",
-            clientName());
-        writeCallback(StreamIoFault);
-        return;
     }
 
     switch (status)
