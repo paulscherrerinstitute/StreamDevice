@@ -23,17 +23,17 @@
 
 #include <stdio.h>
 #include "StreamBuffer.h"
+#include "MacroMagic.h"
 
-enum FormatType {NoFormat, ScanFormat, PrintFormat};
+ENUM (FormatType,
+    NoFormat, ScanFormat, PrintFormat);
 
 class StreamProtocolParser
 {
 public:
 
-    enum Codes
-    {
-        eos = 0, skip, whitespace, format, format_field, last_function_code
-    };
+    ENUM (Codes,
+        eos, skip, whitespace, format, format_field, last_function_code);
 
     class Client;
 

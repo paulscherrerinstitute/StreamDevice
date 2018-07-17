@@ -41,6 +41,7 @@ extern "C" {
 #include "asynGpibDriver.h"
 
 #include "devStream.h"
+#include "MacroMagic.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
 
@@ -117,20 +118,16 @@ static void intrCallbackUInt32(void* pvt, asynUser *pasynUser,
     epicsUInt32 data);
 }
 
-enum IoAction {
+ENUM (IoAction,
     None, Lock, Write, Read, AsyncRead, AsyncReadMore,
-    ReceiveEvent, Connect, Disconnect
-};
+    ReceiveEvent, Connect, Disconnect);
 
-static const char* ioActionStr[] = {
-    "None", "Lock", "Write", "Read",
-    "AsyncRead", "AsyncReadMore",
-    "ReceiveEvent", "Connect", "Disconnect"
-};
-
-static const char* asynStatusStr[] = {
-    "asynSuccess", "asynTimeout", "asynOverflow", "asynError",
-    "asynDisconnected", "asynDisabled"
+inline const char* toStr(asynStatus status)
+{
+    const char* asynStatusStr[] = {
+        "asynSuccess", "asynTimeout", "asynOverflow", "asynError",
+        "asynDisconnected", "asynDisabled"};
+    return status > 5 ? "unknown" : asynStatusStr[status];
 };
 
 static const char* eomReasonStr[] = {
@@ -451,7 +448,7 @@ connectToBus(const char* portname, int addr)
     debug("%s: AsynDriverInterface::connectToBus(%s, %d): "
         "pasynManager->connectDevice(%p, %s, %d) = %s\n",
         clientName(), portname, addr,  pasynUser,portname, addr,
-            asynStatusStr[status]);
+            toStr(status));
     if (status != asynSuccess)
     {
         // asynDriver does not know this portname/address
@@ -546,7 +543,7 @@ connectToAsynPort()
     status = pasynManager->isConnected(pasynUser, &connected);
     debug("%s: AsynDriverInterface::connectToAsynPort: "
         "pasynManager->isConnected(%p, %p) = %s => %s\n",
-        clientName(), pasynUser, &connected, asynStatusStr[status],
+        clientName(), pasynUser, &connected, toStr(status),
             connected ? "yes" : "no");
     if (status != asynSuccess)
     {
@@ -570,7 +567,7 @@ connectToAsynPort()
         debug("AsynDriverInterface::connectToAsynPort(%s): "
             "read(..., 0, ...) [timeout=%g sec] = %s\n",
             clientName(), pasynUser->timeout,
-            asynStatusStr[status]);
+            toStr(status));
         pasynManager->isConnected(pasynUser, &connected);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
             "device was %sconnected!\n",
@@ -585,7 +582,7 @@ connectToAsynPort()
         status = pasynCommon->connect(pvtCommon, pasynUser);
         debug("AsynDriverInterface::connectToAsynPort(%s): "
                 "status=%s\n",
-            clientName(), asynStatusStr[status]);
+            clientName(), toStr(status));
         reportAsynStatus(status, "connectToAsynPort");
         return (status == asynSuccess);
     }
@@ -734,7 +731,7 @@ writeHandler()
             clientName(),
             StreamBuffer(outputBuffer, outputSize).expand()(),
             outputSize, written,
-            pasynUser->timeout, asynStatusStr[status],
+            pasynUser->timeout, toStr(status),
             pasynUser->errorMessage);
 
         // When devices goes offline, we get an error only at next write.
@@ -837,7 +834,7 @@ readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
     debug("AsynDriverInterface::readRequest %s: "
         "queueRequest(..., priority=%d, queueTimeout=%g sec) = %s [async=%s] %s\n",
         clientName(), priority(), queueTimeout,
-        asynStatusStr[status], async? "true" : "false",
+        toStr(status), async? "true" : "false",
         status!=asynSuccess ? pasynUser->errorMessage : "");
     if (!async)
     {
@@ -963,7 +960,7 @@ readHandler()
         debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
             "read(..., bytesToRead=%" Z "u, ...) "
             "[timeout=%g sec]\n",
-            clientName(), ioActionStr[ioAction],
+            clientName(), toStr(ioAction),
             bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
@@ -971,7 +968,7 @@ readHandler()
         debug("AsynDriverInterface::readHandler(%s): "
             "read returned %s: ioAction=%s received=%" Z "d, "
             "eomReason=%s, buffer=\"%s\"\n",
-            clientName(), asynStatusStr[status], ioActionStr[ioAction],
+            clientName(), toStr(status), toStr(ioAction),
             received,eomReasonStr[eomReason&0x7],
             StreamBuffer(buffer, received).expand()());
         pasynManager->isConnected(pasynUser, &connected);
@@ -1074,7 +1071,7 @@ readHandler()
                 debug("AsynDriverInterface::readHandler(%s): "
                         "ioAction=%s, timeout [%g sec] "
                         "after %" Z "d of %" Z "u bytes \"%s\"\n",
-                    clientName(), ioActionStr[ioAction], pasynUser->timeout,
+                    clientName(), toStr(ioAction), pasynUser->timeout,
                     received, bytesToRead,
                     StreamBuffer(buffer, received).expand()());
                 if (ioAction == AsyncRead || ioAction == AsyncReadMore)
@@ -1189,7 +1186,7 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
     debug("AsynDriverInterface::asynReadHandler(%s, buffer=\"%s\", "
             "received=%ld eomReason=%s) ioAction=%s\n",
         clientName(), StreamBuffer(buffer, received).expand()(),
-        (long)received, eomReasonStr[eomReason&0x7], ioActionStr[ioAction]);
+        (long)received, eomReasonStr[eomReason&0x7], toStr(ioAction));
 
     ioAction = None;
     ssize_t readMore = 1;
@@ -1270,7 +1267,7 @@ asynReadHandler(const char *buffer, size_t received, int eomReason)
         startTimer(readTimeout);
     }
     debug("AsynDriverInterface::asynReadHandler(%s) readMore=%" Z "d, ioAction=%s \n",
-        clientName(), readMore, ioActionStr[ioAction]);
+        clientName(), readMore, toStr(ioAction));
 }
 
 // interface function: we want to receive an event
@@ -1373,7 +1370,7 @@ timerExpired()
                 // if this fails, we are already queued by another thread
                 debug("AsynDriverInterface::timerExpired %s: "
                     "queueRequest(..., priority=Low, queueTimeout=-1) = %s %s\n",
-                    clientName(), asynStatusStr[status],
+                    clientName(), toStr(status),
                     status!=asynSuccess ? pasynUser->errorMessage : "");
                 if (status != asynSuccess) startTimer(replyTimeout);
                 // continues with:
@@ -1382,7 +1379,7 @@ timerExpired()
             return;
         default:
             error("INTERNAL ERROR (%s): timerExpired() unexpected ioAction %s\n",
-                clientName(), ioActionStr[ioAction]);
+                clientName(), toStr(ioAction));
             return;
     }
 }
@@ -1492,7 +1489,7 @@ void handleRequest(asynUser* pasynUser)
         static_cast<AsynDriverInterface*>(pasynUser->userPvt);
     interface->cancelTimer();
     debug("AsynDriverInterface::handleRequest(%s) %s\n",
-        interface->clientName(), ioActionStr[interface->ioAction]);
+        interface->clientName(), toStr(interface->ioAction));
     switch (interface->ioAction)
     {
         case None:
@@ -1519,7 +1516,7 @@ void handleRequest(asynUser* pasynUser)
         default:
             error("INTERNAL ERROR (%s): "
                 "handleRequest() unexpected ioAction %s\n",
-                interface->clientName(), ioActionStr[interface->ioAction]);
+                interface->clientName(), toStr(interface->ioAction));
     }
 }
 
@@ -1555,7 +1552,7 @@ void handleTimeout(asynUser* pasynUser)
         default:
             error("INTERNAL ERROR (%s): handleTimeout() "
                 "unexpected ioAction %s\n",
-                interface->clientName(), ioActionStr[interface->ioAction]);
+                interface->clientName(), toStr(interface->ioAction));
     }
 }
 

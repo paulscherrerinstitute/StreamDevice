@@ -20,8 +20,6 @@
 #include "StreamBusInterface.h"
 #include "StreamError.h"
 
-StreamIoStatusStrClass StreamIoStatusStr;
-
 StreamBusInterfaceRegistrarBase* StreamBusInterfaceRegistrarBase::first;
 
 StreamBusInterfaceRegistrarBase::

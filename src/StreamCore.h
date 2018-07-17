@@ -70,6 +70,8 @@ void acceptEvent(unsigned short mask, unsigned short timeout)
 
 ***************************************/
 
+#include "MacroMagic.h"
+
 enum Flags {
     // 0x00FFFFFF reserved for StreamCore
     None = 0x0000,
@@ -97,14 +99,12 @@ class StreamCore :
     StreamBusInterface::Client
 {
 protected:
-    enum ProtocolResult {
-        Success, LockTimeout, WriteTimeout, ReplyTimeout, ReadTimeout,
-        ScanError, FormatError, Abort, Fault
-    };
 
-    enum StartMode {
-        StartNormal, StartInit, StartAsync
-    };
+    ENUM(ProtocolResult,
+        Success, LockTimeout, WriteTimeout, ReplyTimeout, ReadTimeout, ScanError, FormatError, Abort, Fault, Offline);
+
+    ENUM(StartMode,
+        StartNormal, StartInit, StartAsync);
 
     class MutexLock
     {

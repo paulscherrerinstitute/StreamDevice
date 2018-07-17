@@ -22,25 +22,11 @@
 
 #include <stddef.h>
 #include "StreamBuffer.h"
+#include "MacroMagic.h"
 
-enum StreamIoStatus {
+ENUM (StreamIoStatus,
     StreamIoSuccess, StreamIoTimeout, StreamIoNoReply,
-    StreamIoEnd, StreamIoFault
-};
-
-class StreamIoStatusStrClass {
-public:
-    const char* operator [] (int index) {
-        switch (index) {
-            case StreamIoSuccess: return "StreamIoSuccess";
-            case StreamIoTimeout: return "StreamIoTimeout";
-            case StreamIoNoReply: return "StreamIoNoReply";
-            case StreamIoEnd:     return "StreamIoEnd";
-            case StreamIoFault:   return "StreamIoFault";
-            default:              return "illegal status";
-        }
-    }
-} extern StreamIoStatusStr;
+    StreamIoEnd, StreamIoFault);
 
 class StreamBusInterface
 {
