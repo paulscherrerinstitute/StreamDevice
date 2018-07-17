@@ -476,10 +476,26 @@ drvInit()
 
 long streamInit(int after)
 {
+    static int oldStreamError;
     if (after)
     {
-        streamError = 0; // Switch off errors after init in order not to spam messages when a device is down.
-        StreamProtocolParser::free();
+        static int first = 1;
+        if (first)
+        {
+            streamError = oldStreamError;
+            StreamProtocolParser::free();
+            first = 0;
+        }
+    }
+    else
+    {
+        static int first = 1;
+        if (first)
+        {
+            oldStreamError = streamError;
+            streamError = 1;
+            first = 0;
+        }
     }
     return OK;
 }
@@ -734,7 +750,7 @@ initRecord(const char* filename, const char* protocol,
 
     debug("Stream::initRecord %s: initialize the first time\n",
         name());
-
+        
     if (!onInit) return DO_NOT_CONVERT; // no @init handler, keep DOL
 
     // initialize the record from hardware

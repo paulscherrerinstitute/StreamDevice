@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 int streamDebug = 0;
-int streamError = 1;
+int streamError = 0;
 extern "C" {
 #ifdef _WIN32
 __declspec(dllexport)
