@@ -63,6 +63,7 @@ extern DBBASE *pdbbase;
 #include "epicsThread.h"
 #include "epicsString.h"
 #include "registryFunction.h"
+#include "epicsStdioRedirect.h"
 #include "iocsh.h"
 
 #if (!defined VERSION_INT && EPICS_MODIFICATION<9)
