@@ -66,7 +66,12 @@ extern DBBASE *pdbbase;
 #include "epicsStdioRedirect.h"
 #include "iocsh.h"
 
-#if (!defined VERSION_INT && EPICS_MODIFICATION<9)
+#if defined(VERSION_INT) || EPICS_MODIFICATION >= 11
+#include "initHooks.h"
+#define WITH_IOC_RUN
+#endif
+
+#if !defined(VERSION_INT) && EPICS_MODIFICATION < 9
 // iocshCmd() is missing in iocsh.h (up to R3.14.8.2)
 // To build with win32-x86, you MUST fix iocsh.h.
 // Move the declaration below to iocsh.h and rebuild base.
@@ -168,6 +173,10 @@ class Stream : protected StreamCore
     ssize_t scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
 
+#ifdef WITH_IOC_RUN
+    static void initHook(initHookState);
+#endif
+
 // device support functions
     friend long streamInitRecord(dbCommon *record, const struct link *ioLink,
         streamIoFunction readData, streamIoFunction writeData);
@@ -201,10 +210,8 @@ long streamReloadSub()
 
 long streamReload(const char* recordname)
 {
-    DBENTRY dbentry;
-    dbCommon* record;
+    Stream* stream;
     long status;
-
     int oldStreamError = streamError;
     streamError = 1;
 
@@ -214,38 +221,24 @@ long streamReload(const char* recordname)
         return ERROR;
     }
     debug("streamReload(%s)\n", recordname);
-    dbInitEntry(pdbbase,&dbentry);
-    for (status = dbFirstRecordType(&dbentry); status == OK;
-        status = dbNextRecordType(&dbentry))
+    for (stream = static_cast<Stream*>(Stream::first); stream;
+        stream = static_cast<Stream*>(stream->next))
     {
-        for (status = dbFirstRecord(&dbentry); status == OK;
-            status = dbNextRecord(&dbentry))
-        {
-            char* value;
-            if (dbFindField(&dbentry, "DTYP") != OK)
-                continue;
-            if ((value = dbGetString(&dbentry)) == NULL)
-                continue;
-            if (strcmp(value, "stream") != 0)
-                continue;
-            record=(dbCommon*)dbentry.precnode->precord;
-            if (recordname && strcmp(recordname, record->name) != 0)
-                continue;
-
-            // This cancels any running protocol and reloads
-            // the protocol file
-            status = record->dset->init_record(record);
-            if (status == OK || status == DO_NOT_CONVERT)
-            {
-                printf("%s: Protocol reloaded\n", record->name);
-            }
-            else
-            {
-                error("%s: Protocol reload failed\n", record->name);
-            }
-        }
+        if (recordname && recordname[0] &&
+#ifdef EPICS_3_13
+            strcmp(stream->name(), recordname) == 0)
+#else        
+            !epicsStrGlobMatch(stream->name(), recordname))
+#endif
+            continue;
+        // This cancels any running protocol and reloads
+        // the protocol file
+        status = stream->record->dset->init_record(stream->record);
+        if (status == OK || status == DO_NOT_CONVERT)
+            printf("%s: Protocol reloaded\n", stream->name());
+        else
+            error("%s: Protocol reload failed\n", stream->name());
     }
-    dbFinishEntry(&dbentry);
     StreamProtocolParser::free();
     streamError = oldStreamError;
     return OK;
@@ -388,25 +381,25 @@ report(int interest)
         }
     }
 
-    Stream* pstream;
+    Stream* stream;
     printf("  connected records:\n");
-    for (pstream = static_cast<Stream*>(first); pstream;
-        pstream = static_cast<Stream*>(pstream->next))
+    for (stream = static_cast<Stream*>(first); stream;
+        stream = static_cast<Stream*>(stream->next))
     {
         if (interest == 2)
         {
-            printf("\n%s: %s\n", pstream->name(),
-                pstream->ioLink->value.instio.string);
-            pstream->printProtocol();
+            printf("\n%s: %s\n", stream->name(),
+                stream->ioLink->value.instio.string);
+            stream->printProtocol();
         }
         else
         {
-            printf("    %s: %s\n", pstream->name(),
-                pstream->ioLink->value.instio.string);
+            printf("    %s: %s\n", stream->name(),
+                stream->ioLink->value.instio.string);
             if (interest == 3)
             {
                 StreamBuffer buffer;
-                pstream->printStatus(buffer);
+                stream->printStatus(buffer);
                 printf("      %s\n", buffer());
             }
         }
@@ -416,23 +409,23 @@ report(int interest)
 
 long streamReportRecord(const char* recordname)
 {
-    Stream* pstream;
-    for (pstream = static_cast<Stream*>(Stream::first); pstream;
-        pstream = static_cast<Stream*>(pstream->next))
+    Stream* stream;
+    for (stream = static_cast<Stream*>(Stream::first); stream;
+        stream = static_cast<Stream*>(stream->next))
     {
         if (!recordname ||
 #ifdef EPICS_3_13
-            strcmp(pstream->name(), recordname) == 0)
+            strcmp(stream->name(), recordname) == 0)
 #else
-            epicsStrGlobMatch(pstream->name(), recordname))
+            epicsStrGlobMatch(stream->name(), recordname))
 #endif
         {
-            printf("%s: %s\n", pstream->name(),
-                pstream->ioLink->value.instio.string);
+            printf("%s: %s\n", stream->name(),
+                stream->ioLink->value.instio.string);
             StreamBuffer buffer;
-            pstream->printStatus(buffer);
+            stream->printStatus(buffer);
             printf("%s\n", buffer());
-            pstream->printProtocol();
+            stream->printProtocol();
             printf("\n");
         }
     }
@@ -453,32 +446,63 @@ drvInit()
         SYM_TYPE type;
         if (symFindByName(sysSymTbl,
             "STREAM_PROTOCOL_PATH", &symbol, &type) == OK)
-        {
             path = *(char**)symbol;
-        }
         else
         if (symFindByName(sysSymTbl,
             "STREAM_PROTOCOL_DIR", &symbol, &type) == OK)
-        {
             path = *(char**)symbol;
-        }
     }
 #endif
     if (!path)
-    {
         fprintf(stderr,
             "drvStreamInit: Warning! STREAM_PROTOCOL_PATH not set. "
             "Defaults to \"%s\"\n", StreamProtocolParser::path);
-    }
     else
-    {
         StreamProtocolParser::path = path;
-    }
     debug("StreamProtocolParser::path = %s\n",
         StreamProtocolParser::path);
     StreamPrintTimestampFunction = streamEpicsPrintTimestamp;
+
+#ifdef WITH_IOC_RUN
+    initHookRegister(initHook);
+#endif
+
     return OK;
 }
+
+#ifdef WITH_IOC_RUN
+void Stream::
+initHook(initHookState state)
+{
+    Stream* stream;
+
+    if (state == initHookAtIocRun)
+    {
+        debug("Stream::initHook(initHookAtIocRun) interruptAccept=%d\n", interruptAccept);
+
+        static int inIocInit = 1;
+        if (inIocInit)
+        {
+            // We don't want to run @init twice in iocInit
+            inIocInit = 0;
+            return;
+        }
+
+        for (stream = static_cast<Stream*>(first); stream;
+            stream = static_cast<Stream*>(stream->next))
+        {
+            if (!stream->onInit) continue;
+            debug("Stream::initHook(initHookAtIocRun) Re-inititializing %s\n", stream->name());
+            if (!stream->startProtocol(StartInit))
+            {
+                error("%s: Re-initialization failed.\n",
+                    stream->name());
+            }
+            stream->initDone.wait();
+        }
+    }
+}
+#endif
 
 // device support (C interface) //////////////////////////////////////////
 
@@ -490,6 +514,7 @@ long streamInit(int after)
         static int first = 1;
         if (first)
         {
+            // restore error filtering to previous setting
             streamError = oldStreamError;
             StreamProtocolParser::free();
             first = 0;
@@ -500,6 +525,7 @@ long streamInit(int after)
         static int first = 1;
         if (first)
         {
+            // enable errors while reading protocol files
             oldStreamError = streamError;
             streamError = 1;
             first = 0;
@@ -520,38 +546,38 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     memset(busparam, 0 ,sizeof(busparam));
 
     debug("streamInitRecord(%s): SEVR=%d\n", record->name, record->sevr);
-    Stream* pstream = (Stream*)record->dpvt;
-    if (!pstream)
+    Stream* stream = static_cast<Stream*>(record->dpvt);
+    if (!stream)
     {
         // initialize the first time
         debug("streamInitRecord(%s): create new Stream object\n",
             record->name);
-        pstream = new Stream(record, ioLink, readData, writeData);
-        record->dpvt = pstream;
+        stream = new Stream(record, ioLink, readData, writeData);
+        record->dpvt = stream;
     } else {
         // stop any running protocol
         debug("streamInitRecord(%s): stop running protocol\n",
             record->name);
-        pstream->finishProtocol(Stream::Abort);
+        stream->finishProtocol(Stream::Abort);
     }
     // scan the i/o link
     debug("streamInitRecord(%s): parse link \"%s\"\n",
         record->name, ioLink->value.instio.string);
-    status = pstream->parseLink(ioLink, filename, protocol,
+    status = stream->parseLink(ioLink, filename, protocol,
         busname, &addr, busparam);
     // (re)initialize bus and protocol
     debug("streamInitRecord(%s): calling initRecord\n",
         record->name);
     if (status == 0)
-        status = pstream->initRecord(filename, protocol,
+        status = stream->initRecord(filename, protocol,
             busname, addr, busparam);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
     }
-    else if (!pstream->ioscanpvt)
+    else if (!stream->ioscanpvt)
     {
-        scanIoInit(&pstream->ioscanpvt);
+        scanIoInit(&stream->ioscanpvt);
     }
     debug("streamInitRecord(%s) done status=%#lx\n", record->name, status);
     return status;
@@ -559,33 +585,33 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
 
 long streamReadWrite(dbCommon *record)
 {
-    Stream* pstream = (Stream*)record->dpvt;
-    if (!pstream || pstream->status == ERROR)
+    Stream* stream = static_cast<Stream*>(record->dpvt);
+    if (!stream || stream->status == ERROR)
     {
         (void) recGblSetSevr(record, UDF_ALARM, INVALID_ALARM);
         error("%s: Record not initialised correctly\n", record->name);
         return ERROR;
     }
-    return pstream->process() ? pstream->convert : ERROR;
+    return stream->process() ? stream->convert : ERROR;
 }
 
 long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt)
 {
-    Stream* pstream = (Stream*)record->dpvt;
-    debug("streamGetIointInfo(%s,cmd=%d): pstream=%p, ioscanpvt=%p\n",
+    Stream* stream = static_cast<Stream*>(record->dpvt);
+    debug("streamGetIointInfo(%s,cmd=%d): stream=%p, ioscanpvt=%p\n",
         record->name, cmd,
-        (void*)pstream, pstream ? pstream->ioscanpvt : NULL);
-    if (!pstream)
+        (void*)stream, stream ? stream->ioscanpvt : NULL);
+    if (!stream)
     {
         error("streamGetIointInfo called without stream instance\n");
         return ERROR;
     }
-    *ppvt = pstream->ioscanpvt;
+    *ppvt = stream->ioscanpvt;
     if (cmd == 0)
     {
         debug("streamGetIointInfo: starting protocol\n");
         // SCAN has been set to "I/O Intr"
-        if (!pstream->startProtocol(Stream::StartAsync))
+        if (!stream->startProtocol(Stream::StartAsync))
         {
             error("%s: Can't start \"I/O Intr\" protocol\n",
                 record->name);
@@ -594,7 +620,7 @@ long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt)
     else
     {
         // SCAN is no longer "I/O Intr"
-        pstream->finishProtocol(Stream::Abort);
+        stream->finishProtocol(Stream::Abort);
     }
     return OK;
 }
@@ -603,11 +629,11 @@ long streamPrintf(dbCommon *record, format_t *format, ...)
 {
     debug("streamPrintf(%s,format=%%%c)\n",
         record->name, format->priv->conv);
-    Stream* pstream = (Stream*)record->dpvt;
-    if (!pstream) return ERROR;
+    Stream* stream = static_cast<Stream*>(record->dpvt);
+    if (!stream) return ERROR;
     va_list ap;
     va_start(ap, format);
-    bool success = pstream->print(format, ap);
+    bool success = stream->print(format, ap);
     va_end(ap);
     return success ? OK : ERROR;
 }
@@ -616,9 +642,9 @@ ssize_t streamScanfN(dbCommon* record, format_t *format,
     void* value, size_t maxStringSize)
 {
     ssize_t size;
-    Stream* pstream = (Stream*)record->dpvt;
-    if (!pstream) return ERROR;
-    size = pstream->scan(format, value, maxStringSize);
+    Stream* stream = static_cast<Stream*>(record->dpvt);
+    if (!stream) return ERROR;
+    size = stream->scan(format, value, maxStringSize);
     return size;
 }
 
@@ -753,11 +779,12 @@ initRecord(const char* filename, const char* protocol,
                     name());
             }
         }
-        return OK;
     }
-
-    debug("Stream::initRecord %s: initialize the first time\n",
-        name());
+    else
+    {
+        debug("Stream::initRecord %s: initialize the first time\n",
+            name());
+    }
 
     if (!onInit) return DO_NOT_CONVERT; // no @init handler, keep DOL
 
@@ -899,8 +926,7 @@ scan(format_t *format, void* value, size_t maxStringSize)
 void Stream::
 expire(CALLBACK *pcallback)
 {
-    Stream* pstream = static_cast<Stream*>(pcallback->user);
-    pstream->timerCallback();
+    static_cast<Stream*>(pcallback->user)->timerCallback();
 }
 #else
 epicsTimerNotify::expireStatus Stream::

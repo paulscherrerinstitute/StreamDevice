@@ -55,21 +55,22 @@ its <code>SEVR</code> field set to <code>INVALID</code> and its
  <dt><code>TIMEOUT</code></dt>
  <dd>
   The device could not be locked (<code>LockTimeout</code>) or the
-  device did not reply (<code>ReplyTimeout</code>).
+  device did not reply in time
+  (<a href="protocol.html#sysvar"><code>ReplyTimeout</code></a>).
  </dd>
  <dt><code>WRITE</code></dt>
  <dd>
-  Output could not be written to the device (<code>WriteTimeout</code>).
+  Output could not be written to the device in time
+  (<a href="protocol.html#sysvar"><code>WriteTimeout</code></a>).
  </dd>
  <dt><code>READ</code></dt>
  <dd>
   Input from the device started but stopped unexpectedly
-  (<code>ReadTimeout</code>).
+  (<a href="protocol.html#sysvar"><code>ReadTimeout</code></a>).
  </dd>
  <dt><code>COMM</code></dt>
  <dd>
-  The device driver reported some other communication error (e.g.
-  unplugged cable).
+  The device driver reported that the device is disconnected.
  </dd>
  <dt><code>CALC</code></dt>
  <dd>
@@ -146,6 +147,19 @@ read from a constant <code>INP</code> or <code>DOL</code> field,
 or restored from a bump-less reboot system
 (e.g. <em>autosave</em> from the <em>synApps</em> package).
 </p>
+<p class="new">
+The <code>@init</code> handler is called again in the following situations:
+</p>
+<ul class="new">
+<li>The device driver informs <em>StreamDevice</em> that the device has
+reconnected after it had been disconnected. This is only detectable for
+some types of busses.
+<li>The IOC is resumed with <code>iocRun</code> after it had
+been paused with <code>iocPause</code>. This requires EPICS 3.14.11 or higher.
+<li>The record protocol has been <a href="setup.html#reload">reloaded</a>
+using the shell function <code>streamReload</code> or the subroutine
+record funtion <code>streamReloadSub</code>.
+</ul>
 
 <a name="iointr"></a>
 <h2>3. I/O Intr</h2>
