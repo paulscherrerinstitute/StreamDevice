@@ -122,7 +122,7 @@ printProtocol()
 StreamCore* StreamCore::first = NULL;
 
 StreamCore::
-StreamCore()
+StreamCore() : activeCommand(end)
 {
     businterface = NULL;
     flags = None;
@@ -132,7 +132,6 @@ StreamCore()
     StreamCore** pstream;
     for (pstream = &first; *pstream; pstream = &(*pstream)->next);
     *pstream = this;
-    activeCommand = NULL;
 }
 
 StreamCore::
@@ -241,10 +240,10 @@ compile(StreamProtocolParser::Protocol* protocol)
     unsigned short ignoreExtraInput = false;
     if (!protocol->getEnumVariable("extrainput", ignoreExtraInput,
         extraInputNames))
-    {
         return false;
-    }
+
     if (ignoreExtraInput) flags |= IgnoreExtraInput;
+
     if (!(protocol->getNumberVariable("locktimeout", lockTimeout) &&
         protocol->getNumberVariable("readtimeout", readTimeout) &&
         protocol->getNumberVariable("replytimeout", replyTimeout) &&
@@ -253,26 +252,23 @@ compile(StreamProtocolParser::Protocol* protocol)
         // use replyTimeout as default for pollPeriod
         protocol->getNumberVariable("replytimeout", pollPeriod) &&
         protocol->getNumberVariable("pollperiod", pollPeriod)))
-    {
         return false;
-    }
+
     if (!(protocol->getStringVariable("terminator", inTerminator, &inTerminatorDefined) &&
         protocol->getStringVariable("terminator", outTerminator, &outTerminatorDefined) &&
         protocol->getStringVariable("interminator", inTerminator, &inTerminatorDefined) &&
         protocol->getStringVariable("outterminator", outTerminator, &outTerminatorDefined) &&
         protocol->getStringVariable("separator", separator)))
-    {
         return false;
-    }
+
     if (!(protocol->getCommands(NULL, commands, this) &&
         protocol->getCommands("@init", onInit, this) &&
         protocol->getCommands("@writetimeout", onWriteTimeout, this) &&
         protocol->getCommands("@replytimeout", onReplyTimeout, this) &&
         protocol->getCommands("@readtimeout", onReadTimeout, this) &&
         protocol->getCommands("@mismatch", onMismatch, this)))
-    {
         return false;
-    }
+
     return protocol->checkUnused();
 }
 
@@ -416,6 +412,7 @@ startProtocol(StartMode startMode)
     {
         case StartInit:
             flags |= InitRun;
+            commandIndex = onInit();
             break;
         case StartAsync:
             if (!busSupportsAsyncRead())
@@ -424,16 +421,15 @@ startProtocol(StartMode startMode)
                 return false;
             }
             flags |= AsyncMode;
-            break;
         case StartNormal:
+            commandIndex = commands();
             break;
     }
-    if (!commands)
+    if (!commandIndex)
     {
-        error ("%s: No protocol loaded\n", name());
         return false;
     }
-    commandIndex = (startMode == StartInit) ? onInit() : commands();
+    StreamBuffer buffer;
     runningHandler = Success;
     protocolStartHook();
     return evalCommand();
@@ -442,6 +438,9 @@ startProtocol(StartMode startMode)
 void StreamCore::
 finishProtocol(ProtocolResult status)
 {
+    debug("StreamCore::finishProtocol(%s, %s) %sbus owner\n",
+        name(), toStr(status), flags & BusOwner ? "" : "not ");
+
     if (flags & BusPending)
     {
         error("StreamCore::finishProtocol(%s): Still waiting for %s%s%s\n",
@@ -451,6 +450,8 @@ finishProtocol(ProtocolResult status)
             flags & WaitPending ? "timerCallback()" : "");
         status = Fault;
     }
+    activeCommand = end;
+
 ////    flags &= ~(AcceptInput|AcceptEvent);
     if (runningHandler || flags & InitRun)
     {
@@ -509,8 +510,6 @@ finishProtocol(ProtocolResult status)
             return;
         }
     }
-    debug("StreamCore::finishProtocol(%s, status=%s) %sbus owner\n",
-        name(), toStr(status), flags & BusOwner ? "" : "not ");
     if (flags & BusOwner)
     {
         busUnlock();
@@ -533,9 +532,9 @@ evalCommand()
             flags & WaitPending ? "timerCallback()" : "");
         return false;
     }
-    activeCommand = commandIndex;
+    activeCommand = commandIndex[0];
     debug("StreamCore::evalCommand(%s): activeCommand = %s\n",
-        name(), CommandsToStr(*activeCommand));
+        name(), CommandsToStr(activeCommand));
     switch (*commandIndex++)
     {
         case out:
@@ -561,7 +560,7 @@ evalCommand()
             return evalDisconnect();
         default:
             error("INTERNAL ERROR (%s): illegal command code 0x%02x\n",
-                name(), *activeCommand);
+                name(), activeCommand);
             flags &= ~BusPending;
             finishProtocol(Fault);
             return false;
@@ -598,6 +597,10 @@ evalOut()
         flags |= LockPending;
         if (!busLockRequest(flags & InitRun ? 0 : lockTimeout))
         {
+            flags &= ~LockPending;
+            debug ("StreamCore::evalOut(%s): lockRequest failed. Device is offline.\n",
+                name());
+            finishProtocol(Offline);
             return false;
         }
         return true;
@@ -743,7 +746,7 @@ printValue(const StreamFormat& fmt, long value)
             name(), value);
         return false;
     }
-    debug("StreamCore::printValue %s %%%c long %ld (%lx): \"%s\"\n",
+    debug("StreamCore::printValue(%s, %%%c, %ld = 0x%lx): \"%s\"\n",
         name(), fmt.conv, value, value, outputLine.expand()());
     return true;
 }
@@ -765,7 +768,7 @@ printValue(const StreamFormat& fmt, double value)
             name(), value);
         return false;
     }
-    debug("StreamCore::printValue %s %%%c double %#g: \"%s\"\n",
+    debug("StreamCore::printValue(%s, %%%c, %#g): \"%s\"\n",
         name(), fmt.conv, value, outputLine.expand()());
     return true;
 }
@@ -788,7 +791,7 @@ printValue(const StreamFormat& fmt, char* value)
             name(), buffer.expand()());
         return false;
     }
-    debug("StreamCore::printValue %s %%%c char* \"%s\"): \"%s\"\n",
+    debug("StreamCore::printValue(%s, %%%c, \"%s\"): \"%s\"\n",
         name(), fmt.conv, value, outputLine.expand()());
     return true;
 }
@@ -797,12 +800,12 @@ void StreamCore::
 lockCallback(StreamIoStatus status)
 {
     MutexLock lock(this);
-    debug("StreamCore::lockCallback(%s, status=%s)\n",
+    debug("StreamCore::lockCallback(%s, %s)\n",
         name(), ::toStr(status));
     if (!(flags & LockPending))
     {
-        error("StreamCore::lockCallback(%s) called unexpectedly\n",
-            name());
+        error("%s: StreamCore::lockCallback(%s) called unexpectedly\n",
+            name(), ::toStr(status));
         return;
     }
     flags &= ~LockPending;
@@ -841,12 +844,12 @@ void StreamCore::
 writeCallback(StreamIoStatus status)
 {
     MutexLock lock(this);
-    debug("StreamCore::writeCallback(%s, status=%s)\n",
+    debug("StreamCore::writeCallback(%s, %s)\n",
         name(), ::toStr(status));
     if (!(flags & WritePending))
     {
-        error("StreamCore::writeCallback(%s) called unexpectedly\n",
-            name());
+        error("%s: StreamCore::writeCallback(%s) called unexpectedly\n",
+            name(), ::toStr(status));
         return;
     }
     flags &= ~WritePending;
@@ -929,13 +932,13 @@ readCallback(StreamIoStatus status,
     MutexLock lock(this);
     lastInputStatus = status;
 
-    debug("StreamCore::readCallback(%s, status=%s input=\"%s\", size=%" Z "u)\n",
+    debug("StreamCore::readCallback(%s, %s input=\"%s\", size=%" Z "u)\n",
         name(), ::toStr(status),
         StreamBuffer(input, size).expand()(), size);
 
     if (!(flags & AcceptInput))
     {
-        error("StreamCore::readCallback(%s, %s, \"%s\") called unexpectedly\n",
+        error("%s: StreamCore::readCallback(%s, \"%s\") called unexpectedly\n",
             name(), ::toStr(status),
             StreamBuffer(input, size).expand()());
         return 0;
@@ -981,7 +984,7 @@ readCallback(StreamIoStatus status,
     inputBuffer.append(input, size);
     debug("StreamCore::readCallback(%s) inputBuffer=\"%s\", size %" Z "u\n",
         name(), inputBuffer.expand()(), inputBuffer.length());
-    if (*activeCommand != in)
+    if (activeCommand != in)
     {
         // early input, stop here and wait for in command
         // -- Should we limit size of inputBuffer? --
@@ -1290,7 +1293,7 @@ normal_format:
                                 inputLine.length()-consumedInput > 20 ? "..." : "",
                                 formatstring());
                         else
-                            error("%s: Format \"%%%s\" has data type %s which does not match the type of \"%s\".\n",
+                            error("%s: Format \"%%%s\" has data type %s which is not supported by \"%s\".\n",
                                 name(), formatstring(), StreamFormatTypeStr[fmt.type], fieldAddress ? fieldName : name());
                     }
                     return false;
@@ -1564,21 +1567,16 @@ evalEvent()
 void StreamCore::
 eventCallback(StreamIoStatus status)
 {
-    if (status < 0 || status > StreamIoFault)
-    {
-        error("StreamCore::eventCallback(%s) called with illegal StreamIoStatus %d\n",
-            name(), status);
-        return;
-    }
+    MutexLock lock(this);
+    debug ("StreamCore::eventCallback(%s, %s) activeCommand: %s\n",
+        name(), ::toStr(status), CommandsToStr(activeCommand));
+
     if (!(flags & AcceptEvent))
     {
-        error("StreamCore::eventCallback(%s) called unexpectedly\n",
-            name());
+        error("%s: StreamCore::eventCallback(%s) called unexpectedly\n",
+            name(), ::toStr(status));
         return;
     }
-    debug("StreamCore::eventCallback(%s, status=%s)\n",
-        name(), ::toStr(status));
-    MutexLock lock(this);
     flags &= ~AcceptEvent;
     switch (status)
     {
@@ -1615,7 +1613,7 @@ timerCallback()
     debug ("StreamCore::timerCallback(%s)\n", name());
     if (!(flags & WaitPending))
     {
-        error("StreamCore::timerCallback(%s) called unexpectedly\n",
+        error("%s: StreamCore::timerCallback() called unexpectedly\n",
             name());
         return;
     }
@@ -1652,17 +1650,23 @@ evalExec()
 void StreamCore::
 execCallback(StreamIoStatus status)
 {
-    switch (status)
+    MutexLock lock(this);
+    debug ("StreamCore::execCallback(%s, %s) activeCommand: %s\n",
+        name(), ::toStr(status), CommandsToStr(activeCommand));
+
+    if (activeCommand != exec)
     {
-        case StreamIoSuccess:
-            evalCommand();
-            return;
-        default:
-            error("%s: Shell command \"%s\" failed\n",
-                name(), outputLine());
-            finishProtocol(Fault);
-            return;
+        error("%s: execCallback (%s) called unexpectedly during command %s\n",
+            name(), ::toStr(status), CommandsToStr(activeCommand));
     }
+    else if (status != StreamIoSuccess)
+    {
+        error("%s: Shell command \"%s\" failed\n",
+            name(), outputLine());
+        finishProtocol(Fault);
+    }
+    else
+        evalCommand();
 }
 
 bool StreamCore::execute()
@@ -1687,17 +1691,27 @@ bool StreamCore::evalConnect()
 void StreamCore::
 connectCallback(StreamIoStatus status)
 {
-    switch (status)
+    MutexLock lock(this);
+    debug ("StreamCore::connectCallback(%s, %s) activeCommand: %s\n",
+        name(), ::toStr(status), CommandsToStr(activeCommand));
+
+    if (activeCommand == end)
     {
-        case StreamIoSuccess:
-            evalCommand();
-            return;
-        default:
-            error("%s: Connect failed\n",
-                name());
-            finishProtocol(Fault);
-            return;
+        // asynchronous connect
+        startProtocol(StartInit);
     }
+    else if (activeCommand != connect)
+    {
+        error("%s: connectCallback(%s) called unexpectedly during command %s\n",
+            name(), ::toStr(status), CommandsToStr(activeCommand));
+    }
+    else if (status != StreamIoSuccess)
+    {
+        error("%s: Connect failed\n", name());
+        finishProtocol(Fault);
+    }
+    else
+        evalCommand();
 }
 
 bool StreamCore::evalDisconnect()
@@ -1715,24 +1729,31 @@ bool StreamCore::evalDisconnect()
 void StreamCore::
 disconnectCallback(StreamIoStatus status)
 {
-    switch (status)
+    MutexLock lock(this);
+    debug ("StreamCore::disconnectCallback(%s, %s) activeCommand: %s\n",
+        name(), ::toStr(status), CommandsToStr(activeCommand));
+
+    if (activeCommand != disconnect)
     {
-        case StreamIoSuccess:
-            evalCommand();
-            return;
-        default:
-            error("%s: Disconnect failed\n",
-                name());
-            finishProtocol(Fault);
-            return;
+        // asynchronous disconnect
+        flags &= ~BusPending;
+        finishProtocol(Offline);
     }
+    else if (status != StreamIoSuccess)
+    {
+        error("%s: Disconnect failed\n",
+            name());
+        finishProtocol(Fault);
+    }
+    else
+        evalCommand();
 }
 
 void StreamCore::
 printStatus(StreamBuffer& buffer)
 {
     buffer.print("active command=%s ",
-        activeCommand ? CommandsToStr(*activeCommand) : "none");
+        activeCommand ? CommandsToStr(activeCommand) : "none");
     buffer.print("flags=0x%04lx ", flags);
     if (flags & IgnoreExtraInput) buffer.append("IgnoreExtraInput ");
     if (flags & InitRun) buffer.append("InitRun ");

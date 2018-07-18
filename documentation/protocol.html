@@ -557,7 +557,8 @@ There is a fixed set of exception handler names starting with
  <dd>
   Not really an exception but formally specified in the same syntax.
   This handler is called from <code>iocInit</code> during record
-  initialization.
+  initialization <span class="new">and again whenever it is detected
+  that the device was disconnected and has reconnected</span>.
   It can be used to initialize an output record with a value read from
   the device.
   Also see chapter <a href="processing.html#init">Record Processing</a>.

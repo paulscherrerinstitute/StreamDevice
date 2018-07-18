@@ -750,7 +750,7 @@ initRecord(const char* filename, const char* protocol,
 
     debug("Stream::initRecord %s: initialize the first time\n",
         name());
-        
+
     if (!onInit) return DO_NOT_CONVERT; // no @init handler, keep DOL
 
     // initialize the record from hardware
@@ -914,6 +914,8 @@ protocolStartHook()
 void Stream::
 protocolFinishHook(ProtocolResult result)
 {
+    debug("Stream::protocolFinishHook(%s, %s)\n",
+        name(), toStr(result));
     switch (result)
     {
         case Success:
@@ -943,6 +945,9 @@ protocolFinishHook(ProtocolResult result)
         case ScanError:
         case FormatError:
             status = CALC_ALARM;
+            break;
+        case Offline:
+            status = COMM_ALARM;
             break;
         case Abort:
             flags |= Aborted;

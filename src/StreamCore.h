@@ -159,7 +159,7 @@ protected:
     StreamBuffer onReadTimeout;   // error handler (optional)
     StreamBuffer onMismatch;      // error handler (optional)
     const char* commandIndex;     // current position
-    const char* activeCommand;    // start of current command
+    char activeCommand;           // current command
     StreamBuffer outputLine;
     StreamBuffer inputBuffer;
     StreamBuffer inputLine;
