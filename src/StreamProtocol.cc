@@ -1092,8 +1092,6 @@ compileString(StreamBuffer& buffer, const char*& source,
 
     while (1)
     {
-        debug("StreamProtocolParser::Protocol::compileString "
-            "buffer so far: %s\n", buffer.expand()());
         // this is step 2: replacing the formats
         if (!*source || (newline = getLineNumber(source)) != line)
         {
