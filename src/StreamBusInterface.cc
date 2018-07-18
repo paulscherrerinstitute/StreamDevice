@@ -17,6 +17,7 @@
 *                                                              *
 ***************************************************************/
 
+#include <stdio.h>
 #include "StreamBusInterface.h"
 #include "StreamError.h"
 
@@ -68,7 +69,20 @@ find(Client* client, const char* busname, int addr, const char* param)
         bus = r->find(client, busname, addr, param);
         debug("StreamBusInterface::find %s %s\n",
             r->name, bus ? "matches" : "does not match");
-        if (bus) return bus;
+        if (bus)
+        {
+            if (addr >= 0)
+            {
+                bus->_name = new char[strlen(busname) + sizeof(int)*2 + sizeof(int)/2 + 2];
+                sprintf(bus->_name, "%s %d", busname, addr);
+            }
+            else
+            {
+                bus->_name = new char[strlen(busname) + 1];
+                strcpy(bus->_name, busname);
+            }
+            return bus;
+        }
     }
     return NULL;
 }

@@ -34,7 +34,9 @@ public:
 
     class Client
     {
+    private:
         friend class StreamBusInterface;
+
         virtual void lockCallback(StreamIoStatus status) = 0;
         virtual void writeCallback(StreamIoStatus status);
         virtual ssize_t readCallback(StreamIoStatus status,
@@ -96,27 +98,29 @@ public:
 private:
     friend class StreamBusInterfaceClass; // the iterator
     friend class Client;
+    char* _name;
 
 public:
     Client* client;
     virtual ~StreamBusInterface() {};
+    const char* name() { return _name; }
 
 protected:
     StreamBusInterface(Client* client);
 
 // map client functions into StreamBusInterface namespace
-    void lockCallback(StreamIoStatus status)
+    void lockCallback(StreamIoStatus status = StreamIoSuccess)
         { client->lockCallback(status); }
-    void writeCallback(StreamIoStatus status)
+    void writeCallback(StreamIoStatus status = StreamIoSuccess)
         { client->writeCallback(status); }
     ssize_t readCallback(StreamIoStatus status,
         const void* input = NULL, size_t size = 0)
         { return client->readCallback(status, input, size); }
-    void eventCallback(StreamIoStatus status)
+    void eventCallback(StreamIoStatus status = StreamIoSuccess)
         { client->eventCallback(status); }
-    void connectCallback(StreamIoStatus status)
+    void connectCallback(StreamIoStatus status = StreamIoSuccess)
         { client->connectCallback(status); }
-    void disconnectCallback(StreamIoStatus status)
+    void disconnectCallback(StreamIoStatus status = StreamIoSuccess)
         { client->disconnectCallback(status); }
     const char* getInTerminator(size_t& length)
         { return client->getInTerminator(length); }
