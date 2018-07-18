@@ -297,7 +297,7 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
         c = buffer[i];
         if (c < 0x20 || c >= 0x7f)
         {
-            result.print("<%02x>", c & 0xff);
+            result.print("\033[1m<%02x>\033[0m", c & 0xff);
         }
         else
         {
