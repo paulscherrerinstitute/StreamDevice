@@ -91,8 +91,6 @@ enum MoreFlags {
 };
 
 extern "C" {
-void streamExecuteCommand(CALLBACK *pcallback);
-void streamRecordProcessCallback(CALLBACK *pcallback);
 long streamReload(const char* recordname);
 long streamReportRecord(const char* recordname);
 }
@@ -145,9 +143,17 @@ class Stream : protected StreamCore
     void lockMutex();
     void releaseMutex();
     bool execute();
-    friend void streamExecuteCommand(CALLBACK *pcallback);
-    friend void streamRecordProcessCallback(CALLBACK *pcallback);
-    friend long streamReportRecord(const char* recordname);
+
+// need static wrappers for callbacks
+    void executeCommand();
+    static void executeCommand(CALLBACK *pcallback) {
+        static_cast<Stream*>(pcallback->user)->executeCommand();
+    }
+
+    void recordProcessCallback();
+    static void recordProcessCallback(CALLBACK *pcallback) {
+        static_cast<Stream*>(pcallback->user)->recordProcessCallback();
+    }
 
 // Stream Epics methods
     Stream(dbCommon* record, const struct link *ioLink,
@@ -171,6 +177,7 @@ class Stream : protected StreamCore
     friend ssize_t streamScanfN(dbCommon *record, format_t *format,
         void*, size_t maxStringSize);
     friend long streamReload(const char* recordname);
+    friend long streamReportRecord(const char* recordname);
 
 public:
     long priority() { return record->prio; };
@@ -632,9 +639,9 @@ Stream(dbCommon* _record, const struct link *ioLink,
     timerQueue = &epicsTimerQueueActive::allocate(true);
     timer = &timerQueue->createTimer();
 #endif
-    callbackSetCallback(streamExecuteCommand, &commandCallback);
+    callbackSetCallback(executeCommand, &commandCallback);
     callbackSetUser(this, &commandCallback);
-    callbackSetCallback(streamRecordProcessCallback, &processCallback);
+    callbackSetCallback(recordProcessCallback, &processCallback);
     callbackSetUser(this, &processCallback);
     status = ERROR;
     convert = DO_NOT_CONVERT;
@@ -988,31 +995,23 @@ protocolFinishHook(ProtocolResult result)
 
 }
 
-void streamRecordProcessCallback(CALLBACK *pcallback)
+void Stream::
+recordProcessCallback()
 {
-    Stream* pstream = static_cast<Stream*>(pcallback->user);
-    dbCommon* record = pstream->record;
-
     // process record
     // This will call streamReadWrite.
-    debug("streamRecordProcessCallback(%s) processing record\n",
-            pstream->name());
+    debug("recordProcessCallback(%s) processing record\n", name());
     dbScanLock(record);
     ((DEVSUPFUN)record->rset->process)(record);
     dbScanUnlock(record);
-    debug("streamRecordProcessCallback(%s) processing record done\n",
-            pstream->name());
+    debug("recordProcessCallback(%s) processing record done\n", name());
 
-    if (record->scan == SCAN_IO_EVENT && !(pstream->flags & Aborted))
+    if (record->scan == SCAN_IO_EVENT && !(flags & Aborted))
     {
         // restart protocol for next turn
-        debug("streamRecordProcessCallback(%s) restart async protocol\n",
-            pstream->name());
-        if (!pstream->startProtocol(Stream::StartAsync))
-        {
-            error("%s: Can't restart \"I/O Intr\" protocol\n",
-                pstream->name());
-        }
+        debug("recordProcessCallback(%s) restart async protocol\n", name());
+        if (!startProtocol(Stream::StartAsync))
+            error("%s: Can't restart \"I/O Intr\" protocol\n", name());
     }
 }
 
@@ -1472,36 +1471,19 @@ matchValue(const StreamFormat& format, const void* fieldaddress)
 #ifdef EPICS_3_13
 // Pass command to vxWorks shell
 extern "C" int execute(const char *cmd);
-
-void streamExecuteCommand(CALLBACK *pcallback)
-{
-    Stream* pstream = static_cast<Stream*>(pcallback->user);
-
-    if (execute(pstream->outputLine()) != OK)
-    {
-        pstream->execCallback(StreamIoFault);
-    }
-    else
-    {
-        pstream->execCallback(StreamIoSuccess);
-    }
-}
-#else
-// Pass command to iocsh
-void streamExecuteCommand(CALLBACK *pcallback)
-{
-    Stream* pstream = static_cast<Stream*>(pcallback->user);
-
-    if (iocshCmd(pstream->outputLine()) != OK)
-    {
-        pstream->execCallback(StreamIoFault);
-    }
-    else
-    {
-        pstream->execCallback(StreamIoSuccess);
-    }
-}
 #endif
+
+void Stream::
+executeCommand()
+{
+    int status;
+#ifdef EPICS_3_13
+    status = ::execute(outputLine());
+#else
+    status = iocshCmd(outputLine());
+#endif
+    execCallback(status == OK ? StreamIoSuccess : StreamIoFault);
+}
 
 bool Stream::
 execute()
