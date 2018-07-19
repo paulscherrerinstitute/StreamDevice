@@ -376,7 +376,6 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
         }
         if (op == ';' || op == '}') // no arguments
         {
-            if (op == '}') ungetc(op, file);
             // Check for protocol reference
             Protocol* p;
             for (p = protocols; p; p = p->next)
@@ -384,14 +383,16 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
                 if (p->protocolname.startswith(token()))
                 {
                     commands->append(*p->commands);
+                    if (op == '}') ungetc(op, file);
                     break;
                 }
             }
             if (p) continue;
+            // Fall through for commands without arguments
         }
         // must be a command (validity will be checked later)
         commands->append(token); // is null separated
-        ungetc(op, file); // put back first char of value
+        ungetc(op, file); // put back first char after command
         if (parseValue(*commands, true) == false)
         {
             line = startline;
