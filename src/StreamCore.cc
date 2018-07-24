@@ -193,7 +193,11 @@ parse(const char* filename, const char* _protocolname)
     {
         while (i >= 0)
         {
+            if (protocolname[i-1] == ' ')
+                protocolname.remove(--i, 1); // remove trailing space
             protocolname[i] = '\0'; // replace '(' and ',' with '\0'
+            if (protocolname[i+1] == ' ')
+                protocolname.remove(i+1, 1); // remove leading space
             i = protocolname.find(',', i+1);
         }
         // should have closing parentheses

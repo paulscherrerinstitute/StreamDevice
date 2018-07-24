@@ -705,32 +705,53 @@ parseLink(const struct link *ioLink, char* filename,
     char* protocol, char* busname, int* addr, char* busparam)
 {
     // parse link parameters: filename protocol busname addr busparam
-    int n;
+    int n1, n2;
     if (ioLink->type != INST_IO)
     {
         error("%s: Wrong I/O link type %s\n", name(),
             pamaplinkType[ioLink->type].strvalue);
         return S_dev_badInitRet;
     }
-    int items = sscanf(ioLink->value.instio.string, "%s%s%s%n%i%n",
-        filename, protocol, busname, &n, addr, &n);
-    if (items <= 0)
+    if (0 >= sscanf(ioLink->value.instio.string, "%s%n", filename, &n1))
     {
         error("%s: Empty I/O link. "
             "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
             name());
         return S_dev_badInitRet;
     }
-    if (items < 3)
+    if (0 >= sscanf(ioLink->value.instio.string+n1, " %[^ \t(] %n", protocol, &n2))
     {
-        error("%s: Wrong I/O link format\n"
-            "  expect \"@file protocol bus addr params\"\n"
+        error("%s: Missing protocol name\n"
+            "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
             "  in \"@%s\"\n", name(),
             ioLink->value.instio.string);
         return S_dev_badInitRet;
     }
-    while (isspace((unsigned char)ioLink->value.instio.string[n])) n++;
-    strcpy (busparam, ioLink->value.constantStr+n);
+    n1+=n2;
+    if (ioLink->value.instio.string[n1] == '(')
+    {
+        strcat(protocol, "(");
+        n1++;
+        sscanf(ioLink->value.instio.string+n1, " %[^)] %n", protocol+strlen(protocol), &n2);
+        n1+=n2;
+        if (ioLink->value.instio.string[n1++] != ')')
+        {
+            error("%s: Missing ')' after protocol '%s': '%s'\n"
+                "  expect \"@file protocol(args) bus [addr] [params]\"\n"
+                "  in \"@%s\"\n", name(), protocol, ioLink->value.instio.string+n1-1,
+                ioLink->value.instio.string);
+            return S_dev_badInitRet;
+        }
+        strcat(protocol, ")");
+    }
+    if (0 >= sscanf(ioLink->value.instio.string+n1, "%s %i %99c", busname, addr, busparam))
+    {
+        error("%s: Missing bus name\n"
+            "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
+            "  in \"@%s\"\n", name(),
+            ioLink->value.instio.string);
+        return S_dev_badInitRet;
+    }    
     return OK;
 }
 
