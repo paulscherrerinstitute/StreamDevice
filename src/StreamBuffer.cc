@@ -287,7 +287,7 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
     }
     end = start+length;
     if (end > len) end = len;
-    StreamBuffer result((end-start)*2);
+    StreamBuffer result;
     start += offs;
     end += offs;
     size_t i;
@@ -296,13 +296,9 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
     {
         c = buffer[i];
         if (c < 0x20 || c >= 0x7f)
-        {
-            result.print("\033[1m<%02x>\033[0m", c & 0xff);
-        }
+            result.print("\033[1m<%02x>\033[22m", c & 0xff);
         else
-        {
             result.append(c);
-        }
     }
     return result;
 }
@@ -310,27 +306,20 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
 StreamBuffer StreamBuffer::
 dump() const
 {
-    StreamBuffer result(256+cap*5);
-    result.append("\033[0m");
+    StreamBuffer result;
     size_t i;
-    result.print("%" P "d,%" P "d,%" P "d:\033[37m", offs, len, cap);
+    result.print("%" P "d,%" P "d,%" P "d:", offs, len, cap);
+    if (offs) result.print("\033[47m");
+    char c;
     for (i = 0; i < cap; i++)
     {
-        if (i == offs) result.append("\033[34m[\033[0m");
-        if (buffer[i] < 0x20 || buffer[i] >= 0x7f)
-        {
-            if (i < offs || i >= offs+len)
-            result.print(
-                "<%02x>", buffer[i] & 0xff);
-            else
-            result.print(
-                "\033[34m<%02x>\033[37m", buffer[i] & 0xff);
-        }
+        c = buffer[i];
+        if (offs && i == offs) result.append("\033[0m");
+        if (c < 0x20 || c >= 0x7f)
+            result.print("\033[1m<%02x>\033[22m", c & 0xff);
         else
-        {
-            result.append(buffer[i]);
-        }
-        if (i == offs+len-1) result.append("\033[34m]\033[37m");
+            result.append(c);
+        if (i == offs+len-1) result.append("\033[47m");
     }
     result.append("\033[0m");
     return result;
