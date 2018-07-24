@@ -390,7 +390,7 @@ report(int interest)
         {
             printf("\n%s: %s\n", stream->name(),
                 stream->ioLink->value.instio.string);
-            stream->printProtocol();
+            stream->printProtocol(stdout);
         }
         else
         {
@@ -425,7 +425,7 @@ long streamReportRecord(const char* recordname)
             StreamBuffer buffer;
             stream->printStatus(buffer);
             printf("%s\n", buffer());
-            stream->printProtocol();
+            stream->printProtocol(stdout);
             printf("\n");
         }
     }

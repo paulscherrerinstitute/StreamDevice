@@ -80,40 +80,40 @@ static char* printCommands(StreamBuffer& buffer, const char* c)
 }
 
 void StreamCore::
-printProtocol()
+printProtocol(FILE* file)
 {
     StreamBuffer buffer;
-    printf("%s {\n", protocolname());
-    printf("  extraInput    = %s;\n",
+    fprintf(file, "%s {\n", protocolname());
+    fprintf(file, "  extraInput    = %s;\n",
       (flags & IgnoreExtraInput) ? "ignore" : "error");
-    printf("  lockTimeout   = %ld; # ms\n", lockTimeout);
-    printf("  readTimeout   = %ld; # ms\n", readTimeout);
-    printf("  replyTimeout  = %ld; # ms\n", replyTimeout);
-    printf("  writeTimeout  = %ld; # ms\n", writeTimeout);
-    printf("  pollPeriod    = %ld; # ms\n", pollPeriod);
-    printf("  maxInput      = %ld; # bytes\n", maxInput);
+    fprintf(file, "  lockTimeout   = %ld; # ms\n", lockTimeout);
+    fprintf(file, "  readTimeout   = %ld; # ms\n", readTimeout);
+    fprintf(file, "  replyTimeout  = %ld; # ms\n", replyTimeout);
+    fprintf(file, "  writeTimeout  = %ld; # ms\n", writeTimeout);
+    fprintf(file, "  pollPeriod    = %ld; # ms\n", pollPeriod);
+    fprintf(file, "  maxInput      = %ld; # bytes\n", maxInput);
     StreamProtocolParser::printString(buffer.clear(), inTerminator());
-    printf("  inTerminator  = \"%s\";\n", buffer());
+    fprintf(file, "  inTerminator  = \"%s\";\n", buffer());
         StreamProtocolParser::printString(buffer.clear(), outTerminator());
-    printf("  outTerminator = \"%s\";\n", buffer());
+    fprintf(file, "  outTerminator = \"%s\";\n", buffer());
         StreamProtocolParser::printString(buffer.clear(), separator());
-    printf("  separator     = \"%s\";\n", buffer());
+    fprintf(file, "  separator     = \"%s\";\n", buffer());
     if (onInit)
-        printf("  @Init {\n%s  }\n",
+        fprintf(file, "  @Init {\n%s  }\n",
         printCommands(buffer.clear(), onInit()));
     if (onReplyTimeout)
-        printf("  @ReplyTimeout {\n%s  }\n",
+        fprintf(file, "  @ReplyTimeout {\n%s  }\n",
         printCommands(buffer.clear(), onReplyTimeout()));
     if (onReadTimeout)
-        printf("  @ReadTimeout {\n%s  }\n",
+        fprintf(file, "  @ReadTimeout {\n%s  }\n",
         printCommands(buffer.clear(), onReadTimeout()));
     if (onWriteTimeout)
-        printf("  @WriteTimeout {\n%s  }\n",
+        fprintf(file, "  @WriteTimeout {\n%s  }\n",
         printCommands(buffer.clear(), onWriteTimeout()));
     if (onMismatch)
-        printf("  @Mismatch {\n%s  }\n",
+        fprintf(file, "  @Mismatch {\n%s  }\n",
         printCommands(buffer.clear(), onMismatch()));
-    printf("\n%s}\n",
+    fprintf(file, "\n%s}\n",
         printCommands(buffer.clear(), commands()));
 }
 

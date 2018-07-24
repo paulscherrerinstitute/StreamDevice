@@ -217,7 +217,7 @@ public:
     StreamCore();
     virtual ~StreamCore();
     bool parse(const char* filename, const char* protocolname);
-    void printProtocol();
+    void printProtocol(FILE* = stdout);
     const char* name() { return streamname; }
     void printStatus(StreamBuffer& buffer);
 };
