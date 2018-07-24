@@ -254,10 +254,12 @@ compile(StreamProtocolParser::Protocol* protocol)
         protocol->getNumberVariable("pollperiod", pollPeriod)))
         return false;
 
-    if (!(protocol->getStringVariable("terminator", inTerminator, &inTerminatorDefined) &&
-        protocol->getStringVariable("terminator", outTerminator, &outTerminatorDefined) &&
-        protocol->getStringVariable("interminator", inTerminator, &inTerminatorDefined) &&
+    if (!(protocol->getStringVariable("interminator", inTerminator, &inTerminatorDefined) &&
         protocol->getStringVariable("outterminator", outTerminator, &outTerminatorDefined) &&
+        (inTerminatorDefined ||
+            protocol->getStringVariable("terminator", inTerminator, &inTerminatorDefined)) &&
+        (outTerminatorDefined ||
+            protocol->getStringVariable("terminator", outTerminator, &outTerminatorDefined)) &&
         protocol->getStringVariable("separator", separator)))
         return false;
 

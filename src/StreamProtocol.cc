@@ -882,12 +882,12 @@ getEnumVariable(const char* varname, unsigned short& value, const char** enumstr
 bool StreamProtocolParser::Protocol::
 getStringVariable(const char* varname, StreamBuffer& value, bool* defined)
 {
+    value.clear();
     const Variable* pvar = getVariable(varname);
     if (!pvar) return true;
     if (defined) *defined = true;
     const StreamBuffer* pvalue = &pvar->value;
     const char* source = (*pvalue)();
-    value.clear();
     if (!compileString(value, source))
     {
         error("in string variable '%s' in protocol file '%s' line %d\n",
@@ -909,10 +909,10 @@ getStringVariable(const char* varname, StreamBuffer& value, bool* defined)
 bool StreamProtocolParser::Protocol::
 getCommands(const char* handlername,StreamBuffer& code, Client* client)
 {
+    code.clear();
     const Variable* pvar = getVariable(handlername);
     if (!pvar) return true;
     if (!pvar->value) return true;
-    code.clear();
     const char* source = pvar->value();
     debug("StreamProtocolParser::Protocol::getCommands"
         "(handlername=\"%s\", client=\"%s\"): source=%s\n",
