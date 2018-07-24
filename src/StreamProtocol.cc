@@ -907,7 +907,7 @@ getStringVariable(const char* varname, StreamBuffer& value, bool* defined)
 }
 
 bool StreamProtocolParser::Protocol::
-getCommands(const char* handlername,StreamBuffer& code, Client* client)
+getCommands(const char* handlername, StreamBuffer& code, Client* client)
 {
     code.clear();
     const Variable* pvar = getVariable(handlername);
@@ -1035,7 +1035,7 @@ compileNumber(unsigned long& number, const char*& source, unsigned long max)
         {
             buffer.append(source);
         }
-        source += strlen(source)+1+sizeof(int); // skip eos + line
+        source += strlen(source) + 1 + sizeof(int); // skip eos + line
     };
     n = strtoul(buffer(), &end, 0);
     if (end == buffer())
@@ -1082,8 +1082,8 @@ compileString(StreamBuffer& buffer, const char*& source,
     line = getLineNumber(source);
 
     debug("StreamProtocolParser::Protocol::compileString "
-        "line %d source=\"%s\" recursionDepth=%d\n",
-        line, source, recursionDepth);
+        "line %d source=\"%s\" formatType=%s quoted=%i recursionDepth=%d\n",
+        line, source, ::toStr(formatType), quoted, recursionDepth);
 
     // coding is done in two steps:
     // 1) read a line from protocol source and code quoted strings,
@@ -1096,6 +1096,7 @@ compileString(StreamBuffer& buffer, const char*& source,
         // this is step 2: replacing the formats
         if (!*source || (newline = getLineNumber(source)) != line)
         {
+            debug("StreamProtocolParser::Protocol::compileString line %i: %s\n", line, buffer.expand()());
             // compile all formats in this line
             // We do this here after all variables in this line
             // have been replaced and after string has been coded.
@@ -1103,7 +1104,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             {
                 int nformats=0;
                 char c;
-                while ((c = buffer[formatpos]) != '\0')
+                while (formatpos < buffer.length() && (c = buffer[formatpos]) != '\0')
                 {
                     if (c == esc) {
                         // ignore escaped %
@@ -1261,7 +1262,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             {
                 StreamBuffer value;
                 if (!replaceVariable(value, source)) return false;
-                source += strlen(source)+1+sizeof(int);
+                source += strlen(source) + 1 + sizeof(int);
                 p = value();
                 int saveline = line;
                 if (!compileString(buffer, p, formatType, client, false, recursionDepth + 1))
@@ -1346,7 +1347,7 @@ compileString(StreamBuffer& buffer, const char*& source,
             {"gs",   0x1D},
             {"rs",   0x1E},
             {"us",   0x1F},
-            {"del",  0x7f}
+            {"del",  0x7F}
         };
         size_t i;
         c=-1;
@@ -1368,7 +1369,7 @@ compileString(StreamBuffer& buffer, const char*& source,
                     buffer.append(esc);
                 }
                 buffer.append(c);
-                source += strlen(source)+1+sizeof(int);
+                source += strlen(source) + 1 + sizeof(int);
                 break;
             }
         }
@@ -1509,7 +1510,7 @@ compileCommands(StreamBuffer& buffer, const char*& source, Client* client)
     while (*source)
     {
         command = source;
-        args = source + strlen(source)+1+sizeof(int);
+        args = source + strlen(source) + 1 + sizeof(int);
         if (!client->compileCommand(this, buffer, command, args))
         {
             error(getLineNumber(source), filename(),
