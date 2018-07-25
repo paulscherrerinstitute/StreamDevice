@@ -231,14 +231,14 @@ connected device.
 </p>
 <h3>Example:</h3>
 <p>
-A power supply with serial communication (9600 baud, 8N1) is connected to
-<kbd>/dev/ttyS1</kbd>.
-The name of the power supply is <tt>PS1</tt>.
+A device with serial communication (9600 baud, 8N1, no flow control) is
+connected to <kbd>/dev/ttyS1</kbd>.
+The name of the device shall be <tt>PS1</tt>.
 Protocol files are either in the current working directory or in the
 <kbd>../protocols</kbd> directory.
 </p>
 <p>
-Then the startup script must contain lines like this:
+Then the startup script may look like this:
 </p>
 <pre>
 epicsEnvSet ("STREAM_PROTOCOL_PATH", ".:../protocols")
@@ -252,9 +252,28 @@ asynSetOption ("PS1", 0, "clocal", "Y")
 asynSetOption ("PS1", 0, "crtscts", "N")
 </pre>
 
-<p>If the power supply was connected via telnet-style TCP/IP
+<p>All above options are the defaults.
+Thus their usage in optional in this case.
+</p>
+<p>
+If the device uses hardware flow control, change the last two lines to:
+</p>
+<pre>
+asynSetOption ("PS1", 0, "clocal", "N")
+asynSetOption ("PS1", 0, "crtscts", "Y")
+</pre>
+<p>
+Newer versions of <em>asyn</em> also support software flow control
+(CTRL-S,CTRL-Q). If the device uses this, you may want to set:
+</p>
+<pre>
+asynSetOption ("PS1", 0, "ixon", "Y")
+asynSetOption ("PS1", 0, "ixany", "Y")
+</pre>
+
+<p>If the device was instead connected via telnet-style TCP/IP
 at address 192.168.164.10 on port 23,
-the startupscript would contain:
+the startup script would contain:
 </p>
 <pre>
 epicsEnvSet ("STREAM_PROTOCOL_PATH", ".:../protocols")
@@ -369,8 +388,9 @@ specify them enclosed in parentheses:
 <p>
 The communication channel is specified with <code><var>bus</var></code>
 (aka <em>asynDriver</em> "port") and <code><var>addr</var></code>.
-If the bus does not have addresses, <code><var>addr</var></code> is dispensable.
+If the bus does not have addresses, <code><var>addr</var></code> may be skipped.
 Optional <code><var>parameters</var></code> are passed to the bus driver.
+(At the moment, no bus driver supports parameters.)
 </p>
 
 <h3>Example:</h3>
