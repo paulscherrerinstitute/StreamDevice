@@ -1,25 +1,24 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-    "http://www.w3.org/TR/html4/loose.dtd">
-<html>
+<!DOCTYPE HTML>
+<html lang="en">
 <head>
 <title>StreamDevice: aai Records</title>
-<link rel="shortcut icon" href="favicon.ico">
-<link rel="stylesheet" type="text/css" href="stream.css">
-<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<meta name="author" content="Dirk Zimoch">
+<meta charset="utf-8" />
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" type="text/css" href="stream.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="author" content="Dirk Zimoch" />
 </head>
 <body>
 <iframe src="nav.html" id="navleft"></iframe>
 <h1>aai Records</h1>
 <p>
-<b>Note:</b> aai record support is disabled per default.
-Enable it in <code>src/CONFIG_STREAM</code>.
+<b>Note:</b> In EPICS versions before 3.14.12, aai records may be disabled.
 </p>
 
 <h2>Normal Operation</h2>
 <p>
 With aai records, the format converter is applied to
-each element. Between the elements, a separator is printed
+each array element. Between the elements, a separator is printed
 or expected as specified by the <code>Separator</code>
 <a href="protocol.html#sysvar">variable</a> in the protocol.
 When parsing input, a space as the first character of the
@@ -105,24 +104,31 @@ the written or read value.
  present. All format converters work like in normal operation.
 </p>
 
-<hr>
-<p>
+<footer>
+<nav>
+<a href="aai.html">aai</a>
 <a href="aao.html">aao</a>
 <a href="ai.html">ai</a>
 <a href="ao.html">ao</a>
 <a href="bi.html">bi</a>
 <a href="bo.html">bo</a>
-<a href="mbbi.html">mbbi</a>
-<a href="mbbo.html">mbbo</a>
-<a href="mbbiDirect.html">mbbiDirect</a>
-<a href="mbboDirect.html">mbboDirect</a>
+<a href="calcout.html">calcout</a>
+<a href="int64in.html">int64in</a>
+<a href="int64out.html">int64out</a>
 <a href="longin.html">longin</a>
 <a href="longout.html">longout</a>
+<a href="lsi.html">lsi</a>
+<a href="lso.html">lso</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="scalcout.html">scalcout</a>
 <a href="stringin.html">stringin</a>
 <a href="stringout.html">stringout</a>
-<a href="calcout.html">calcout</a>
-<a href="scalcout.html">scalcout</a>
-</p>
-<p><small>Dirk Zimoch, 2006</small></p>
+<a href="waveform.html">waveform</a>
+</nav>
+Dirk Zimoch, 2018
+</footer>
 </body>
 </html>

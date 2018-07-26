@@ -5,10 +5,10 @@ a:hover   {color: #FF0000;}
 body {
     margin-right:1em;
     margin-left:15em;
-    margin-top:70px;
+    margin-top:75px;
     padding-top:1px;
     font-family: Helvetica, Arial, sans-serif;
-    font-size:14px;
+    font-size: 100%;
     background-color:#ffffff;
 }
 
@@ -74,11 +74,30 @@ p {
     margin-bottom:0.75ex;
 }
 
+body h1 + p {
+    margin-top:1.5ex;
+    margin-bottom:0.75ex;
+}
+
+footer {
+    font-size:75%;
+    margin-top: 1em;
+    border-top: 1px solid darkgray;
+    padding-top: 1em;
+}
+
+footer a:only-of-type {
+    display: block;
+    position: absolute;
+    right: 1em;
+}
+
 small {
     font-size:75%;
 }
 
 code {
+    font-size: 125%;
     color: #008000;
 }
 
