@@ -207,6 +207,10 @@ parse(const char* filename, const char* _protocolname)
             return false;
         }
         protocolname.truncate(-1); // remove ')'
+        if (protocolname[-1] == ' ')
+        {
+            protocolname.truncate(-1); // remove trailing space
+        }
     }
     StreamProtocolParser::Protocol* protocol;
     protocol = StreamProtocolParser::getProtocol(filename, protocolname);
