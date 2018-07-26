@@ -34,7 +34,7 @@ written or read value.
     <dt>If <code>MASK!=0</code>:</dt>
      <dd>
        <u>Output:</u> <code><i>x</i>=RVAL&amp;MASK</code><br>
-       <u>Input:</u> <code>RBV=<i>x</i>&amp;MASK</code><br>
+       <u>Input:</u> <code>RBV=RVAL=<i>x</i>&amp;MASK</code><br>
      </dd>
     </dl>
     <code>MASK</code> is initialized to <code>NOBT</code> 1-bits shifted
@@ -53,9 +53,7 @@ written or read value.
 <h2>Initialization</h2>
 <p>
  During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
- present. In contrast to normal operation, input is put to
- <code>RVAL</code> as well as to <code>RBV</code> and converted by the
- record if <code>MASK!=0</code>.
+ present.
 </p>
 
 <footer>

@@ -31,7 +31,7 @@ written or read value.
  <dt>LONG format (e.g. <code>%i</code>):</dt>
   <dd>
    <u>Output:</u> <code><i>x</i>=RVAL</code><br>
-   <u>Input:</u> <code>RBV=<i>x</i></code><br>
+   <u>Input:</u> <code>RBV=RVAL=<i>x</i></code><br>
    Note that the record calculates
    <code>RVAL=(((OVAL-EOFF)/ESLO)-AOFF)/ASLO</code> if
    <code>LINR=="LINEAR"</code>. <code>ESLO</code> and <code>EOFF</code>
@@ -63,8 +63,6 @@ written or read value.
  present. In contrast to normal operation, output in DOUBLE format uses
  <code>VAL</code> instead of <code>OVAL</code>. Note that the record
  initializes <code>VAL</code> from <code>DOL</code> if that is a constant.
- LONG input is put to <code>RVAL</code> as well as to <code>RBV</code> and
- converted by the record.
 </p>
 
 <footer>
