@@ -92,7 +92,6 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 // More flags: 0x00FFFFFF used by StreamCore
 const unsigned long InDestructor  = 0x0100000;
 const unsigned long ValueReceived = 0x0200000;
-const unsigned long Aborted       = 0x0400000;
 
 extern "C" {
 long streamReload(const char* recordname);
@@ -135,7 +134,6 @@ class Stream : protected StreamCore
 #endif
 
 // StreamCore methods
-    void protocolStartHook();
     void protocolFinishHook(ProtocolResult);
     void startTimer(unsigned long timeout);
     bool getFieldAddress(const char* fieldname,
@@ -962,12 +960,6 @@ expire(const epicsTime&)
 // StreamCore virtual methods ////////////////////////////////////////////
 
 void Stream::
-protocolStartHook()
-{
-    flags &= ~Aborted;
-}
-
-void Stream::
 protocolFinishHook(ProtocolResult result)
 {
     debug("Stream::protocolFinishHook(%s, %s)\n",
@@ -1006,7 +998,6 @@ protocolFinishHook(ProtocolResult result)
             status = COMM_ALARM;
             break;
         case Abort:
-            flags |= Aborted;
         case Fault:
             status = UDF_ALARM;
             if (record->pact || record->scan == SCAN_IO_EVENT)

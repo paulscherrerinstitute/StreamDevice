@@ -505,6 +505,8 @@ finishProtocol(ProtocolResult status)
                     break;
                 }
                 break;
+            case Abort:
+                flags |= Aborted;
             default:
                 // get rid of all the rubbish whe might have collected
                 unparsedInput = false;
@@ -809,6 +811,7 @@ printValue(const StreamFormat& fmt, char* value)
 void StreamCore::
 lockCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug("StreamCore::lockCallback(%s, %s)\n",
         name(), ::toStr(status));
@@ -853,6 +856,7 @@ lockCallback(StreamIoStatus status)
 void StreamCore::
 writeCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug("StreamCore::writeCallback(%s, %s)\n",
         name(), ::toStr(status));
@@ -933,6 +937,7 @@ readCallback(StreamIoStatus status,
 // returns number of bytes to read additionally
 
 {
+    if (flags & Aborted) return 0;
     if (status < 0 || status > StreamIoFault)
     {
         error("StreamCore::readCallback(%s) called with illegal StreamIoStatus %d\n",
@@ -1582,6 +1587,7 @@ evalEvent()
 void StreamCore::
 eventCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug ("StreamCore::eventCallback(%s, %s) activeCommand: %s\n",
         name(), ::toStr(status), CommandsToStr(activeCommand));
@@ -1624,6 +1630,7 @@ evalWait()
 void StreamCore::
 timerCallback()
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug ("StreamCore::timerCallback(%s)\n", name());
     if (!(flags & WaitPending))
@@ -1665,6 +1672,7 @@ evalExec()
 void StreamCore::
 execCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug ("StreamCore::execCallback(%s, %s) activeCommand: %s\n",
         name(), ::toStr(status), CommandsToStr(activeCommand));
@@ -1706,6 +1714,7 @@ bool StreamCore::evalConnect()
 void StreamCore::
 connectCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug ("StreamCore::connectCallback(%s, %s) activeCommand: %s\n",
         name(), ::toStr(status), CommandsToStr(activeCommand));
@@ -1744,6 +1753,7 @@ bool StreamCore::evalDisconnect()
 void StreamCore::
 disconnectCallback(StreamIoStatus status)
 {
+    if (flags & Aborted) return;
     MutexLock lock(this);
     debug ("StreamCore::disconnectCallback(%s, %s) activeCommand: %s\n",
         name(), ::toStr(status), CommandsToStr(activeCommand));
@@ -1769,19 +1779,20 @@ printStatus(StreamBuffer& buffer)
 {
     buffer.print("active command=%s ",
         activeCommand ? CommandsToStr(activeCommand) : "none");
-    buffer.print("flags=0x%04lx ", flags);
-    if (flags & IgnoreExtraInput) buffer.append("IgnoreExtraInput ");
-    if (flags & InitRun) buffer.append("InitRun ");
-    if (flags & AsyncMode) buffer.append("AsyncMode ");
-    if (flags & GotValue) buffer.append("GotValue ");
-    if (flags & BusOwner) buffer.append("BusOwner ");
-    if (flags & Separator) buffer.append("Separator ");
-    if (flags & ScanTried) buffer.append("ScanTried ");
-    if (flags & AcceptInput) buffer.append("AcceptInput ");
-    if (flags & AcceptEvent) buffer.append("AcceptEvent ");
-    if (flags & LockPending) buffer.append("LockPending ");
-    if (flags & WritePending) buffer.append("WritePending ");
-    if (flags & WaitPending) buffer.append("WaitPending ");
+    buffer.print("flags=0x%04lx", flags);
+    if (flags & IgnoreExtraInput) buffer.append(" IgnoreExtraInput");
+    if (flags & InitRun)          buffer.append(" InitRun");
+    if (flags & AsyncMode)        buffer.append(" AsyncMode");
+    if (flags & GotValue)         buffer.append(" GotValue");
+    if (flags & BusOwner)         buffer.append(" BusOwner");
+    if (flags & Separator)        buffer.append(" Separator");
+    if (flags & ScanTried)        buffer.append(" ScanTried");
+    if (flags & AcceptInput)      buffer.append(" AcceptInput");
+    if (flags & AcceptEvent)      buffer.append(" AcceptEvent");
+    if (flags & LockPending)      buffer.append(" LockPending");
+    if (flags & WritePending)     buffer.append(" WritePending");
+    if (flags & WaitPending)      buffer.append(" WaitPending");
+    if (flags & Aborted)          buffer.append(" Aborted");
     busPrintStatus(buffer);
 }
 

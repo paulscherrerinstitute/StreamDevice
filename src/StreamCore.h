@@ -87,8 +87,9 @@ const unsigned long AcceptEvent      = 0x0200;
 const unsigned long LockPending      = 0x0400;
 const unsigned long WritePending     = 0x0800;
 const unsigned long WaitPending      = 0x1000;
+const unsigned long Aborted          = 0x2000;
 const unsigned long BusPending       = LockPending|WritePending|WaitPending;
-const unsigned long ClearOnStart     = InitRun|AsyncMode|GotValue|
+const unsigned long ClearOnStart     = InitRun|AsyncMode|GotValue|Aborted|
                                        BusOwner|Separator|ScanTried|
                                        AcceptInput|AcceptEvent|BusPending;
 
