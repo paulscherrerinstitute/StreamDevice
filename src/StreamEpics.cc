@@ -89,12 +89,10 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 
 #define Z PRINTF_SIZE_T_PREFIX
 
-enum MoreFlags {
-    // 0x00FFFFFF used by StreamCore
-    InDestructor  = 0x0100000,
-    ValueReceived = 0x0200000,
-    Aborted       = 0x0400000
-};
+// More flags: 0x00FFFFFF used by StreamCore
+const unsigned long InDestructor  = 0x0100000;
+const unsigned long ValueReceived = 0x0200000;
+const unsigned long Aborted       = 0x0400000;
 
 extern "C" {
 long streamReload(const char* recordname);
@@ -566,11 +564,13 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     status = stream->parseLink(ioLink, filename, protocol,
         busname, &addr, busparam);
     // (re)initialize bus and protocol
-    debug("streamInitRecord(%s): calling initRecord\n",
-        record->name);
     if (status == 0)
+    {
+        debug("streamInitRecord(%s): calling initRecord\n",
+            record->name);
         status = stream->initRecord(filename, protocol,
             busname, addr, busparam);
+    }
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
@@ -787,7 +787,7 @@ initRecord(const char* filename, const char* protocol,
     if (ioscanpvt)
     {
         // we have been called by streamReload
-        debug("Stream::initRecord %s: initialize after streamReload\n",
+        debug("Stream::initRecord %s: re-initialize after streamReload\n",
             name());
         if (record->scan == SCAN_IO_EVENT)
         {
@@ -812,7 +812,7 @@ initRecord(const char* filename, const char* protocol,
     // initialize the record from hardware
     if (!startProtocol(StartInit))
     {
-        error("%s: Can't start init run\n",
+        error("%s: Can't start @init handler\n",
             name());
         return ERROR;
     }
@@ -823,8 +823,7 @@ initRecord(const char* filename, const char* protocol,
 #else
     initDone.wait();
 #endif
-    debug("Stream::initRecord %s: initDone\n",
-        name());
+    debug("Stream::initRecord %s: initDone\n", name());
 
     // init run has set status and convert
     if (status != NO_ALARM)
@@ -834,8 +833,9 @@ initRecord(const char* filename, const char* protocol,
             name());
         return ERROR;
     }
-    debug("Stream::initRecord %s: initialized. convert=%d\n",
-        name(), convert);
+    debug("Stream::initRecord %s: initialized. %s\n",
+        name(), convert==2 ?
+            "convert" : "don't convert");
     return convert;
 }
 
@@ -843,6 +843,7 @@ bool Stream::
 process()
 {
     MutexLock lock(this);
+    debug("Stream::process(%s)\n", name());
     if (record->pact || record->scan == SCAN_IO_EVENT)
     {
         if (status != NO_ALARM)
@@ -1018,8 +1019,9 @@ protocolFinishHook(ProtocolResult result)
             break;
 
     }
-    if (flags & InitRun)
+    if ((flags & (InitRun|Aborted)) == InitRun)
     {
+        debug("Stream::protocolFinishHook %s: signalling init done\n", name());
 #ifdef EPICS_3_13
         semGive(initDone);
 #else

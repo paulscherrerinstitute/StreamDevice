@@ -20,12 +20,15 @@
 
 #include <string.h>
 #include "boRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     boRecord *bo = (boRecord *)record;
     unsigned long val;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
@@ -35,14 +38,13 @@ static long readData(dbCommon *record, format_t *format)
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
             if (bo->mask) val &= bo->mask;
             bo->rbv = val;
-            if (INIT_RUN) bo->rval = val;
-            return OK;
+            bo->rval = val;
+            break;
         }
         case DBF_ENUM:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
-            bo->val = (val != 0);
-            return DO_NOT_CONVERT;
+            break;
         }
         case DBF_STRING:
         {
@@ -51,17 +53,40 @@ static long readData(dbCommon *record, format_t *format)
                 return ERROR;
             if (strcmp (bo->znam, buffer) == 0)
             {
-                bo->val = 0;
-                return DO_NOT_CONVERT;
+                val = 0;
+                break;
             }
             if (strcmp (bo->onam, buffer) == 0)
             {
-                bo->val = 1;
-                return DO_NOT_CONVERT;
+                val = 1;
+                break;
             }
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    bo->val = (val != 0);
+    if (bo->pact) return DO_NOT_CONVERT;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (bo->mlst != bo->val)
+    {
+        monitor_mask |= (DBE_VALUE | DBE_LOG);
+        bo->mlst = bo->val;
+    }
+    if (monitor_mask)
+        db_post_events(record, &bo->val, monitor_mask);
+    if (bo->oraw != bo->rval)
+    {
+        db_post_events(record,&bo->rval, monitor_mask | DBE_VALUE | DBE_LOG);
+        bo->oraw = bo->rval;
+    }
+    if (bo->orbv != bo->rbv)
+    {
+        db_post_events(record, &bo->rbv, monitor_mask | DBE_VALUE | DBE_LOG);
+        bo->orbv = bo->rbv;
+    }
+    return DO_NOT_CONVERT;
 }
 
 static long writeData(dbCommon *record, format_t *format)

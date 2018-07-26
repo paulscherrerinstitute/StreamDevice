@@ -1,9 +1,7 @@
 /***************************************************************
-* Stream Device record interface for long output records       *
+* Stream Device record interface for int64out records          *
 *                                                              *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
+* (C) 2018 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *
 * This is an EPICS record Interface for StreamDevice.          *
 * Please refer to the HTML files in ../doc/ for a detailed     *
@@ -20,11 +18,17 @@
 ***************************************************************/
 
 #include "int64outRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
+
+/* DELTA calculates the absolute difference between its arguments */
+#define DELTA(last, val) ((last) > (val) ? (last) - (val) : (val) - (last))
 
 static long readData(dbCommon *record, format_t *format)
 {
     int64outRecord *i64o = (int64outRecord *)record;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
@@ -38,10 +42,27 @@ static long readData(dbCommon *record, format_t *format)
                 i64o->val = val;
             else
                 i64o->val = (unsigned long)val;
-            return OK;
+            break;
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (DELTA(i64o->mlst, i64o->val) > i64o->mdel)
+    {
+        monitor_mask |= DBE_VALUE;
+        i64o->mlst = i64o->val;
+    }
+    if (DELTA(i64o->alst, i64o->val) > i64o->adel)
+    {
+        monitor_mask |= DBE_LOG;
+        i64o->alst = i64o->val;
+    }
+    if (monitor_mask)
+        db_post_events(record, &i64o->val, monitor_mask);
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)

@@ -21,31 +21,65 @@
 
 #include "mbboDirectRecord.h"
 #include "alarm.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     mbboDirectRecord *mbboD = (mbboDirectRecord *)record;
     unsigned long val;
+    unsigned short monitor_mask;
+    unsigned int i;
+    unsigned char *bit;
 
-    if (format->type == DBF_ULONG || format->type == DBF_LONG)
+    if (format->type != DBF_ULONG && format->type != DBF_LONG)
+        return ERROR;
+    if (streamScanf(record, format, &val) == ERROR) return ERROR;
+    if (mbboD->mask)
+        val &= mbboD->mask;
+        
+    mbboD->rbv = val;
+    mbboD->rval = val;
+    if (mbboD->shft > 0) val >>= mbboD->shft;
+    mbboD->val = val; /* no cast because we cannot be sure about type of VAL */
+
+    if (record->pact) return DO_NOT_CONVERT;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (mbboD->mlst != mbboD->val)
     {
-        if (streamScanf(record, format, &val) == ERROR) return ERROR;
-        if (mbboD->mask)
-        {
-            val &= mbboD->mask;
-            mbboD->rbv = val;
-            if (INIT_RUN) mbboD->rval = val;
-            return OK;
-        }
-        else
-        {
-            /* No MASK, (NOBT = 0): use VAL field */
-            mbboD->val = val; /* no cast because we cannot be sure about type of VAL */
-            return DO_NOT_CONVERT;
-        }
+        monitor_mask |= (DBE_VALUE | DBE_LOG);
+        mbboD->mlst = mbboD->val;
     }
-    return ERROR;
+    if (monitor_mask)
+    {
+        db_post_events(record, &mbboD->val, monitor_mask);
+    }
+    if (mbboD->oraw != mbboD->rval)
+    {
+        db_post_events(record, &mbboD->rval, monitor_mask | DBE_VALUE | DBE_LOG);
+        mbboD->oraw = mbboD->rval;
+    }
+    if (mbboD->orbv != mbboD->rbv)
+    {
+        db_post_events(record, &mbboD->rbv, monitor_mask | DBE_VALUE | DBE_LOG);
+        mbboD->orbv = mbboD->rbv;
+    }
+    /* update the bits */
+    for (i = 0; i < sizeof(mbboD->val) * 8; i++)
+    {
+        bit = &(mbboD->b0) + i;
+        if ((val & 1) == !*bit)
+        {
+            *bit = val & 1;
+            db_post_events(record, bit, monitor_mask | DBE_VALUE | DBE_LOG);
+        }
+        else if (monitor_mask)
+            db_post_events(record, bit, monitor_mask);
+        val >>= 1;
+    }
+    return DO_NOT_CONVERT;
 }
 
 static long writeData(dbCommon *record, format_t *format)

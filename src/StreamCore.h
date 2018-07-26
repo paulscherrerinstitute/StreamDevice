@@ -72,25 +72,25 @@ void acceptEvent(unsigned short mask, unsigned short timeout)
 
 #include "MacroMagic.h"
 
-enum Flags {
-    // 0x00FFFFFF reserved for StreamCore
-    None = 0x0000,
-    IgnoreExtraInput = 0x0001,
-    InitRun = 0x0002,
-    AsyncMode = 0x0004,
-    GotValue = 0x0008,
-    BusOwner = 0x0010,
-    Separator = 0x0020,
-    ScanTried = 0x0040,
-    AcceptInput = 0x0100,
-    AcceptEvent = 0x0200,
-    LockPending = 0x0400,
-    WritePending = 0x0800,
-    WaitPending = 0x1000,
-    BusPending = LockPending|WritePending|WaitPending,
-    ClearOnStart = InitRun|AsyncMode|GotValue|BusOwner|Separator|ScanTried|
-                    AcceptInput|AcceptEvent|BusPending
-};
+
+// Flags: 0x00FFFFFF reserved for StreamCore
+const unsigned long None             = 0x0000;
+const unsigned long IgnoreExtraInput = 0x0001;
+const unsigned long InitRun          = 0x0002;
+const unsigned long AsyncMode        = 0x0004;
+const unsigned long GotValue         = 0x0008;
+const unsigned long BusOwner         = 0x0010;
+const unsigned long Separator        = 0x0020;
+const unsigned long ScanTried        = 0x0040;
+const unsigned long AcceptInput      = 0x0100;
+const unsigned long AcceptEvent      = 0x0200;
+const unsigned long LockPending      = 0x0400;
+const unsigned long WritePending     = 0x0800;
+const unsigned long WaitPending      = 0x1000;
+const unsigned long BusPending       = LockPending|WritePending|WaitPending;
+const unsigned long ClearOnStart     = InitRun|AsyncMode|GotValue|
+                                       BusOwner|Separator|ScanTried|
+                                       AcceptInput|AcceptEvent|BusPending;
 
 struct StreamFormat;
 

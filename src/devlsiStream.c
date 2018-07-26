@@ -1,5 +1,5 @@
 /***************************************************************
-* Stream Device record interface for long string input records *
+* Stream Device record interface for long string in records    *
 *                                                              *
 * (C) 2018 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *

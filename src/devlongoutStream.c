@@ -19,11 +19,17 @@
 ***************************************************************/
 
 #include "longoutRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
+
+/* DELTA calculates the absolute difference between its arguments */
+#define DELTA(last, val) ((last) > (val) ? (last) - (val) : (val) - (last))
 
 static long readData(dbCommon *record, format_t *format)
 {
     longoutRecord *lo = (longoutRecord *)record;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
@@ -34,10 +40,27 @@ static long readData(dbCommon *record, format_t *format)
             long val;
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
             lo->val = val;
-            return OK;
+            break;
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (DELTA(lo->mlst, lo->val) > lo->mdel)
+    {
+        monitor_mask |= DBE_VALUE;
+        lo->mlst = lo->val;
+    }
+    if (DELTA(lo->alst, lo->val) > lo->adel)
+    {
+        monitor_mask |= DBE_LOG;
+        lo->alst = lo->val;
+    }
+    if (monitor_mask)
+        db_post_events(record, &lo->val, monitor_mask);
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)

@@ -1,5 +1,5 @@
 /***************************************************************
-* Stream Device record interface for long string output records*
+* Stream Device record interface for long string out records   *
 *                                                              *
 * (C) 2018 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
 *                                                              *
@@ -17,25 +17,46 @@
 *                                                              *
 ***************************************************************/
 
+#include <string.h>
 #include "lsoRecord.h"
+#include "menuPost.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     lsoRecord *lso = (lsoRecord *)record;
+    long len;
+    unsigned short monitor_mask;
 
-    if (format->type == DBF_STRING)
+    if (format->type != DBF_STRING)
+        return ERROR;
+    if ((len = streamScanfN(record, format, lso->val, lso->sizv) == ERROR))
     {
-        long len;
-        if ((len = streamScanfN(record, format, lso->val, lso->sizv) == ERROR))
-        {
-            lso->len = 0;
-            return ERROR;
-        }
-        lso->len = len;
-        return OK;
+        lso->len = 0;
+        return ERROR;
     }
-    return ERROR;
+    lso->len = len;
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (lso->len != lso->olen ||
+        memcmp(lso->oval, lso->val, lso->len)) {
+        monitor_mask |= DBE_VALUE | DBE_LOG;
+        memcpy(lso->oval, lso->val, lso->len);
+    }
+    if (lso->len != lso->olen) {
+        lso->olen = lso->len;
+        db_post_events(record, &lso->len, DBE_VALUE | DBE_LOG);
+    }
+    if (lso->mpst == menuPost_Always)
+        monitor_mask |= DBE_VALUE;
+    if (lso->apst == menuPost_Always)
+        monitor_mask |= DBE_LOG;
+    if (monitor_mask)
+        db_post_events(record, lso->val, monitor_mask);
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)

@@ -18,13 +18,19 @@
 *                                                              *
 ***************************************************************/
 
+#include <math.h>
 #include "aoRecord.h"
+#include "menuConvert.h"
+#include "cvtTable.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     aoRecord *ao = (aoRecord *)record;
     double val;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
@@ -40,22 +46,64 @@ static long readData(dbCommon *record, format_t *format)
             if (streamScanf(record, format, &rval) == ERROR) return ERROR;
             ao->rbv = rval;
             ao->rval = rval;
-            if (ao->linr == 0)
-            {
-                /* allow integers with more than 32 bits */
-                if (format->type == DBF_ULONG)
-                    val = (unsigned long)rval;
-                else
-                    val = rval;
-                break;
+            if (format->type == DBF_ULONG)
+                val = (unsigned long)rval;
+            else
+                val = rval;
+            break;
+            val += ao->roff;
+            if (ao->linr == menuConvertNO_CONVERSION) {
+	        ; /*do nothing*/
+            } else if ((ao->linr == menuConvertLINEAR)
+#ifndef EPICS_3_13
+		    || (ao->linr == menuConvertSLOPE)
+#endif
+                    ) {
+                val = val * ao->eslo + ao->eoff;
+            } else {
+                if (cvtRawToEngBpt(&val, ao->linr, 0,
+		        (void *)&ao->pbrk, &ao->lbrk) == ERROR) return ERROR;
             }
-            return OK;
         }
         default:
             return ERROR;
     }
-    if (ao->aslo != 0.0 && ao->aslo != 1.0) val *= ao->aslo;
-    ao->val = val + ao->aoff;
+    if (ao->aslo != 0.0) val *= ao->aslo;
+    val += ao->aoff;
+    ao->val = val;
+    if (record->pact) return DO_NOT_CONVERT;
+    /* In @init handler, no processing, enforce monitor updates. */
+    ao->omod = ao->oval != val;
+    ao->orbv = ao->oval = val;
+    monitor_mask = recGblResetAlarms(record);
+    if (!(fabs(ao->mlst - val) <= ao->mdel))
+    {
+        monitor_mask |= DBE_VALUE;
+        ao->mlst = val;
+    }
+    if (!(fabs(ao->alst - val) <= ao->adel))
+    {
+        monitor_mask |= DBE_LOG;
+        ao->alst = val;
+    }
+    if (monitor_mask)
+        db_post_events(record, &ao->val, monitor_mask);
+    if (ao->omod) monitor_mask |= (DBE_VALUE|DBE_LOG);
+    if (monitor_mask)
+    {
+        ao->omod = FALSE;
+        db_post_events (record, &ao->oval, monitor_mask);
+        if (ao->oraw != ao->rval)
+        {
+            db_post_events(record, &ao->rval, monitor_mask | DBE_VALUE | DBE_LOG);
+            ao->oraw = ao->rval;
+        }
+        if (ao->orbv != ao->rbv)
+        {
+            db_post_events(record, &ao->rbv, monitor_mask | DBE_VALUE | DBE_LOG);
+            ao->orbv = ao->rbv;
+        }
+    }
     return DO_NOT_CONVERT;
 }
 

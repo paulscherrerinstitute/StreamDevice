@@ -17,19 +17,23 @@
 *                                                              *
 ***************************************************************/
 
+#include <math.h>
 #include "calcoutRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     calcoutRecord *co = (calcoutRecord *)record;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
         case DBF_DOUBLE:
         {
             if (streamScanf(record, format, &co->val) == ERROR) return ERROR;
-            return OK;
+            break;
         }
         case DBF_ULONG:
         case DBF_LONG:
@@ -42,10 +46,28 @@ static long readData(dbCommon *record, format_t *format)
                 co->val = lval;
             else
                 co->val = (unsigned long)lval;
-            return OK;
+            break;
         }
+        default:
+            return ERROR;        
     }
-    return ERROR;
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+
+    if (!(fabs(co->mlst - co->val) <= co->mdel)) {
+        monitor_mask |= DBE_VALUE;
+        co->mlst = co->val;
+    }
+    if (!(fabs(co->mlst - co->val) <= co->adel)) {
+        monitor_mask |= DBE_LOG;
+        co->alst = co->val;
+    }
+    if (monitor_mask){
+        db_post_events(record, &co->val, monitor_mask);
+    }
+    
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)

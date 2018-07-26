@@ -18,19 +18,37 @@
 *                                                              *
 ***************************************************************/
 
+#include <string.h>
 #include "stringoutRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
 {
     stringoutRecord *so = (stringoutRecord *)record;
+    unsigned short monitor_mask;
 
-    if (format->type == DBF_STRING)
+    if (format->type != DBF_STRING) return ERROR;
+    if (streamScanfN(record, format, so->val, sizeof(so->val)) == ERROR) return ERROR;
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+#ifndef EPICS_3_13
+    if (so->mpst == stringoutPOST_Always)
+        monitor_mask |= DBE_VALUE;
+    if (so->apst == stringoutPOST_Always)
+        monitor_mask |= DBE_LOG;
+#endif
+    if (monitor_mask != (DBE_VALUE|DBE_LOG) &&
+        strncmp(so->oval, so->val, sizeof(so->val)))
     {
-        if (streamScanfN(record, format, so->val, sizeof(so->val)) == ERROR) return ERROR;
-        return OK;
+        monitor_mask |= DBE_VALUE | DBE_LOG;
+        strncpy(so->oval, so->val, sizeof(so->val));
     }
-    return ERROR;
+    if (monitor_mask)
+        db_post_events(record, so->val, monitor_mask);
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)

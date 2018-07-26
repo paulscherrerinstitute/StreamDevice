@@ -21,6 +21,8 @@
 
 #include <string.h>
 #include "mbboRecord.h"
+#include "recGbl.h"
+#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
@@ -28,6 +30,7 @@ static long readData(dbCommon *record, format_t *format)
     mbboRecord *mbbo = (mbboRecord *)record;
     unsigned long val;
     int i;
+    unsigned short monitor_mask;
 
     switch (format->type)
     {
@@ -35,25 +38,32 @@ static long readData(dbCommon *record, format_t *format)
         case DBF_LONG:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
+            mbbo->rbv = val;
+            mbbo->rval = val;
+            if (mbbo->mask) val &= mbbo->mask;
+            if (mbbo->shft > 0) val >>= mbbo->shft;
             /* read VAL or RBV? Look if any value is defined */
-            if (mbbo->sdef) for (i=0; i<16; i++)
+            if (mbbo->sdef)
             {
-                if ((&mbbo->zrvl)[i])
+                mbbo->val = 65535; /* initalize to unknown state*/
+                for (i = 0; i < 16; i++)
                 {
-                    if (mbbo->mask) val &= mbbo->mask;
-                    mbbo->rbv = val;
-                    if (INIT_RUN) mbbo->rval = val;
-                    return OK;
+                    if ((&mbbo->zrvl)[i] == val)
+                    {
+                        mbbo->val = i;
+                        break;
+                    }
                 }
+                break;
             }
             mbbo->val = (epicsEnum16)val;
-            return DO_NOT_CONVERT;
+            break;
         }
         case DBF_ENUM:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
             mbbo->val = (epicsEnum16)val;
-            return DO_NOT_CONVERT;
+            break;
         }
         case DBF_STRING:
         {
@@ -65,12 +75,33 @@ static long readData(dbCommon *record, format_t *format)
                 if (strcmp ((&mbbo->zrst)[val], buffer) == 0)
                 {
                     mbbo->val = (epicsEnum16)val;
-                    return DO_NOT_CONVERT;
+                    break;
                 }
             }
         }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    if (record->pact) return DO_NOT_CONVERT;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (mbbo->mlst != mbbo->val)
+    {
+        monitor_mask |= (DBE_VALUE | DBE_LOG);
+        mbbo->mlst = mbbo->val;
+    }
+    if (monitor_mask){
+        db_post_events(record, &mbbo->val, monitor_mask);
+    }
+    if (mbbo->oraw != mbbo->rval) {
+        db_post_events(record, &mbbo->rval, monitor_mask | DBE_VALUE);
+        mbbo->oraw = mbbo->rval;
+    }
+    if (mbbo->orbv != mbbo->rbv) {
+        db_post_events(record, &mbbo->rbv, monitor_mask | DBE_VALUE);
+        mbbo->orbv = mbbo->rbv;
+    }
+    return DO_NOT_CONVERT;
 }
 
 static long writeData(dbCommon *record, format_t *format)
