@@ -1341,20 +1341,25 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s\" mismatch after %" Z "d byte%s: %c != %c\n",
+                        error("%s: Input \"%s%s%s\"\n", 
                             name(),
-                            consumedInput > 10 ? "..." : "",
-                            inputLine.expand(consumedInput > 10 ?
-                                consumedInput-10 : 0,20)(),
+                            consumedInput > 20 ? "..." : "",
+                            inputLine.expand(consumedInput > 20 ? consumedInput-20 : 0, 40)(),
+                            inputLine.length() - consumedInput > 20 ? "..." : "");
+
+                        error("%s: mismatch after %" Z "d byte%s \"%s%s\"\n",
+                            name(),
                             consumedInput,
                             consumedInput==1 ? "" : "s",
-                            command,
-                            inputLine[consumedInput]);
-
-                        error("%s: got \"%s\" where \"%s\" was expected\n",
+                            consumedInput > 10 ? "..." : "",
+                            inputLine.expand(consumedInput > 10 ? consumedInput-10 : 0,
+                                consumedInput > 10 ? 10 : consumedInput)());
+                        
+                        error("%s: got \"%s%s\" where \"%s\" was expected\n",
                             name(),
-                            inputLine.expand(consumedInput, 20)(),
-                            StreamBuffer(commandIndex-1,i+1).expand()());
+                            inputLine.expand(consumedInput, 10)(),
+                            inputLine.length() - consumedInput > 10 ? "..." : "",
+                            StreamBuffer(commandIndex-1, i+1).expand()());
                     }
                     return false;
                 }

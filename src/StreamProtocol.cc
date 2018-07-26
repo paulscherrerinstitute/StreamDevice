@@ -281,20 +281,27 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
                 // end of protocol or handler definition
                 return true;
             }
-            error(line, filename(), "Stray '}' in global context\n");
+            error(line, filename(), "Unexpected '}' (no matching '{') in global context\n");
             return false;
         }
-        if (strchr("{=", token[0]))
+        if (token[0] == '{')
         {
-            error(line, filename(), "Expect name before '%c'\n", token[0]);
+            error(line, filename(), "Expect %s name before '%c'\n", 
+                isGlobalContext(commands) ? "protocol" : "handler",
+                token[0]);
+            return false;
+        }
+        if (token[0] == '=')
+        {
+            error(line, filename(), "Expect variable name before '%c'\n", token[0]);
+            return false;
+        }
+        if (token[0] != '@' && !isalpha(token[0]))
+        {
+            error(line, filename(), "Unexpected '%s'\n", token());
             return false;
         }
         do op = readChar(); while (op == ' '); // what comes after token?
-        if (op == EOF)
-        {
-            error(line, filename(), "Unexpected end of file after: %s\n", token());
-            return false;
-        }
         if (op == '=')
         {
             // variable assignment
@@ -367,11 +374,16 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
             *ppP = pP;
             continue;
         }
+        if (token[0] == '@')
+        {
+            error(line, filename(), "Expect '{' after handler '%s'\n", token());
+            return false;
+        }
         // Must be a command or a protocol reference.
         if (isGlobalContext(commands))
         {
-            error(line, filename(), "Expect '=' or '{' instead of '%c' after '%s'\n",
-                op, token());
+            error(line, filename(), "Expect '=' or '{' instead after '%s'\n",
+                token());
             return false;
         }
         if (op == ';' || op == '}') // no arguments
@@ -485,7 +497,7 @@ Each time newline is read, line is incremented.
         }
         if (c == EOF)
         {
-            error(line, filename(), "Unexpected end of file after '$'\n");
+            error(line, filename(), "Unexpected end of file after '$' (looking for '}')\n");
             return false;
         }
         if (strchr (specialchars, c))
@@ -548,7 +560,7 @@ Each time newline is read, line is incremented.
         // end of file
         if (!eofAllowed)
         {
-            error(line, filename(), "Unexpected end of file\n");
+            error(line, filename(), "Unexpected end of file (looking for '}')\n");
             return false;
         }
         buffer.append('\0');
@@ -1376,7 +1388,7 @@ compileString(StreamBuffer& buffer, const char*& source,
         if (c >= 0) continue;
         // source may contain a function name
         error(line, filename(),
-            "Unexpected word: \"%s\"\n", source);
+            "Unexpected '%s' in string\n", source);
         return false;
     }
     debug("StreamProtocolParser::Protocol::compileString buffer=%s\n", buffer.expand()());
