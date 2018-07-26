@@ -37,14 +37,19 @@ written.
 <p>
 The format data type must be convertible to or from the type
 specified in the <code>FTVL</code> field.
+The types <code>"INT64"</code> and <code>"UINT64"</code> are
+only available in EPICS base version 3.16 or higher.
+</p>
+<p>
 The variable <code><i>x[i]</i></code> stands for one element of
 the written or read value.
 </p>
 <dl>
  <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
   <dd>
-   <u>Output:</u><code><i>x[i]</i>=double(VAL[i])</code><br>
+   <u>Output:</u> <code><i>x[i]</i>=double(VAL[i])</code><br>
    <code>FTVL</code> can be <code>"DOUBLE"</code>, <code>"FLOAT"</code>,
+   <code>"INT64"</code>, <code>"UINT64"</code>,
    <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
    <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
    or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
@@ -55,6 +60,7 @@ the written or read value.
   <dd>
    <u>Output:</u> <code><i>x[i]</i>=long(VAL[i])</code><br>
    <code>FTVL</code> can be 
+   <code>"INT64"</code>, <code>"UINT64"</code>,
    <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
    <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
    or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
@@ -62,6 +68,7 @@ the written or read value.
    zero-extended to long before converting them.<br>
    <u>Input:</u> <code>VAL[i]=FTVL(<i>x[i])</i></code><br>
    <code>FTVL</code> can be <code>"DOUBLE"</code>, <code>"FLOAT"</code>,
+   <code>"INT64"</code>, <code>"UINT64"</code>,
    <code>"LONG"</code>, <code>"ULONG"</code>, <code>"SHORT"</code>,
    <code>"USHORT"</code>, <code>"CHAR"</code>, <code>"UCHAR"</code>,
    or <code>"ENUM"</code> (which is treated as <code>"USHORT"</code>).<br>
