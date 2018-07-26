@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+<title>StreamDevice: lso Records</title>
+<meta charset="utf-8" />
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="stylesheet" type="text/css" href="stream.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="author" content="Dirk Zimoch" />
+</head>
+<body>
+<iframe src="nav.html" id="navleft"></iframe>
+<h1>lso Records</h1>
+
+<p>
+<b>Note:</b> The lso (long string out) record is only available from EPICS base R3.15 on.
+</p>
+
+<h2>Normal Operation</h2>
+<p>
+The variable <code><i>x</i></code> stands for the
+written or read value.
+</p>
+<dl>
+ <dt>DOUBLE format (e.g. <code>%f</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>LONG format (e.g. <code>%i</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>ENUM format (e.g. <code>%{</code>):</dt>
+  <dd>
+   Not allowed.
+  </dd>
+ <dt>STRING format (e.g. <code>%s</code>):</dt>
+  <dd>
+   <u>Output:</u> <code><i>x</i>=VAL</code><br>
+   <u>Input:</u> <code>VAL=<i>x</i></code><br>
+   Also the <code>LEN</code> field is set to the length of the input
+   including possible null bytes.
+  </dd>
+</dl>
+
+<h2>Initialization</h2>
+<p>
+ During <a href="processing.html#init">initialization</a>, the <code>@init</code> handler is executed, if
+ present. All format converters work like in normal operation.
+</p>
+
+<footer>
+<nav>
+<a href="aai.html">aai</a>
+<a href="aao.html">aao</a>
+<a href="ai.html">ai</a>
+<a href="ao.html">ao</a>
+<a href="bi.html">bi</a>
+<a href="bo.html">bo</a>
+<a href="calcout.html">calcout</a>
+<a href="int64in.html">int64in</a>
+<a href="int64out.html">int64out</a>
+<a href="longin.html">longin</a>
+<a href="longout.html">longout</a>
+<a href="lsi.html">lsi</a>
+<a href="lso.html">lso</a>
+<a href="mbbiDirect.html">mbbiDirect</a>
+<a href="mbboDirect.html">mbboDirect</a>
+<a href="mbbi.html">mbbi</a>
+<a href="mbbo.html">mbbo</a>
+<a href="scalcout.html">scalcout</a>
+<a href="stringin.html">stringin</a>
+<a href="stringout.html">stringout</a>
+<a href="waveform.html">waveform</a>
+</nav>
+Dirk Zimoch, 2018
+</footer>
+</body>
+</html>
