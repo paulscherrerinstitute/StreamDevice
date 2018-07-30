@@ -421,6 +421,7 @@ startProtocol(StartMode startMode)
     switch (startMode)
     {
         case StartInit:
+            if (!onInit) return false;
             flags |= InitRun;
             commandIndex = onInit();
             break;
@@ -432,12 +433,9 @@ startProtocol(StartMode startMode)
             }
             flags |= AsyncMode;
         case StartNormal:
+            if (!commands) return false;
             commandIndex = commands();
             break;
-    }
-    if (!commandIndex)
-    {
-        return false;
     }
     StreamBuffer buffer;
     runningHandler = Success;

@@ -869,11 +869,11 @@ process()
     debug("Stream::process(%s) start\n", name());
     status = NO_ALARM;
     convert = OK;
-    if (!startProtocol(StreamCore::StartNormal))
+    if (!startProtocol(record->proc==2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
-        debug("Stream::process(%s): could not start, status=%d\n",
-            name(), status);
-        (void) recGblSetSevr(record, status, INVALID_ALARM);
+        debug("Stream::process(%s): could not start %sprotocol, status=%d\n",
+            name(), record->proc==2 ? "@init " : "", status);
+        (void) recGblSetSevr(record, status ? status : UDF_ALARM, INVALID_ALARM);
         return false;
     }
     debug("Stream::process(%s): protocol started\n", name());
@@ -1010,7 +1010,7 @@ protocolFinishHook(ProtocolResult result)
             break;
 
     }
-    if ((flags & (InitRun|Aborted)) == InitRun)
+    if ((flags & (InitRun|Aborted)) == InitRun && record->proc != 2)
     {
         debug("Stream::protocolFinishHook %s: signalling init done\n", name());
 #ifdef EPICS_3_13
@@ -1033,7 +1033,6 @@ protocolFinishHook(ProtocolResult result)
         callbackSetPriority(priority(), &processCallback);
         callbackRequest(&processCallback);
     }
-
 }
 
 void Stream::
