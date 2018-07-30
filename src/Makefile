@@ -87,6 +87,9 @@ streamReferences: ../CONFIG_STREAM
 # create stream.dbd from all RECORDTYPES
 $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(RECORDTYPES) > $@
+ifdef ASYN
+	echo "registrar(AsynDriverInterfaceRegistrar)" >> $@
+endif
 
 $(LIBRARY_DEFAULT).dbd$(DEP): ../CONFIG_STREAM
 	echo $(LIBRARY_DEFAULT).dbd: $< > $@

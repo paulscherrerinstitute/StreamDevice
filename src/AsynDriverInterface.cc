@@ -32,6 +32,8 @@ extern "C" {
 #include "epicsAssert.h"
 #include "epicsTime.h"
 #include "epicsTimer.h"
+#include "epicsStdioRedirect.h"
+#include "iocsh.h"
 #endif
 
 #include "asynDriver.h"
@@ -1558,3 +1560,53 @@ handleTimeout()
                 clientName(), toStr(ioAction));
     }
 }
+
+extern "C" long streamReinit(const char* portname, int addr)
+{
+    if (!portname)
+    {
+        fprintf(stderr, "Usage: streamReinit \"portname\", [addr]\n");
+        return -1;
+    }
+    asynUser* pasynUser = pasynManager->createAsynUser(NULL, NULL);
+    if (!pasynUser)
+    {
+        fprintf(stderr, "Can't create asynUser\n");
+        return -1;
+    }
+    asynStatus status = pasynManager->connectDevice(pasynUser, portname, addr);
+    if (status == asynSuccess)
+        status = pasynManager->exceptionDisconnect(pasynUser);
+    if (status == asynSuccess)
+        status = pasynManager->exceptionConnect(pasynUser);
+    if (status != asynSuccess)
+        fprintf(stderr, "%s\n", pasynUser->errorMessage);
+    pasynManager->disconnect(pasynUser);
+    pasynManager->freeAsynUser(pasynUser);
+    return status;
+}
+
+#ifndef EPICS_3_13
+static const iocshArg streamReinitArg0 =
+    { "portname", iocshArgString };
+static const iocshArg streamReinitArg1 =
+    { "[addr]", iocshArgInt };
+static const iocshArg * const streamReinitArgs[] =
+    { &streamReinitArg0, &streamReinitArg1 };
+static const iocshFuncDef streamReinitDef =
+    { "streamReinit", 2, streamReinitArgs };
+
+void streamReinitFunc(const iocshArgBuf *args)
+{
+    streamReinit(args[0].sval, args[1].ival);
+}
+static void AsynDriverInterfaceRegistrar ()
+{
+     iocshRegister(&streamReinitDef, streamReinitFunc);
+}
+
+extern "C" {
+epicsExportRegistrar(AsynDriverInterfaceRegistrar);
+}
+
+#endif

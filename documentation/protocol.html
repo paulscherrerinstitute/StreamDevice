@@ -558,15 +558,8 @@ There is a fixed set of exception handler names starting with
   Not really an exception but formally specified in the same syntax.
   This handler can be used to initialize an output record with a value read from
   the device.
-  Also see chapter <a href="processing.html#init">Record Processing</a>.
+  See also chapter <a href="processing.html#init">Record Processing</a>.
   
-  It is called at startup by <code>iocInit</code> during record
-  initialization <span class="new">and again whenever <em>StreamDevice</em>
-  detects that the device has reconnected after a disconnect or when the
-  IOC is resumed with <code>iocRun</code> after beeing paused or
-  when the protocol has been <a href="setup.html#reload">reloaded</a></span>
-  or when the "magic value" <code>2</code> is written to the <code>.PROC</code>
-  field.
  </dd>
 </dl>
 <h3>Example:</h3>

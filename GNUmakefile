@@ -9,10 +9,10 @@ BUILDCLASSES += Linux
 
 DOCUDIR = documentation
 
-ifdef EPICSVERSION
-ifndef RECORDTYPES
 PCRE=1
 ASYN=1
+ifdef EPICSVERSION
+ifndef RECORDTYPES
 include src/CONFIG_STREAM
 export RECORDTYPES BUSSES FORMATS
 endif
@@ -44,5 +44,10 @@ export DBDFILES = streamSup.dbd
 streamSup.dbd:
 	@echo Creating $@ from $(RECORDTYPES)
 	$(PERL) ../src/makedbd.pl $(RECORDTYPES) > $@
+ifdef BASE_3_14
+ifdef ASYN
+	echo "registrar(AsynDriverInterfaceRegistrar)" >> $@
+endif
+endif
 
 endif
