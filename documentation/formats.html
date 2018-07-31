@@ -55,17 +55,19 @@ The <code>#</code> flag may alter the format, depending on the
 converter (see below).
 </p>
 <p>
-The '<code> </code>' (space) and <code>+</code> flags print a space
-or a <code>+</code> sign before positive numbers, where negative
+The '<code> </code>' (space) and <code>+</code> flags usually print a
+space or a <code>+</code> sign before positive numbers, where negative
 numbers would have a <code>-</code>.
+Some converters may redefine the meaning of these flags (see below).
 </p>
 <p>
-The <code>0</code> flag says that numbers should be left padded with
-<code>0</code> if <em>width</em> is larger than required.
-</p>
+The <code>0</code> flag usually says that numbers should be left padded
+with <code>0</code> if <em>width</em> is larger than required.
+Some converters may redefine the meaning of this flag (see below).
 <p>
-The <code>-</code> flag specifies that output is left justified if
-<em>width</em> is larger than required.
+The <code>-</code> flag usually specifies that output is left justified
+if <em>width</em> is larger than required.
+Some converters may redefine the meaning of this flag (see below).
 </p>
 <p>
 The <code>?</code> flag makes failing input conversions succeed with
@@ -90,31 +92,31 @@ This feature has been added by Klemen Vodopivec, SNS.
 <table>
  <tr>
   <td><code>in "%f";</code></td>
-  <td>float</td>
+  <td>Read a float value</td>
  </tr>
  <tr>
   <td><code>out "%(HOPR)7.4f";</code></td>
-  <td>the HOPR field as 7 char float with precision 4</td>
+  <td>Write the HOPR field as 7 char float with precision 4</td>
  </tr>
  <tr>
   <td><code>out "%#010x";</code></td>
-  <td>0-padded 10 char alternate hex (with leading 0x)</td>
+  <td>Write a 0-padded 10 char hex integer using the alternative format (with leading 0x)</td>
  </tr>
  <tr>
   <td><code>in "%[_a-zA-Z0-9]";</code></td>
-  <td>string of chars out of a charset</td>
+  <td>Read a string of alphanumerical chars or underscores</td>
  </tr>
  <tr>
   <td><code>in "%*i";</code></td>
-  <td>skipped integer number</td>
+  <td>Skip over an integer number</td>
  </tr>
  <tr>
   <td><code>in "%?d";</code></td>
-  <td>decimal number or nothing (read as 0)</td>
+  <td>Read a decimal number or if that fails pretend that value was 0</td>
  </tr>
  <tr>
   <td><code>in "%=.3f";</code></td>
-  <td>compare input to the current value formatted as a float with precision 3</td>
+  <td>Assure that the input is equal to the current value formatted as a float with precision 3</td>
  </tr>
 </table>
 
@@ -123,9 +125,9 @@ This feature has been added by Klemen Vodopivec, SNS.
 <h3>Default fields</h3>
 <p>
 Every conversion character corresponds to one of the data types DOUBLE,
-LONG, ENUM, or STRING.
-In opposite to to <em>printf()</em> and <em>scanf()</em>, it is not
-required to specify a variable for the conversion.
+LONG, ULONG, ENUM, or STRING.
+In contrast to to the C functions <em>printf()</em> and <em>scanf()</em>,
+it is not required to specify a variable for the conversion.
 The variable is typically the <code>VAL</code> or <code>RVAL</code> field
 of the record, selected automatically depending on the data type.
 Not all data types make sense for all record types.
@@ -141,23 +143,50 @@ exist in <em>StreamDevice</em> formats.
 </p>
 
 <a name="redirection"></a>
-<h3>Redirection</h3>
+<h3>I/O Redirection to other records or fields</h3>
 <p>
-To use other fields of the record or even fields of other records on the
-same IOC for the conversion, write the field name in parentheses directly
-after the <code>%</code>.
-For example <code>out&nbsp;"%(EGU)s";</code> outputs the <code>EGU</code>
-field formatted as a string.
-Use <code>in&nbsp;"%(<i>otherrecord</i>.RVAL)f";</code> to write the floating
-point input value into the <code>RVAL</code> field of
-<code><i>otherrecord</i></code>. 
-If no field is given for an other record .VAL is assumed.
-When a record name conflicts with a field name use .VAL explicitly.
+To use formats with other than the default fields of a record or even with
+fields of other records on the same IOC, use the syntax
+<code>%(<var>record</var>.<var>FIEL</var>D)</code>.
+If only a field name but no record is given, the active record is assumed.
+If only a record name but no field name is given, the <code>VAL</code>
+field is assumed.
 </p>
 <p>
-This feature is very useful when one line of input contains many values that should
-be distributed to many records.
-If <code><i>otherrecord</i></code> is passive and the field has the PP
+<b>Example 1:</b> <code>out&nbsp;"%(EGU)s";</code> outputs the
+<code>EGU</code> field of the active record.
+</p>
+<p>
+<b>Example 2:</b> <code>in&nbsp;"%(<var>otherrecord</var>.RVAL)i";</code>
+stores the received integer value in the <code>RVAL</code> field of the
+other record and then processes that record.
+The other record should probably use <code>DTYP="Raw Soft Channel"</code>
+in order to convert <code>RVAL</code> to <code>VAL</code>.
+</p>
+<p>
+<b>Example 3:</b> <code>in&nbsp;"%(<var>otherrecord</var>)f";</code>
+stores the received floating point value in the <code>VAL</code> field
+of the other record and then processes that record. 
+The other record should probably use <code>DTYP="Soft Channel"</code>.
+In the unlikely case that the name of the other record is the same as a field
+of the active record (e.g. if you name a record "DESC"), then use <code>.VAL</code>
+explicitly to refer to the record rather than the field of the active record.
+</p>
+<p>
+This feature is quite useful in the case that one line of input contains more
+than one value that need to be stored in multiple records or if one line of
+output needs to be contructed from values of multiple records.
+In order to avoid using full record names in the protocol file, it is recommended
+to pass the name or part of the name (e.g. the device prefix) of the other
+record as a <a href="protocol.html#argvar">protocol argument</a>.
+In that case the redirection usually looks like this:
+<code>in "%(\$1<var>recordpart</var>)f"</code> and the record calls the protocol
+like this:
+<code>field(INP, "@<var>protocolfile</var> <var>protocol</var>($(PREFIX)) $(PORT)")</code>
+using a macro for the prefix part which is then used for <code>\$1</code>.
+</p>
+<p>
+If the other record is passive and the field has the PP
 attribute (see
 <a href="http://www.aps.anl.gov/asd/controls/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-1.html"
 target="ex">Record Reference Manual</a>), the record will be processed.
@@ -166,17 +195,20 @@ compatible to the the data type of the converter.
 STRING formats are compatible with arrays of CHAR or UCHAR.
 </p>
 <p>
-Note that using this syntax is by far not as efficient as using the
+Be aware that using this syntax is by far not as efficient as using the
 default field.
-At the moment it is not possible to set <code>otherrecord</code> to an alarm
-state when anything fails.
+At the moment it is not possible to set the other record to an alarm
+state if anything fails. It will simply not be processed if the fault
+happens before or while handling it and it will already have been
+processed if the fault happens later.
 </p>
 
 <h3>Pseudo-converters</h3>
 <p>
 Some formats are not actually converters.
 They format data which is not stored in a record field, such as a
-<a href="#chksum">checksum</a>.
+<a href="#chksum">checksum</a> or
+<a href="#regsub">regular expression substitution</a>.
 No data type corresponds to those <em>pseudo-converters</em> and the
 <code>%(<em>FIELD</em>)</code> syntax cannot be used.
 </p>
@@ -207,7 +239,7 @@ field witdth when the space flag is used.
 </p>
 
 <a name="stdl"></a>
-<h2>4. Standard LONG Converters (<code>%d</code>, <code>%i</code>,
+<h2>4. Standard LONG and ULONG Converters (<code>%d</code>, <code>%i</code>,
 <code>%u</code>, <code>%o</code>, <code>%x</code>, <code>%X</code>)</h2>
 <p>
 <b>Output</b>: <code>%d</code> and <code>%i</code> print signed decimal,
@@ -306,7 +338,8 @@ Unassigned strings increment their values by 1 as usual.
 <p>
 If one string is the initial substing of another, the substing must come
 later to ensure correct matching.
-In particular if one string is the emptry string, it must be the last one.
+In particular if one string is the emptry string, it must be the last one
+because it always matches.
 Use <code>#</code> and <code>=</code> to renumber if necessary.
 </p>
 <p>
@@ -323,14 +356,14 @@ a <code>\</code> must be used to escape the character.
 </p>
 <p>
 <b>Output:</b> Depending on the value, one of the strings is printed,
-or the default if no value matches.
+or the default if given and no value matches.
 </p>
 <p>
 <b>Input:</b> If any of the strings matches, the value is set accordingly.
 </p>
 
 <a name="bin"></a>
-<h2>8. Binary LONG Converter (<code>%b</code>, <code>%B<em>zo</em></code>)</h2>
+<h2>8. Binary LONG or ULONG Converter (<code>%b</code>, <code>%B<em>zo</em></code>)</h2>
 <p>
 This format prints or scans an unsigned integer represented as a binary
 string (one character per bit).
@@ -360,7 +393,7 @@ one character.
 </p>
 
 <a name="raw"></a>
-<h2>9. Raw LONG Converter (<code>%r</code>)</h2>
+<h2>9. Raw LONG or ULONG Converter (<code>%r</code>)</h2>
 <p>
 The raw converter does not really "convert".
 A signed or unsigned integer value is written or read in the internal
@@ -405,7 +438,7 @@ The <em>width</em> must be 4 (float) or 8 (double). The default is 4.
 </p>
 
 <a name="bcd"></a>
-<h2>11. Packed BCD (Binary Coded Decimal) LONG Converter (<code>%D</code>)</h2>
+<h2>11. Packed BCD (Binary Coded Decimal) LONG or ULONG Converter (<code>%D</code>)</h2>
 <p>
 Packed BCD is a format where each byte contains two binary coded
 decimal digits (<code>0</code> ... <code>9</code>).
