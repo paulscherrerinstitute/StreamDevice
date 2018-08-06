@@ -44,7 +44,7 @@ class MyConverter : public StreamFormatConverter
 {
     int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
     bool printLong(const StreamFormat&, StreamBuffer&, long);
-    int scanLong(const StreamFormat&, const char*, long&);
+    ssize_t scanLong(const StreamFormat&, const char*, long&);
 };
 
 RegisterConverter(MyConverter,"Q");
@@ -73,17 +73,17 @@ Provide multiple classes, that's more efficient.
 <a name="parsing"></a>
 <h3>Parsing</h3>
 <div class="indent"><code>
-int parse (const&nbsp;StreamFormat&&nbsp;fmt, StreamBuffer&&nbsp;info,
+int parse(const&nbsp;StreamFormat&&nbsp;fmt, StreamBuffer&&nbsp;info,
 const&nbsp;char*&&nbsp;source, bool&nbsp;scanFormat);
 </code></div>
 <div class="indent"><code>
 struct&nbsp;StreamFormat {
 char&nbsp;conv;
 StreamFormatType&nbsp;type;
-unsigned&nbsp;char&nbsp;flags;
-short&nbsp;prec;
-unsigned&nbsp;short&nbsp;width;
-unsigned&nbsp;short&nbsp;infolen;
+unsigned&nbsp;short&nbsp;flags;
+long&nbsp;prec;
+unsigned&nbsp;long&nbsp;width;
+unsigned&nbsp;long&nbsp;infolen;
 const&nbsp;char*&nbsp;info;
 };
 </code></div>
@@ -124,12 +124,12 @@ flags set:
 </ul>
 <p>
 It is not necessary that these flags have exactly the same meaning in your
-formats, but a similar and intuitive meaning helpful for the user.
+formats, but a similar and intuitive meaning is helpful for the user.
 </p>
 <p>
 There are two additional flags, <code>default_flag</code> indicating a
 <code>?</code> and <code>compare_flag</code> indicating a <code>=</code>
-int the format, that are handled internally by <em>StreamDevice</em> and
+in the format, that are handled internally by <em>StreamDevice</em> and
 are not of interest to the converter class.
 </p>
 <p>
@@ -163,13 +163,13 @@ This will probably be necessary if you have parsed additional characters
 from the format string as in the above example<br>
 </p>
 <p>
-Return <code>long_format</code>, <em>double_format</em>,
-<em>string_format</em>, or <code>enum_format</code> depending on the
+Return <code>unsigned_format</code>, <code>signed_format</code>,
+<code>double_format</code>, <code>string_format</code>, or
+<code>enum_format</code> depending on the
 datatype associated with the conversion character.
 It is not necessary to return the same value for print and for scan
 formats.
-You can even return different values depending on the format string,
-but I can't imagine why anyone should do that.
+You can even return different values depending on the format string.
 </p>
 <p>
 If the format is not a real data conversion but does other things with
@@ -178,7 +178,8 @@ return <code>pseudo_format</code>.
 </p>
 <p>
 Return <code>false</code> if there is any parse error or if print or scan
-is requested but not supported by this conversion.
+is requested but not supported by this conversion or flags are used that
+are not supported by this conversion.
 </p>
 
 <a name="printing_scanning"></a>
@@ -191,7 +192,45 @@ That method is called whenever the conversion appears in an output or input,
 respectively.
 You only need to implement the flavour of print and/or scan suitable for
 the datatype returned by <code>parse()</code>.
+Both <code>unsigned_format</code> and <code>signed_format</code> will use
+the <code>Long</code> flavour.
 </p>
+</p>
+The possible interface methods are:
+</p>
+<div class="indent"><code>
+bool printLong(const&nbsp;StreamFormat&&nbsp;fmt,
+        StreamBuffer& output, long value);
+</code></div>
+<div class="indent"><code>
+bool printDouble(const&nbsp;StreamFormat&&nbsp;fmt,
+        StreamBuffer& output, double value);
+</code></div>
+<div class="indent"><code>
+bool printString(const&nbsp;StreamFormat&&nbsp;fmt,
+        StreamBuffer& output, const&nbsp;char* value);
+</code></div>
+<div class="indent"><code>
+bool printPseudo(const&nbsp;StreamFormat&&nbsp;fmt,
+        StreamBuffer& output);
+</code></div>
+<div class="indent"><code>
+ssize_t scanLong(const&nbsp;StreamFormat&&nbsp;fmt,
+        const&nbsp;char* input, long& value);
+</code></div>
+<div class="indent"><code>
+ssize_t scanDouble(const&nbsp;StreamFormat&&nbsp;fmt,
+        const&nbsp;char* input, double& value);
+</code></div>
+<div class="indent"><code>
+ssize_t scanString(const&nbsp;StreamFormat&&nbsp;fmt,
+        const&nbsp;char* input, char* value, size_t& size);
+</code></div>
+<div class="indent"><code>
+ssize_t scanPseudo(const&nbsp;StreamFormat&&nbsp;fmt,
+        StreamBuffer& inputLine, size_t& cursor);
+</code></div>
+
 <p>
 Now, <code>fmt.type</code> contains the value returned by <code>parse()</code>.
 With <code>fmt.info()</code> get access to the string you have written to
@@ -203,16 +242,21 @@ The length of the info string can be found in <code>fmt.infolen</code>.
 <p>
 In <code>print*()</code>, append the converted value to <code>output</code>.
 Do not modify what is already in output (unless you really know what you're
-doing).
+doing, e.g. some <code>printPseudo</code> methods).
 Return <code>true</code> on success, <code>false</code> on failure.
 </p>
 <p>
 In <code>scan*()</code>, read the value from input and return the number of
-consumed bytes.
-In the string version, don't write more bytes than <code>maxlen</code>!
+consumed bytes or -1 on failure.
 If the <code>skip_flag</code> is set, you don't need to write to
 <code>value</code>, since the value will be discarded anyway. 
-Return <code>-1</code> on failure.
+In <code>scanString()</code>, don't write more bytes than
+<code>maxlen</code> to <code>value</code> and set <code>size</code> to the
+actual string length, which may be different to the number of bytes consumed
+(e.g. if leading spaces are skipped).
+In <code>scanPseudo()</code>, <code>cursor</code> is the index of the first
+byte in <code>inputLine</code> to consider, which may be larger than
+<code>0</code>.
 </p>
 
 <footer>

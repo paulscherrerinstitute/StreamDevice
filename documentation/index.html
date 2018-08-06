@@ -15,7 +15,7 @@
 <h2>What is <em>StreamDevice</em>?</h2>
 <p>
 <em>StreamDevice</em> is a generic
-<a href="http://www.aps.anl.gov/epics" target="ex">EPICS</a>
+<a href="https://www.aps.anl.gov/epics" target="ex">EPICS</a>
 device support for devices with a "byte stream" based
 communication interface.
 That means devices that can be controlled by sending and
@@ -52,7 +52,7 @@ It does not provide loops or branches.
 </p>
 <p>
 <em>StreamDevice</em> comes with an interface to<a target="ex"
-href="http://www.aps.anl.gov/epics/modules/soft/asyn/">
+href="https://www.aps.anl.gov/epics/modules/soft/asyn/">
 <em>asynDriver</em></a>
 but can be extended to
 <a href="businterface.html">support other bus drivers</a>.
@@ -82,14 +82,26 @@ primitive commands.
 </p>
 <p>
 It is not a block oriented device support.
-It is not possible to send or receive huge blocks of data that contain
+It is not intended for huge binary blocks of data that contain
 many process variables distributed over many records.
+Consider <a href="https://github.com/paulscherrerinstitute/regdev"
+target="ex"><em>regDev</em></a>
+for that.
+</p>
+<p>
+It is not a very flexible html, xml, json, etc. parser. Data needs to
+come in a predictible order to be parsable by <em>StreamDevice</em>.
 </p>
 
 <h2>Recommended Readings</h2>
 <p>
-<a href="http://www.aps.anl.gov/epics/base/R3-14/12-docs/AppDevGuide"
-target="ex">IOC Application Developer's Guide</a>
+IOC Application Developer's Guide:
+<a href="https://www.aps.anl.gov/epics/base/R3-14/12-docs/AppDevGuide"
+target="ex">R3.14.12</a>,
+<a href="https://www.aps.anl.gov/epics/base/R3-16/1-docs/AppDevGuide"
+target="ex">R3.15.5</a>,
+<a href="https://www.aps.anl.gov/epics/base/R3-15/5-docs/AppDevGuide"
+target="ex">R3.16.1</a>
 </p>
 <p>
 <a href="https://wiki-ext.aps.anl.gov/epics/index.php/RRM_3-14"
@@ -104,6 +116,28 @@ This marks text you typically type in configuration files etc.
 <pre>
 Longer code segments are often set in a box.
 </pre>
+
+<h2>Changes in Version 2.8</h2>
+<ul>
+ <li>Support standard EPICS module build system.
+ <li>Compatible with EPICS base releases up to 7.0.1.
+   <ul>
+    <li>Support for new record types: int64in, int64out, lsi, lso.
+    <li>Support for INT64 and UINT64 in aai, aao, waveform.
+   </ul>
+ <li>Run @init more often (e.g. when device re-connects or paused IOC is resumed).
+ <li>Use "COMM" error code in .STAT when device is disconnected.
+ <li>Allow spaces in protocol parameter list.
+ <li>Errors are new silent by default (var streamError 0) except during init.
+ <li>Support output redirect of all shell functions.
+ <li>Fix building shared libraries on Windows.
+ <li>Fix some C++11 warnings.
+ <li>Fix several signed/unsigned problems.
+ <li>Dropped support for cygnus-2.7.2 gcc (used by some old cygwin).
+ <li>Several bug fixes.
+ <li>Several documentation updates.
+</ul>
+
 
 <footer>
 <a href="setup.html">Next: Setup</a>

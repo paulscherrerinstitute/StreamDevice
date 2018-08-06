@@ -19,7 +19,7 @@
     href="http://www.aps.anl.gov/epics/modules/soft/asyn/">
     <em>asynDriver</em></a>.
 You should first try to implement your bus driver compatible to
-<em>asynDriver</em>.
+<em>asynOctet</em>.
 Then it can be used by <em>StreamDevice</em> automatically.
 Only if that does not work, write your own bus interface.
 </p>
@@ -68,17 +68,13 @@ class MyInterface : StreamBusInterface
     // StreamBusInterface virtual methods
     bool <a href="#lock">lockRequest</a>(unsigned long lockTimeout_ms);
     bool <a href="#lock">unlock</a>();
-    bool <a href="#write">writeRequest</a>(const void* output, size_t size,
-        unsigned long writeTimeout_ms);
-    bool <a href="#read">readRequest</a>(unsigned long replyTimeout_ms,
-        unsigned long readTimeout_ms,
-        long expectedLength, bool async);
+    bool <a href="#write">writeRequest</a>(const void* output, size_t size, unsigned long writeTimeout_ms);
+    bool <a href="#read">readRequest</a>(unsigned long replyTimeout_ms, unsigned long readTimeout_ms, long expectedLength, bool async);
     bool <a href="#read">supportsAsyncRead</a>();
     bool <a href="#event">supportsEvent</a>();
-    bool <a href="#event">acceptEvent</a>(unsigned long mask,
-        unsigned long replytimeout_ms);
-    bool <a href="#connect">connectRequest</a>(unsigned long connecttimeout_ms);
-    bool <a href="#connect">disconnect</a>();
+    bool <a href="#event">acceptEvent</a>(unsigned long mask, unsigned long timeout_ms);
+    bool <a href="#connect">connectRequest</a>(unsigned long timeout_ms);
+    bool <a href="#connect">disconnectRequest</a>();
     void <a href="#lock">finish</a>();
 
 public:
@@ -132,13 +128,13 @@ bool <a href="#event">supportsEvent</a>();
 </code></div>
 <div class="indent"><code>
 bool <a href="#event">acceptEvent</a>(unsigned&nbsp;long&nbsp;mask, 
-    unsigned&nbsp;long&nbsp;replytimeout_ms);
+    unsigned&nbsp;long&nbsp;timeout_ms);
 </code></div>
 <div class="indent"><code>
-bool <a href="#connect">connectRequest</a>(unsigned&nbsp;long&nbsp;connecttimeout_ms);
+bool <a href="#connect">connectRequest</a>(unsigned&nbsp;long&nbsp;timeout_ms);
 </code></div>
 <div class="indent"><code>
-bool <a href="#connect">disconnect</a>();
+bool <a href="#connect">disconnectRequest</a>();
 </code></div>
 <div class="indent"><code>
 void <a href="#lock">finish</a>();
@@ -157,24 +153,24 @@ callback methods which must be called in response to the above request
 methods (most probably from another thread):
 </p>
 <div class="indent"><code>
-void <a href="#lock">lockCallback</a>(StreamIoStatus&nbsp;status);
+void <a href="#lock">lockCallback</a>(StreamIoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
-void <a href="#write">writeCallback</a>(StreamIoStatus&nbsp;status);
+void <a href="#write">writeCallback</a>(StreamIoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
-long <a href="#read">readCallback</a>(StreamIoStatus&nbsp;status,
-        const&nbsp;void*&nbsp;input&nbsp;=&nbsp;NULL,
-        long&nbsp;size&nbsp;=&nbsp;0);
+ssize_t <a href="#read">readCallback</a>(StreamIoStatus&nbsp;status,
+        const&nbsp;void*&nbsp;buffer&nbsp;=&nbsp;NULL,
+        size_t&nbsp;size&nbsp;=&nbsp;0);
 </code></div>
 <div class="indent"><code>
-void <a href="#event">eventCallback</a>(StreamIoStatus&nbsp;status);
+void <a href="#event">eventCallback</a>(StreamIoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
-void <a href="#connect">connectCallback</a>(StreamIoStatus&nbsp;status);
+void <a href="#connect">connectCallback</a>(StreamIoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
-void <a href="#connect">disconnectCallback</a>(StreamIoStatus&nbsp;status);
+void <a href="#connect">disconnectCallback</a>(StreamIoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 
 <h3>Other provided methods, attibutes, and types</h3>
@@ -196,6 +192,9 @@ const&nbsp;char*&nbsp;<a href="#read">getInTerminator</a>(size_t&&nbsp;length);
 </code></div>
 <div class="indent"><code>
 enum&nbsp;StreamIoStatus {StreamIoSuccess, StreamIoTimeout, StreamIoNoReply, StreamIoEnd, StreamIoFault};
+</code></div>
+<div class="indent"><code>
+const char* ::toStr(StreamIoStatus);
 </code></div>
 
 <a name="theory"></a>
@@ -276,34 +275,47 @@ correct.
 <a name="connect"></a>
 <h3>Connecting and disconnecting</h3>
 <div class="indent"><code>
-bool connectRequest(unsigned&nbsp;long&nbsp;connecttimeout_ms);
+bool connectRequest(unsigned&nbsp;long&nbsp;timeout_ms);
 </code></div>
 <div class="indent"><code>
-bool disconnect();
+bool disconnectRequest();
 </code></div>
 <div class="indent"><code>
-void connectCallback(IoStatus&nbsp;status);
+void connectCallback(IoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
-void disconnectCallback(IoStatus&nbsp;status);
+void disconnectCallback(IoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <p>
-Connection should be handled automatically.
-If the device is disconnected, each attempt to access the
-device should try to (re-)connect.
+Whenever possible connection should be handled automatically.
+The interface should call <code>connectCallback()</code> when
+the device has connected and <code>disconnectCallback()</code> when
+the device has disconnected.
+These callbacks can be called asynchronously at any time.
+</p>
+<p>
+If the device is disconnected, an attempt to access the
+device should try to reconnect.
 Normally, the interface should not try to disconnect unless
-the device does so.
+the device does so automatically.
 </p>
 <p>
 However, sometimes the client wants to connect or
-disconnect explicitely.
+disconnect explicitly.
 To connect, the client calls <code>connectRequest()</code>.
-This function should return <code>true</code> immediately
-or <code>false</code> if the request cannot be accepted or connection
+This function should set up things to reconnect but should not block
+waiting.
+Instead it should immediately return <code>true</code> if
+it expects that connection can be established soon, or
+<code>false</code> if the request cannot be accepted or connection
 handling is not supported.
-The interface should call <code>connectCallback(StreamIoSuccess)</code>
+The interface should call <code>connectCallback()</code>
 once the bus could be connected.
-If the bus cannot be connected within <code>connecttimeout_ms</code>
+If the device can connect immediately without waiting, it may also call
+<code>connectCallback()</code> directly from <code>connectRequest()</code>.
+</p>
+<p>
+If the bus cannot be connected within <code>timeout_ms</code>
 milliseconds, the bus interface should call
 <code>connectCallback(StreamIoTimeout)</code>.
 </p>
@@ -313,11 +325,11 @@ something wrong with the I/O hardware,
 <code>connectCallback(StreamIoFault)</code> may be called.
 </p>
 <p>
-To disconnect, the client calls <code>disconnectRequest()</code>;
+To disconnect explicitly, the client calls <code>disconnectRequest()</code>;
 This function should return <code>true</code> immediately or
 <code>false</code> if the request cannot be accepted or connection
 handling is not supported.
-The interface should call <code>connectCallback(StreamIoSuccess)</code>
+The interface should call <code>connectCallback()</code>
 once the bus is disconnected. There is no timeout for this operation.
 If disconnecting is impossible, the interface should call
 <code>connectCallback(StreamIoFault)</code>.
@@ -326,10 +338,10 @@ If disconnecting is impossible, the interface should call
 <a name="lock"></a>
 <h3>Bus locking</h3>
 <div class="indent"><code>
-bool lockRequest(unsigned&nbsp;long&nbsp;lockTimeout_ms);
+bool lockRequest(unsigned&nbsp;long&nbsp;timeout_ms);
 </code></div>
 <div class="indent"><code>
-void lockCallback(IoStatus&nbsp;status);
+void lockCallback(IoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
 bool unlock();
@@ -348,7 +360,7 @@ or <code>false</code> if the request cannot be accepted.
 If the device is already locked, the bus interface should add itself to
 a queue, sorted by <code>priority()</code>.
 As soon as the device is available, the bus interface should call
-<code>lockCallback(StreamIoSuccess)</code>.
+<code>lockCallback()</code>.
 If the bus cannot be locked within <code>lockTimeout_ms</code>
 milliseconds, the bus interface should call
 <code>lockCallback(StreamIoTimeout)</code>.
@@ -369,7 +381,7 @@ locked the device.
 When the protocol ends and the device is locked, the client calls
 <code>unlock()</code>.
 If other bus interfaces are in the lock queue, the next one should
-call <code>lockCallback(StreamIoSuccess)</code> now.
+call <code>lockCallback()</code> now.
 </p>
 <p>
 The client calls <code>finish()</code> when the protocol ends.
@@ -385,7 +397,7 @@ bool writeRequest(const&nbsp;void*&nbsp;output,
     size_t&nbsp;size, unsigned&nbsp;long&nbsp;writeTimeout_ms);
 </code></div>
 <div class="indent"><code>
-void writeCallback(IoStatus&nbsp;status);
+void writeCallback(IoStatus&nbsp;status = StreamIoSuccess);
 </code></div>
 <div class="indent"><code>
 const&nbsp;char*&nbsp;getOutTerminator(size_t&&nbsp;length);
@@ -404,7 +416,7 @@ The function should arrange transmission of <code>size</code> bytes of
 or <code>false</code> if the request cannot be accepted.
 It must not block until output has completed.
 After all output has been successfully transmitted, but not earlier, the
-interface should call <code>writeCallback(StreamIoSuccess)</code>.
+interface should call <code>writeCallback()</code>.
 </p>
 <p>
 If output blocks for <code>writeTimeout_ms</code> milliseconds,
@@ -417,14 +429,15 @@ something wrong with the I/O hardware,
 <code>writeCallback(StreamIoFault)</code> may be called.
 </p>
 <p>
-The interface must transmit excactly the <code>size</code> bytes
-from <code>output</code>.
-It must not change anything and it should not assume that
-any bytes have a special meaning.
+The interface must send excactly the <code>size</code> bytes
+from <code>output</code>, not less.
+It should not change anything unless the bus needs some special
+formatting (e.g. added header, escaped bytes) and it should not
+assume that any bytes have a special meaning.
 In particular, a null byte does not terminate <code>output</code>.
 </p>
 <p>
-A call to <code>getOutTerminator</code> tells the interface which
+A call to <code>getOutTerminator()</code> tells the interface which
 terminator has already been added to the output.
 If <code>NULL</code> was returned, the client is not aware of a
 terminator (no outTerminator was defined in the protocol).
@@ -450,9 +463,9 @@ bool readRequest(unsigned&nbsp;long&nbsp;replyTimeout_ms,
     long&nbsp;expectedLength, bool&nbsp;async);
 </code></div>
 <div class="indent"><code>
-long readCallback(IoStatus&nbsp;status,
-        const&nbsp;void*&nbsp;input&nbsp;=&nbsp;NULL,
-        long&nbsp;size&nbsp;=&nbsp;0);
+ssize_t readCallback(IoStatus&nbsp;status,
+        const&nbsp;void*&nbsp;buffer&nbsp;=&nbsp;NULL,
+        size_t&nbsp;size&nbsp;=&nbsp;0);
 </code></div>
 <div class="indent"><code>
 const&nbsp;char*&nbsp;getInTerminator(size_t&&nbsp;length);
@@ -487,11 +500,11 @@ The client copies its contents. It does not modify or free it.
 It is not necessary to wait until all data has been received.
 The bus interface can call <code>n=readCallback()</code> after
 any amount of input has been received.
-If the client needs more input, <code>readCallback()</code>
+If the client expects more input, <code>readCallback()</code>
 returns a non-zero value.
-A positive <code>n</code> means, the client needs another
+A positive <code>n</code> means, the client expects another
 <code>n</code> bytes of input.
-A negative <code>n</code> means, the client needs an unspecified
+A negative <code>n</code> means, the client expects an unspecified
 amount of additional input.
 </p>
 <p>
@@ -559,46 +572,43 @@ something wrong with the I/O hardware,
 <code>readCallback(StreamIoFault)</code> may be called.
 </p>
 <p>
-If the <code>async</code> flag is <code>true</code>, the client
-wants to read input asyncronously without any timeout.
-That means, the bus interface should call <code>readCallback()</code>
-even if the input was requested by another client.
-</p>
-<p>
-If a client wishes to receive asynchonous input, it first calls
+Sometimes a client wishes to get any input received at any time, even
+when requested by another client. 
+If a client wishes to receive such asynchronous input, it first calls
 <code>supportsAsyncRead()</code>.
 The default implementation of this method always returns
 <code>false</code>.
-A bus interface may overwrite this method to return <code>true</code>
-and eventually prepare for asynchonous input.
+If a bus interface supports asynchronous input, it should overwrite
+this method to set up everything needed to receive asynchronous input
+and then return <code>true</code>.
 The client is then allowed to call <code>readRequest()</code> with
 the <code>async==true</code>.
-This means that the client is interested in any input.
+This means that the client is now interested in asynchronous input.
 It should receive a <code>readCallback()</code> of all input which came
-in response to a synchonous (<code>async==false</code>) request from
-another client (which of course should receive the input, too).
-The interface should also receive asynchonous input when no
+in response to any synchonous (<code>async==false</code>) request from
+another client (which should receive the input, too).
+The interface should also receive asynchronous input when no
 synchonous client is active at the moment.
-Many asynchonous <code>readRequest()</code> calls from different clients
+Many asynchronous <code>readRequest()</code> calls from different clients
 may be active at the same time.
 All of them should receive the same input.
 </p>
 <p>
-For asynchonous requests, <code>replyTimeout_ms</code> has a different
+For asynchronous requests, <code>replyTimeout_ms</code> has a different
 meaning: If the bus interface has to poll the bus for input, it may take
 <code>replyTimeout_ms</code> as a hint for the poll period.
-If many asynchonous requests are active at the same time, it should poll
+If many asynchronous requests are active at the same time, it should poll
 with the shortest period of all clients.
-An asynchonous request does not time out.
+An asynchronous request does not time out.
 It stays active until the next input arrives.
 The client may reissue the asynchronous <code>readRequest()</code>
 from within the <code>readCallback()</code> if it wants to continue
-receiving asynchonous input.
+receiving asynchronous input.
 </p>
 <p>
 If the client calls <code>finish()</code> at any time, the bus
 interface should cancel all outstanding requests, including
-asynchonous read requests.
+asynchronous read requests.
 </p>
 <a name="event"></a>
 <h3>Handling events</h3>
@@ -606,10 +616,10 @@ asynchonous read requests.
 bool supportsEvent();
 </code></div>
 <div class="indent"><code>
-bool acceptEvent(unsigned long mask, unsigned long replytimeout_ms);
+bool acceptEvent(unsigned long mask, unsigned long timeout_ms);
 </code></div>
 <div class="indent"><code>
-void eventCallback(StreamIoStatus status);
+void eventCallback(StreamIoStatus status = StreamIoSuccess);
 </code></div>
 <p>
 An event is a sort of input from a device which is not part of
@@ -627,9 +637,9 @@ If <code>true</code> is returned, the client is allowed to call
 If <code>mask</code> is illegal, <code>acceptEvent()</code> should
 return <code>false</code>.
 The call to <code>acceptEvent()</code> must not block.
-It should arrange to call <code>eventCallback(StreamIoSuccess)</code>
+It should arrange to call <code>eventCallback()</code>
 when the event matching <code>mask</code> arrives within
-<code>replytimeout_ms</code> milliseconds.
+<code>timeout_ms</code> milliseconds.
 If no such event arrives within this time, the bus interface
 should call <code>eventCallback(StreamIoTimeout)</code>.
 </p>
