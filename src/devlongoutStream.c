@@ -71,7 +71,7 @@ static long writeData(dbCommon *record, format_t *format)
     {
         case DBF_ULONG:
         case DBF_ENUM:
-            return streamPrintf(record, format, (unsigned long)lo->val);
+            return streamPrintf(record, format, lo->val);
         case DBF_LONG:
             return streamPrintf(record, format, (long)lo->val);
     }

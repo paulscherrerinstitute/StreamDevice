@@ -36,12 +36,11 @@ static long readData(dbCommon *record, format_t *format)
     if (format->type != DBF_ULONG && format->type != DBF_LONG)
         return ERROR;
     if (streamScanf(record, format, &val) == ERROR) return ERROR;
-    if (mbboD->mask)
-        val &= mbboD->mask;
-        
+    if (mbboD->mask) val &= mbboD->mask;
+
     mbboD->rbv = val;
     mbboD->rval = val;
-    if (mbboD->shft > 0) val >>= mbboD->shft;
+    val >>= mbboD->shft;
     mbboD->val = val; /* no cast because we cannot be sure about type of VAL */
 
     if (record->pact) return DO_NOT_CONVERT;
@@ -87,19 +86,26 @@ static long writeData(dbCommon *record, format_t *format)
     mbboDirectRecord *mbboD = (mbboDirectRecord *)record;
     long val;
 
-    if (format->type == DBF_ULONG || format->type == DBF_LONG)
+    switch (format->type)
     {
-        if (mbboD->mask) val = mbboD->rval & mbboD->mask;
-        else val = mbboD->val;
-        return streamPrintf(record, format, val);
+        case DBF_ULONG:
+        case DBF_ENUM:
+            val = mbboD->rval;
+            if (mbboD->mask) val &= mbboD->mask;
+            break;
+        case DBF_LONG:
+            val = (epicsInt32)mbboD->rval;
+            if (mbboD->mask) val &= (epicsInt32)mbboD->mask;
+            break;
+        default:
+            return ERROR;
     }
-    return ERROR;
+    return streamPrintf(record, format, val);
 }
 
 static long initRecord(dbCommon *record)
 {
     mbboDirectRecord *mbboD = (mbboDirectRecord *)record;
-
     mbboD->mask <<= mbboD->shft;
 
     /* Workaround for bug in mbboDirect record:

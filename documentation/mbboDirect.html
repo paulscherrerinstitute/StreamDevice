@@ -23,26 +23,23 @@ written or read value.
   <dd>
    Not allowed.
   </dd>
- <dt>LONG format (e.g. <code>%i</code>):</dt>
+ <dt>LONG or ENUM format (e.g. <code>%i</code>):</dt>
   <dd>
    <dl>
     <dt>If <code>MASK==0</code> (because <code>NOBT</code> is not set):</dt>
      <dd>
-       <u>Output:</u> <code><i>x</i>=VAL</code><br>
-       <u>Input:</u> <code>VAL=<i>x</i></code><br>
+       <u>Output:</u> <code><i>x</i>=RVAL</code><br>
+       <u>Input:</u> <code>RAL=<i>x</i></code>, <code>VAL=RVAL&gt;&gt;SHFT</code><br>
      </dd>
     <dt>If <code>MASK!=0</code>:</dt>
      <dd>
        <u>Output:</u> <code><i>x</i>=RVAL&amp;MASK</code><br>
-       <u>Input:</u> <code>RBV=RVAL=<i>x</i>&amp;MASK</code><br>
+       <u>Input:</u> <code>RBV=RVAL=<i>x</i>&amp;MASK</code>, <code>VAL=RVAL&gt;&gt;SHFT</code><br>
      </dd>
     </dl>
     <code>MASK</code> is initialized to <code>NOBT</code> 1-bits shifted
-    left by <code>SHFT</code>.
-  </dd>
- <dt>ENUM format (e.g. <code>%{</code>):</dt>
-  <dd>
-   Not allowed.
+    left by <code>SHFT</code> (<code>((2^NOBT)-1)&lt;&lt;SHFT</code>).
+    The record calculates <code>RVAL=VAL&lt;&lt;SHFT</code>.
   </dd>
  <dt>STRING format (e.g. <code>%s</code>):</dt>
   <dd>

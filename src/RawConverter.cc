@@ -34,7 +34,7 @@ int RawConverter::
 parse(const StreamFormat& fmt, StreamBuffer&,
     const char*&, bool)
 {
-    return (fmt.flags & (sign_flag|zero_flag)) ? signed_format : unsigned_format;
+    return (fmt.flags & zero_flag) ? unsigned_format : signed_format;
 }
 
 bool RawConverter::
@@ -112,7 +112,7 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         unsigned int shift = 0;
         while (--width && shift < sizeof(long)*8)
         {
-            val |= ((unsigned char)input[consumed++]) << shift;
+            val |= (unsigned long)((unsigned char)input[consumed++]) << shift;
             shift += 8;
         }
         if (width == 0)
@@ -120,12 +120,12 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
             if (fmt.flags & zero_flag)
             {
                 // fill with zero
-                val |= ((unsigned char)input[consumed++]) << shift;
+                val |= (unsigned long)((unsigned char)input[consumed++]) << shift;
             }
             else
             {
                 // fill with sign
-                val |= ((signed char)input[consumed++]) << shift;
+                val |= ((long)(signed char)input[consumed++]) << shift;
             }
         }
         consumed += width; // ignore upper bytes not fitting in long

@@ -107,14 +107,12 @@ static long readData(dbCommon *record, format_t *format)
 static long writeData(dbCommon *record, format_t *format)
 {
     mbboRecord *mbbo = (mbboRecord *)record;
-    unsigned long val;
+    long val;
     int i;
 
     switch (format->type)
     {
         case DBF_ULONG:
-        case DBF_LONG:
-        {
             /* print VAL or RVAL ? */
             val = mbbo->val;
             if (mbbo->sdef) for (i=0; i<16; i++)
@@ -128,10 +126,25 @@ static long writeData(dbCommon *record, format_t *format)
                 }
             }
             return streamPrintf(record, format, val);
+        case DBF_LONG:
+        {
+            /* print VAL or RVAL ? */
+            val = (epicsInt16)mbbo->val;
+            if (mbbo->sdef) for (i=0; i<16; i++)
+            {
+                if ((&mbbo->zrvl)[i])
+                {
+                    /* any values defined ? */
+                    val = (epicsInt32)mbbo->rval;
+                    if (mbbo->mask) val &= mbbo->mask;
+                    break;
+                }
+            }
+            return streamPrintf(record, format, val);
         }
         case DBF_ENUM:
         {
-            return streamPrintf(record, format, (long)mbbo->val);
+            return streamPrintf(record, format, mbbo->val);
         }
         case DBF_STRING:
         {

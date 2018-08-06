@@ -92,25 +92,26 @@ static long readData(dbCommon *record, format_t *format)
 static long writeData(dbCommon *record, format_t *format)
 {
     boRecord *bo = (boRecord *)record;
+    long val;
 
     switch (format->type)
     {
         case DBF_ULONG:
+            val = bo->rval;
+            break;
         case DBF_LONG:
-        {
-            return streamPrintf(record, format, bo->rval);
-        }
+            val = bo->mask ? (epicsInt32)bo->rval : (epicsInt16)bo->val;
+            break;
         case DBF_ENUM:
-        {
-            return streamPrintf(record, format, (long)bo->val);
-        }
+            val = bo->val;
+            break;
         case DBF_STRING:
-        {
             return streamPrintf(record, format,
                 bo->val ? bo->onam : bo->znam);
-        }
+        default:
+            return ERROR;
     }
-    return ERROR;
+    return streamPrintf(record, format, val);
 }
 
 static long initRecord(dbCommon *record)
