@@ -18,6 +18,8 @@
 *                                                              *
 ***************************************************************/
 
+#include <stdio.h>
+#include "epicsString.h"
 #include "aaoRecord.h"
 #include "devStream.h"
 
@@ -26,6 +28,7 @@ static long readData(dbCommon *record, format_t *format)
     aaoRecord *aao = (aaoRecord *)record;
     double dval;
     long lval;
+    unsigned short monitor_mask;
 
     for (aao->nord = 0; aao->nord < aao->nelm; aao->nord++)
     {
@@ -34,9 +37,7 @@ static long readData(dbCommon *record, format_t *format)
             case DBF_DOUBLE:
             {
                 if (streamScanf(record, format, &dval) == ERROR)
-                {
-                    return aao->nord ? OK : ERROR;
-                }
+                    goto end;
                 switch (aao->ftvl)
                 {
                     case DBF_DOUBLE:
@@ -58,9 +59,7 @@ static long readData(dbCommon *record, format_t *format)
             case DBF_ENUM:
             {
                 if (streamScanf(record, format, &lval) == ERROR)
-                {
-                    return aao->nord ? OK : ERROR;
-                }
+                    goto end;
                 switch (aao->ftvl)
                 {
                     case DBF_DOUBLE:
@@ -104,9 +103,7 @@ static long readData(dbCommon *record, format_t *format)
                         if (streamScanfN(record, format,
                             (char *)aao->bptr + aao->nord * MAX_STRING_SIZE,
                             MAX_STRING_SIZE) == ERROR)
-                        {
-                            return aao->nord ? OK : ERROR;
-                        }
+                            goto end;
                         break;
                     case DBF_CHAR:
                     case DBF_UCHAR:
@@ -129,8 +126,8 @@ static long readData(dbCommon *record, format_t *format)
                             ((char*)aao->bptr)[aao->nelm-1] = 0;
                         }
                         aao->nord = (long)length;
-                        return OK;
-					}
+                        goto end_no_check;
+                    }
                     default:
                         errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from string to %s\n",
@@ -149,6 +146,38 @@ static long readData(dbCommon *record, format_t *format)
             }
         }
     }
+end:
+    if (aao->nord == 0) return ERROR;
+end_no_check:
+    if (record->pact) return OK;
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(aao);
+#if defined(VERSION_INT) || EPICS_MODIFICATION >= 12
+    if (aao->mpst == aaoPOST_Always)
+        monitor_mask |= DBE_VALUE;
+    if (aao->apst == aaoPOST_Always)
+        monitor_mask |= DBE_LOG;
+    if ((aao->mpst == aaoPOST_OnChange) ||
+        (aao->apst == aaoPOST_OnChange))
+    {
+        unsigned int hash = epicsMemHash(aao->bptr,
+            aao->nord * dbValueSize(aao->ftvl), 0);
+        if (hash != aao->hash)
+        {
+            if (aao->mpst == aaoPOST_OnChange)
+                monitor_mask |= DBE_VALUE;
+            if (aao->apst == aaoPOST_OnChange)
+                monitor_mask |= DBE_LOG;
+            aao->hash = hash;
+            db_post_events(aao, &aao->hash, DBE_VALUE);
+        }
+    }
+#else
+    monitor_mask |= DBE_VALUE | DBE_LOG;
+#endif
+    if (monitor_mask)
+        db_post_events(aao, aao->bptr, monitor_mask);
+    
     return OK;
 }
 
