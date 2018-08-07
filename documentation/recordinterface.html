@@ -12,7 +12,312 @@
 <iframe src="nav.html" id="navleft"></iframe>
 <h1>Record API</h1>
 
-<h2>Sorry, this documentation is still missing.</h2>
+<a name="theory"></a>
+<h2>Theory of Operation</h2>
+<p>
+<em>StreamDevice</em> implements the generic part of an EPICS device support.
+However it cannot know the internals of a specific record type, such as the
+.VAL or .RVAL fields or the .INP or .OUT links. It can only access a record
+as dbCommon. Thus it is necessary to write an interface for each record type
+which takes care of these details.
+</p>
+<p>
+A record interface consists of three functions, <code>readData()</code> and
+<code>writeData()</code> and <code>initRecord()</code>.
+</p>
+The record interface also implements the device support structure for this
+record type. Most of its functions will be generic <em>StreamDevice</em>
+functions. The exception is <code>initRecord()</code>. 
+</p>
+<p>
+The name of the device support structure must have the form
+<code>dev<var>recordtype</var>Stream</code> and the name of the record
+interface source code file must be
+<code>dev<var>recordtype</var>Stream.c</code> to work seamlessly with the
+build system implemented in the Makefile of <em>StreamDevice</em>.
+</p>
+<p>
+Finally add <code><var>recordtype</var></code> to the
+<code>RECORDTYPES</code> variable in the file src/CONFIG_STREAM
+and rebuild.
+</p>
+<a name="headers"></a>
+<h3>Headers to Include</h2>
+<p>
+A record interface typically <code>#include</code>s the header file
+for the supported record type, <code>"<var>recordtype</var>Record.h"</code>
+and <code>"devStream.h"</code>.
+For many record interfaces this is sufficient, but sometimes additional
+header files may be needed.
+</p>
+
+<a name="functions"></a>
+<h3>Functions to Implement</h2>
+<p>
+A record interface has to implement three functions:
+</p>
+<div class="indent"><code>
+static long readData(dbCommon&nbsp;*record, format_t&nbsp;*format);
+</code></div>
+<div class="indent"><code>
+static long writeData(dbCommon&nbsp;*record, format_t&nbsp;*format);
+</code></div>
+<div class="indent"><code>
+static long initRecord(dbCommon&nbsp;*record);
+</code></div>
+
+<h4>writeData</h4>
+<p>
+The function <code>writeData()</code> is called whenever a
+<a href="protocol.html#proto">protocol</a> needs
+to handle a prining <a href="formats.html">format converter</a>
+(without <a href="formats.html#redirection">redirection</a>),
+typically in an <code>out</code> command.
+It is also possible that <code>writeData()</code> is called for an input
+record, e.g. when the <a href="formats.html#syntax"><code>=</code>&nbsp;flag</a>
+is used in an <code>in</code> command.
+Thus implement this function for input records as well.
+</p>
+<p>
+The functions is called with a <code>dbCommon *record</code> argument,
+which the function should cast to the specific record type to get
+access to the record specific fields, in particular .VAL and .RVAL.
+</p>
+<p>
+The second argument, <code>format_t&nbsp;*format</code>, contains information
+about the format converter. The only field of interest in this argument
+is <code>format->type</code> which specifies the data type of the format
+conversion. Its value is one of <code>DBF_ULONG</code>,
+<code>DBF_ULONG</code>, <code>DBF_ENUM</code>, <code>DBF_DOUBLE</code>,
+or <code>DBF_STRING</code>.
+</p>
+<p>
+The <code>writeData()</code> function may access different fields depending
+on <code>format->type</code>, e.g. .VAL for <code>DBF_DOUBLE</code> but
+.RVAL for <code>DBF_LONG</code>.
+It also may interpret the fields in a different way, e.g. cast to
+<code>long</code> for <code>DBF_LONG</code> but to <code>unsigned long</code>
+for <code>DBF_ULONG</code>.
+This is typically done with a <code>switch(format->type)</code> statement.
+</p>
+<p>
+The function may refuse to handle <code>format->type</code> values
+that make no sense for the record type, e.g. <code>DBF_STRING</code> for a
+record type that cannot handle strings. In that case the function should
+return <code>ERROR</code>. It is a good idea to return <code>ERROR</code>
+in the <code>default</code> part of the <code>switch</code> statement.
+</p>
+<p>
+<em>StreamDevice</em> provides a function to output a value from the record:
+</p>
+<div class="indent"><code>
+long streamPrintf(dbCommon&nbsp;*record, format_t&nbsp;*format, ...);
+</code></div>
+<p>
+Once the correct record field and type cast has been chosen, the
+<code>writeData()</code> function calls
+<code>return streamPrintf(record, format, value)</code> where the type of
+value should match <code>field->type</code> (<code>long</code>, 
+<code>unsigned long</code>, <code>double</code>, or <code>char*</code>),
+returning the result of that call.
+</p>
+<p>
+<b>Example:</b>
+</p>
+<pre>
+static long writeData(dbCommon *record, format_t *format)
+{
+    <var>recordtype</var>Record *rec = (<var>recordtype</var>Record *)record;
+
+    switch (format->type)
+    {
+        case DBF_ULONG:
+        case DBF_ENUM:
+            return streamPrintf(record, format, (unsigned long)rec->rval);
+        case DBF_LONG:
+            return streamPrintf(record, format, (long)rec->rval);
+        case DBF_DOUBLE:
+            return streamPrintf(record, format, rec->val);
+        default:
+            return ERROR;
+    }
+}
+</pre>
+
+<h4>readData</h4>
+<p>
+The arguments of this function are the same as for <code>writeData()</code>.
+But this function stores a value into record fields depending on
+<code>format->type</code>.
+</p>
+<p>
+<em>StreamDevice</em> provides two functions to receive a value;
+</p>
+<div class="indent"><code>
+ssize_t streamScanf(dbCommon&nbsp;*record, format_t&nbsp;*format, void*&nbsp;value);
+</code></div>
+<div class="indent"><code>
+ssize_t streamScanfN(dbCommon&nbsp;*record, format_t&nbsp;*format, void*&nbsp;value, size_t&nbsp;maxStringSize);
+</code></div>
+<p>
+The argument <code>value</code> is a pointer to the variable where the value
+is to be stored. Its type must match <code>field->type</code>
+(<code>long*</code>, <code>unsigned long*</code>, <code>double*</code>, or
+<code>char*</code>).
+</p>
+<p>
+The <code>streamScanfN()</code> function is meant for strings and gets the
+additional argument <code>maxStringSize</code> to specify the size of the
+string buffer.
+</p>
+<p>
+The <code>streamScanf()</code> function is actually a macro calling
+<code>streamScanfN()</code> with <code>MAX_STRING_SIZE</code> (=40) for
+the last argument. For <code>field->type</code> values other than
+<code>DBF_STRING</code>, this argument is ignored.
+</p>
+<p>
+In case of strings, these functions return the number of characters
+actually stored (which may be less than <code>maxStringSize</code>).
+Some record types may want to store this value into a field of the record.
+</p>
+<p>
+The functions return <code>ERROR</code> on failure. In this case the
+<code>readData()</code> function should return <code>ERROR</code> as well.
+Otherwise the function should store the value received into the appropriate
+record field.
+</p>
+<p>
+If <code>record->pact</code> is <code>true</code>, the function
+should now return <code>OK</code> or <code>DO_NOT_CONVERT</code> (=2),
+depending on wheter conversion from .RVAL to .VAL should be left to the
+record or not.
+</p>
+<p>
+If <code>record->pact</code> is <code>false</code>, the record is curretly
+executing the <code>@init</code> handler. 
+This typically only affects output records.
+As the record is not processed by EPICS at this time, changes in fields would
+not trigger monitor updates.
+</p>
+<p>
+Also the record will not convert .RVAL to .VAL in this case, thus the
+<code>readData()</code> function should now convert .RVAL
+to .VAL as usually done by the record.
+</p>
+<p>
+In order to make monitors work properly, the <code>readData()</code> function
+should then first call <code>recGblResetAlarms()</code> and then call
+<code>db_post_events()</code> as needed. Usually the code
+from the record support function <code>monitor()</code> needs to be copied.
+Unfortunately the <code>monitor()</code> function of the record cannot be
+called directly because it is <code>static</code>.
+</p>
+<p>
+<b>Example:</b>
+</p>
+<pre>
+static long readData(dbCommon *record, format_t *format)
+{
+    <var>recordtype</var>Record *rec = (<var>recordtype</var>Record *)record;
+    unsigned long rval;
+    unsigned short monitor_mask;
+
+    switch (format->type)
+    {
+        case DBF_ULONG:
+        case DBF_LONG:
+        case DBF_ENUM:
+            if (streamScanf(record, format, &amp;rval) == ERROR) return ERROR;
+            rec->rval = rval;
+            if (record->pact) return OK;
+            /* emulate convertion to val */
+            rec->val = rval * rec->eslo + rec->eoff;
+            break;
+        case DBF_DOUBLE:
+            if (streamScanf(record, format, &amp;rec->val) == ERROR) return ERROR;
+            break;
+            if (record->pact) return DO_NOT_CONVERT;
+        default:
+            return ERROR;
+    }
+    /* In @init handler, no processing, enforce monitor updates. */
+    monitor_mask = recGblResetAlarms(record);
+    if (rec->oraw != rec->rval)
+    {
+        db_post_events(record, &amp;rec->rval, monitor_mask | DBE_VALUE | DBE_LOG);
+        rec->oraw = rec->rval;
+    }
+    if (!(fabs(rec->mlst - rec->val) <= rec->mdel))
+    {
+        monitor_mask |= DBE_VALUE;
+        ao->mlst = rec->val;
+    }
+    if (!(fabs(rec->alst - rec->val) <= rec->adel))
+    {
+        monitor_mask |= DBE_VALUE;
+        ao->alst = rec->val;
+    }
+    if (monitor_mask)
+        db_post_events(record, &amp;rec->val, monitor_mask);
+    return OK;
+}
+</pre>
+
+<h4>initRecord</h4>
+<p>
+The main purpose of this function is to pass the .INP or .OUT link to
+<em>StreamDevice</em> for parsing and to make the two functions
+<code>readData</code> and <code>writeData</code> known.
+Often the only thing the <code>initRecord()</code> function does is to call
+<code>streamInitRecord()</code> and return its result.
+</p>
+<div class="indent"><code>
+long streamInitRecord(dbCommon&nbsp;*record, const struct link&nbsp;*ioLink,
+    streamIoFunction&nbsp;readData, streamIoFunction&nbsp;writeData);
+</code></div>
+<pre>
+static long initRecord(dbCommon *record)
+{
+    <var>recordtype</var>Record *rec = (<var>recordtype</var>Record *)record;
+
+    return streamInitRecord(record, &amp;rec->out, readData, writeData);
+}
+</pre>
+
+<h3>Device Support Structure</h3>
+<p>
+For most record types the device support structure contains 5 functions,
+<code>report</code>, <code>init</code>, <code>init_record</code>,
+<code>get_ioint_info</code>, and <code>read</code> or <code>write</code>.
+Few other record typess, for examle ai and ao may have additional functions.
+For most of these functions simply pass one of the provided
+<em>StreamDevice</em> functions <code>streamReport</code>,
+<code>streamInit</code>, <code>streamGetIoInitInfo</code>, and
+<code>streamRead</code> or <code>streamWrite</code>.
+Only for <code>init_record</code> pass your own
+<code>initRecord</code> function. Then export the structure.
+</p>
+<pre>
+struct {
+    long number;
+    DEVSUPFUN report;
+    DEVSUPFUN init;
+    DEVSUPFUN init_record;
+    DEVSUPFUN get_ioint_info;
+    DEVSUPFUN write;
+} dev<var>recordtype</var>Stream = {
+    5,
+    streamReport,
+    streamInit,
+    initRecord,
+    streamGetIointInfo,
+    streamWrite
+};
+
+epicsExportAddress(dset,dev<var>recordtype</var>Stream);
+
+</pre>
 
 
 <footer>
@@ -20,3 +325,4 @@ Dirk Zimoch, 2018
 </footer>
 </body>
 </html>
+ 
