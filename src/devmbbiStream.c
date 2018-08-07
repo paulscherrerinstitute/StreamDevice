@@ -19,7 +19,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
 #include "mbbiRecord.h"
 #include "devStream.h"
 

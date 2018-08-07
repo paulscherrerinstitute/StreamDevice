@@ -20,9 +20,6 @@
 ***************************************************************/
 
 #include "mbboDirectRecord.h"
-#include "alarm.h"
-#include "recGbl.h"
-#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)

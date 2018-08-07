@@ -18,8 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
-#include "errlog.h"
 #include "waveformRecord.h"
 #include "devStream.h"
 

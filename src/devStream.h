@@ -22,6 +22,8 @@
 #define devStream_h
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 
 #if defined(__cplusplus)
@@ -57,6 +59,11 @@ extern "C" {
 #include "dbScan.h"
 #include "devSup.h"
 #include "dbAccess.h"
+#include "errlog.h"
+#include "alarm.h"
+#include "recGbl.h"
+#include "dbEvent.h"
+#include "epicsMath.h"
 
 #ifdef devStream_epicsExportSharedSymbols
 #   define epicsExportSharedSymbols

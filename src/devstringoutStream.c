@@ -18,10 +18,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
 #include "stringoutRecord.h"
-#include "recGbl.h"
-#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)

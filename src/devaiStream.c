@@ -18,7 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include "epicsMath.h"
 #include "aiRecord.h"
 #include "devStream.h"
 

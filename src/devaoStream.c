@@ -18,12 +18,9 @@
 *                                                              *
 ***************************************************************/
 
-#include <math.h>
 #include "aoRecord.h"
 #include "menuConvert.h"
 #include "cvtTable.h"
-#include "recGbl.h"
-#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)

@@ -18,9 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
-#include <stdlib.h>
-#include "errlog.h"
 #include "aaiRecord.h"
 #include "devStream.h"
 

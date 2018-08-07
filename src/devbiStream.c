@@ -18,7 +18,6 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
 #include "biRecord.h"
 #include "devStream.h"
 

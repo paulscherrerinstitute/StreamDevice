@@ -19,8 +19,6 @@
 ***************************************************************/
 
 #include "longoutRecord.h"
-#include "recGbl.h"
-#include "dbEvent.h"
 #include "devStream.h"
 
 /* DELTA calculates the absolute difference between its arguments */

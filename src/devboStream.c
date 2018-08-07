@@ -18,10 +18,7 @@
 *                                                              *
 ***************************************************************/
 
-#include <string.h>
 #include "boRecord.h"
-#include "recGbl.h"
-#include "dbEvent.h"
 #include "devStream.h"
 
 static long readData(dbCommon *record, format_t *format)
