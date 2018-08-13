@@ -193,8 +193,10 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
         debug("pcre_exec match \"%s\" result = %d\n", buffer.expand(start+c, length-c)(), rc);
 
         if (rc < 0) // no match
-            return;
-
+        {
+            debug("pcre_exec: no match\n");
+            break;
+        }
         if (!(fmt.flags & sign_flag) && n < fmt.prec) // without + flag
         {
             // do not yet replace this match
@@ -216,16 +218,20 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
             if (s[r] == esc)
             {
                 unsigned char ch = s[r+1];
-                if (c != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
+                debug("found escaped \\%u, in range 1-%d?\n", ch, rc-1);
+                if (ch != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
                 {
                     ch *= 2;
                     rl = ovector[ch+1] - ovector[ch];
-                    debug("replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
+                    debug("yes, replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
                     s.replace(r, 2, buffer(start+c+ovector[ch]), rl);
                     r += rl - 1;
                 }
                 else
+                {
+                    debug("no, use literal \\%u\n", ch);
                     s.remove(r, 1); // just remove escape
+                }
             }
             else if (s[r] == '&') // unescaped & : replace with match
             {
@@ -240,8 +246,12 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
         length += s.length() - l;
         c += ovector[0] + s.length();
         if (n == fmt.prec) // max match reached
-            return;
+        {
+            debug("pcre_exec: max match %d reached\n", n);
+            break;
+        }
     }
+    debug("pcre_exec converted string: %s\n", buffer.expand()());
 }
 
 ssize_t RegexpConverter::
