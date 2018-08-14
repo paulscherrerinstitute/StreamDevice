@@ -6,7 +6,7 @@
 *                                                              *
 * This header defines the format stucture used to interface    *
 * format converters and record interfaces to StreamDevice      *
-* Please refer to the HTML files in ../doc/ for a detailed     *
+* Please refer to the HTML files in ../docs/ for a detailed    *
 * documentation.                                               *
 *                                                              *
 * If you do any changes in this file, you are not allowed to   *

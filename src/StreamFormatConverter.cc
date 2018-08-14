@@ -6,7 +6,7 @@
 *                                                              *
 * This is the format converter base and includes the standard  *
 * format converters for StreamDevice.                          *
-* Please refer to the HTML files in ../doc/ for a detailed     *
+* Please refer to the HTML files in ../docs/ for a detailed    *
 * documentation.                                               *
 *                                                              *
 * If you do any changes in this file, you are not allowed to   *

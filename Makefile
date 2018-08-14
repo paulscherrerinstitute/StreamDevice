@@ -20,7 +20,7 @@ streamApp_DEPEND_DIRS = src
 
 include $(CONFIG)/RULES_TOP
 
-documentation/stream.pdf: documentation/*.html documentation/*.css documentation/*.png
-	cd documentation; makepdf
+docs/stream.pdf: docs/*.html docs/*.css docs/*.png
+	cd docs; makepdf
 
-pdf: documentation/stream.pdf
+pdf: docs/stream.pdf

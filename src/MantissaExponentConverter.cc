@@ -7,7 +7,7 @@
 * StreamDevice.                                                *
 * The number is represented as two signed integers, mantissa   *
 * and exponent, like in +00011-01                              *
-* Please refer to the HTML files in ../doc/ for a detailed     *
+* Please refer to the HTML files in ../docs/ for a detailed    *
 * documentation.                                               *
 *                                                              *
 * If you do any changes in this file, you are not allowed to   *
