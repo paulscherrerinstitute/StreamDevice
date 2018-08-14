@@ -17,4 +17,4 @@ in plain ASCII text which describes the commands a device understands
 and the replies it sends.
 
 For a full documentation see
-https://paulscherrerinstitute.github.io/StreamDevice/index.html.
+https://paulscherrerinstitute.github.io/StreamDevice.
