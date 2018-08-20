@@ -729,13 +729,12 @@ parseLink(const struct link *ioLink, char* filename,
     if (ioLink->value.instio.string[n1] == '(')
     {
         strcat(protocol, "(");
-        n1++;
         sscanf(ioLink->value.instio.string+n1, " %[^)] %n", protocol+strlen(protocol), &n2);
         n1+=n2;
         if (ioLink->value.instio.string[n1++] != ')')
         {
             error("%s: Missing ')' after protocol '%s': '%s'\n"
-                "  expect \"@file protocol(args) bus [addr] [params]\"\n"
+                "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
                 "  in \"@%s\"\n", name(), protocol, ioLink->value.instio.string+n1-1,
                 ioLink->value.instio.string);
             return S_dev_badInitRet;
