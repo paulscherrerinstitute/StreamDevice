@@ -86,11 +86,11 @@ static long writeData(dbCommon *record, format_t *format)
     switch (format->type)
     {
         case DBF_ULONG:
-        case DBF_ENUM:
             val = mbboD->rval;
             if (mbboD->mask) val &= mbboD->mask;
             break;
         case DBF_LONG:
+        case DBF_ENUM:
             val = (epicsInt32)mbboD->rval;
             if (mbboD->mask) val &= (epicsInt32)mbboD->mask;
             break;

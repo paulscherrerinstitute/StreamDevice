@@ -78,11 +78,11 @@ static long writeData(dbCommon *record, format_t *format)
             return streamPrintf(record, format, co->oval);
         }
         case DBF_ULONG:
-        case DBF_ENUM:
         {
             return streamPrintf(record, format, (unsigned long)co->oval);
         }
         case DBF_LONG:
+        case DBF_ENUM:
         {
             return streamPrintf(record, format, (long)co->oval);
         }

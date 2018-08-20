@@ -42,6 +42,7 @@ static long readData(dbCommon *record, format_t *format)
             return OK;
         }
         case DBF_LONG:
+        case DBF_UONG:
         case DBF_ENUM:
         {
             long lval;
@@ -71,6 +72,7 @@ static long writeData(dbCommon *record, format_t *format)
             return streamPrintf(record, format, sco->oval);
         }
         case DBF_LONG:
+        case DBF_UONG:
         case DBF_ENUM:
         {
             return streamPrintf(record, format, (long)sco->oval);

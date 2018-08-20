@@ -47,9 +47,9 @@ static long writeData(dbCommon *record, format_t *format)
     switch (format->type)
     {
         case DBF_ULONG:
-        case DBF_ENUM:
             return streamPrintf(record, format, (unsigned long)li->val);
         case DBF_LONG:
+        case DBF_ENUM:
             return streamPrintf(record, format, (long)li->val);
     }
     return ERROR;

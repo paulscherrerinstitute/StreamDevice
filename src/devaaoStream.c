@@ -217,10 +217,10 @@ static long writeData(dbCommon *record, format_t *format)
                         dval = ((epicsUInt32 *)aao->bptr)[nowd];
                         break;
                     case DBF_SHORT:
+                    case DBF_ENUM:
                         dval = ((epicsInt16 *)aao->bptr)[nowd];
                         break;
                     case DBF_USHORT:
-                    case DBF_ENUM:
                         dval = ((epicsUInt16 *)aao->bptr)[nowd];
                         break;
                     case DBF_CHAR:
@@ -260,10 +260,10 @@ static long writeData(dbCommon *record, format_t *format)
                         lval = ((epicsUInt32 *)aao->bptr)[nowd];
                         break;
                     case DBF_SHORT:
+                    case DBF_ENUM:
                         lval = ((epicsInt16 *)aao->bptr)[nowd];
                         break;
                     case DBF_USHORT:
-                    case DBF_ENUM:
                         lval = ((epicsUInt16 *)aao->bptr)[nowd];
                         break;
                     case DBF_CHAR:

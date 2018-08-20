@@ -80,6 +80,7 @@ static long writeData(dbCommon *record, format_t *format)
     switch (format->type)
     {
         case DBF_LONG:
+        case DBF_ULONG:
         {
             /* print VAL or RVAL ? Look if any value is defined */
             val = mbbi->val;
