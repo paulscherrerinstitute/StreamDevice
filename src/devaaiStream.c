@@ -116,17 +116,11 @@ static long readData(dbCommon *record, format_t *format)
                         if ((length = streamScanfN(record, format,
                             (char *)aai->bptr, aai->nelm)) == ERROR)
                         {
-                            memset(aai->bptr, 0, aai->nelm);
                             return ERROR;
                         }
-                        if (lval < (ssize_t)aai->nelm)
+                        if (length < (ssize_t)aai->nelm)
                         {
-                            memset(((char*)aai->bptr)+lval , 0, aai->nelm-lval);
-                            lval++;
-                        }
-                        else
-                        {
-                            ((char*)aai->bptr)[aai->nelm-1] = 0;
+                            ((char*)aai->bptr)[length] = 0;
                         }
                         aai->nord = (long)length;
                         return OK;

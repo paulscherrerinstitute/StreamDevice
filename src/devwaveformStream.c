@@ -117,21 +117,15 @@ static long readData(dbCommon *record, format_t *format)
                         if ((length = streamScanfN(record, format,
                             (char *)wf->bptr, wf->nelm)) == ERROR)
                         {
-                            memset(wf->bptr, 0, wf->nelm);
                             return ERROR;
                         }
                         if (length < (ssize_t)wf->nelm)
                         {
-                            memset(((char*)wf->bptr)+lval , 0, wf->nelm-lval);
-                            lval++;
-                        }
-                        else
-                        {
-                            ((char*)wf->bptr)[wf->nelm-1] = 0;
+                            ((char*)wf->bptr)[length] = 0;
                         }
                         wf->nord = (long)length;
                         return OK;
-					}
+                    }
                     default:
                         errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from string to %s\n",

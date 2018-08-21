@@ -108,22 +108,16 @@ static long readData(dbCommon *record, format_t *format)
                     case DBF_CHAR:
                     case DBF_UCHAR:
                     {
-						ssize_t length;
+                        ssize_t length;
                         aao->nord = 0;
                         if ((length = streamScanfN(record, format,
                             (char *)aao->bptr, aao->nelm)) == ERROR)
                         {
-                            memset(aao->bptr, 0, aao->nelm);
                             return ERROR;
                         }
                         if (length < (ssize_t)aao->nelm)
                         {
-                            memset(((char*)aao->bptr)+lval , 0, aao->nelm-lval);
-                            lval++;
-                        }
-                        else
-                        {
-                            ((char*)aao->bptr)[aao->nelm-1] = 0;
+                            ((char*)aao->bptr)[length] = 0;
                         }
                         aao->nord = (long)length;
                         goto end_no_check;

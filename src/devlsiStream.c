@@ -23,30 +23,27 @@
 static long readData(dbCommon *record, format_t *format)
 {
     lsiRecord *lsi = (lsiRecord *)record;
+    ssize_t length;
 
-    if (format->type == DBF_STRING)
+    if (format->type != DBF_STRING) return ERROR;
+    if ((length = streamScanfN(record, format, lsi->val, (long)lsi->sizv)) == ERROR)
     {
-        long len;
-        if ((len = streamScanfN(record, format, lsi->val, lsi->sizv) == ERROR))
-        {
-            lsi->len = 0;
-            return ERROR;
-        }
-        lsi->len = len;
-        return OK;
+        return ERROR;
     }
-    return ERROR;
+    if (length < (ssize_t)lsi->sizv)
+    {
+        lsi->val[length] = 0;
+    }
+    lsi->len = length;
+    return OK;
 }
 
 static long writeData(dbCommon *record, format_t *format)
 {
     lsiRecord *lsi = (lsiRecord *)record;
 
-    if (format->type == DBF_STRING)
-    {
-        return streamPrintf(record, format, lsi->val);
-    }
-    return ERROR;
+    if (format->type != DBF_STRING) return ERROR;
+    return streamPrintf(record, format, lsi->val);
 }
 
 static long initRecord(dbCommon *record)

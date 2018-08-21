@@ -24,17 +24,19 @@
 static long readData(dbCommon *record, format_t *format)
 {
     lsoRecord *lso = (lsoRecord *)record;
-    long len;
+    ssize_t length;
     unsigned short monitor_mask;
 
-    if (format->type != DBF_STRING)
-        return ERROR;
-    if ((len = streamScanfN(record, format, lso->val, lso->sizv) == ERROR))
+    if (format->type != DBF_STRING) return ERROR;
+    if ((length = streamScanfN(record, format, lso->val, lso->sizv)) == ERROR)
     {
-        lso->len = 0;
         return ERROR;
     }
-    lso->len = len;
+    if (length < (ssize_t)lso->sizv)
+    {
+        lso->val[length] = 0;
+    }
+    lso->len = length;
     if (record->pact) return OK;
     /* In @init handler, no processing, enforce monitor updates. */
     monitor_mask = recGblResetAlarms(record);
@@ -60,11 +62,8 @@ static long writeData(dbCommon *record, format_t *format)
 {
     lsoRecord *lso = (lsoRecord *)record;
 
-    if (format->type == DBF_STRING)
-    {
-        return streamPrintf(record, format, lso->val);
-    }
-    return ERROR;
+    if (format->type != DBF_STRING) return ERROR;
+    return streamPrintf(record, format, lso->val);
 }
 
 static long initRecord(dbCommon *record)
