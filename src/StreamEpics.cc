@@ -720,7 +720,7 @@ parseLink(const struct link *ioLink, char* filename,
     if (0 >= sscanf(ioLink->value.instio.string+n1, " %[^ \t(] %n", protocol, &n2))
     {
         error("%s: Missing protocol name\n"
-            "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
+            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
             "  in \"@%s\"\n", name(),
             ioLink->value.instio.string);
         return S_dev_badInitRet;
@@ -728,14 +728,14 @@ parseLink(const struct link *ioLink, char* filename,
     n1+=n2;
     if (ioLink->value.instio.string[n1] == '(')
     {
-        strcat(protocol, "(");
+        n2 = 0;
         sscanf(ioLink->value.instio.string+n1, " %[^)] %n", protocol+strlen(protocol), &n2);
         n1+=n2;
         if (ioLink->value.instio.string[n1++] != ')')
         {
-            error("%s: Missing ')' after protocol '%s': '%s'\n"
-                "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
-                "  in \"@%s\"\n", name(), protocol, ioLink->value.instio.string+n1-1,
+            error("%s: Missing ')' after protocol arguments '%s'\n"
+                "  expect \"@file protocol(arg1,...) bus [addr] [params]\"\n"
+                "  in \"@%s\"\n", name(), protocol,
                 ioLink->value.instio.string);
             return S_dev_badInitRet;
         }
@@ -744,7 +744,7 @@ parseLink(const struct link *ioLink, char* filename,
     if (0 >= sscanf(ioLink->value.instio.string+n1, "%s %i %99c", busname, addr, busparam))
     {
         error("%s: Missing bus name\n"
-            "  expect \"@file protocol[(args)] bus [addr] [params]\"\n"
+            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
             "  in \"@%s\"\n", name(),
             ioLink->value.instio.string);
         return S_dev_badInitRet;
