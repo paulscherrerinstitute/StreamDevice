@@ -73,7 +73,7 @@ public:
         {init(NULL, size);}
 
     ~StreamBuffer()
-        {if (buffer != local) delete buffer;}
+        {if (buffer != local) delete [] buffer;}
 
     // operator (): get char* pointing to index
     const char* operator()(ssize_t index=0) const
