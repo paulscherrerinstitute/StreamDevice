@@ -534,11 +534,11 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 {
     long status;
-    char filename[80];
-    char protocol[80];
-    char busname[80];
+    char filename[256];
+    char protocol[256];
+    char busname[256];
     int addr = -1;
-    char busparam[80];
+    char busparam[256];
     memset(busparam, 0 ,sizeof(busparam));
 
     debug("streamInitRecord(%s): SEVR=%d\n", record->name, record->sevr);
