@@ -843,6 +843,7 @@ process()
     debug("Stream::process(%s)\n", name());
     if (record->pact || record->scan == SCAN_IO_EVENT)
     {
+        record->proc = 0;
         if (status != NO_ALARM)
         {
             debug("Stream::process(%s) error status=%s (%d)\n",
@@ -873,6 +874,7 @@ process()
         debug("Stream::process(%s): could not start %sprotocol, status=%d\n",
             name(), record->proc==2 ? "@init " : "", status);
         (void) recGblSetSevr(record, status ? status : UDF_ALARM, INVALID_ALARM);
+        record->proc = 0;
         return false;
     }
     debug("Stream::process(%s): protocol started\n", name());
