@@ -871,8 +871,11 @@ process()
     convert = OK;
     if (!startProtocol(record->proc==2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
-        debug("Stream::process(%s): could not start %sprotocol, status=%d\n",
-            name(), record->proc==2 ? "@init " : "", status);
+        debug("Stream::process(%s): could not start %sprotocol, status=%s (%d)\n",
+            name(), record->proc==2 ? "@init " : "", 
+                status >= 0 && status < ALARM_NSTATUS ?
+                    epicsAlarmConditionStrings[status] : "ERROR",
+            status);
         (void) recGblSetSevr(record, status ? status : UDF_ALARM, INVALID_ALARM);
         record->proc = 0;
         return false;
