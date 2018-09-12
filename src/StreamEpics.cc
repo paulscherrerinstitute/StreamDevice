@@ -831,7 +831,7 @@ initRecord(const char* filename, const char* protocol,
         return ERROR;
     }
     debug("Stream::initRecord %s: initialized. %s\n",
-        name(), convert==2 ?
+        name(), convert == DO_NOT_CONVERT ?
             "convert" : "don't convert");
     return convert;
 }
@@ -855,7 +855,7 @@ process()
             return false;
         }
         debug("Stream::process(%s) ready. %s\n",
-            name(), convert==2 ?
+            name(), convert == DO_NOT_CONVERT ?
             "convert" : "don't convert");
         return true;
     }
@@ -869,10 +869,10 @@ process()
     debug("Stream::process(%s) start\n", name());
     status = NO_ALARM;
     convert = OK;
-    if (!startProtocol(record->proc==2 ? StreamCore::StartInit : StreamCore::StartNormal))
+    if (!startProtocol(record->proc == 2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
         debug("Stream::process(%s): could not start %sprotocol, status=%s (%d)\n",
-            name(), record->proc==2 ? "@init " : "", 
+            name(), record->proc == 2 ? "@init " : "", 
                 status >= 0 && status < ALARM_NSTATUS ?
                     epicsAlarmConditionStrings[status] : "ERROR",
             status);
@@ -925,7 +925,7 @@ scan(format_t *format, void* value, size_t maxStringSize)
             currentValueLength = scanValue(*format->priv, *(double*)value);
             break;
         case DBF_STRING:
-            currentValueLength  = scanValue(*format->priv, (char*)value, size);
+            currentValueLength = scanValue(*format->priv, (char*)value, size);
             break;
         default:
             error("INTERNAL ERROR (%s): Illegal format type %d\n",
