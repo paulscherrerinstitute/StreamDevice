@@ -1315,12 +1315,12 @@ normal_format:
                 break;
             }
             case StreamProtocolParser::skip:
-                // ignore next input byte
-                consumedInput++;
+                // ignore next input byte (if exists)
+                if (consumedInput < inputLine.length()) consumedInput++;
                 break;
             case StreamProtocolParser::whitespace:
                 // any number of whitespace (including 0)
-                while (isspace(inputLine[consumedInput])) consumedInput++;
+                while (consumedInput < inputLine.length() && isspace(inputLine[consumedInput])) consumedInput++;
                 break;
             case esc:
                 // escaped literal byte
