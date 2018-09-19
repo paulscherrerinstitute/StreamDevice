@@ -1,6 +1,6 @@
 # StreamDevice
 
-_StreamDevice_ is a generic [EPICS](https://www.aps.anl.gov/epics)
+_StreamDevice_ is a generic [EPICS](https://epics.anl.gov/)
 device support for devices with a "byte stream" based
 communication interface.
 That means devices that can be controlled by sending and receiving
