@@ -74,7 +74,7 @@ CPPFLAGS += -DUSE_TYPED_RSET
 -include $(TOP)/configure/RULES
 
 # Update version string whenever something changes
-StreamVersion$(OBJ): ../*.c ../*.h ../*.cc ../CONFIG_STREAM
+StreamVersion$(OBJ): $(filter-out StreamVersion.o,$(LIBOBJS)$(LIBRARY_OBJS))
 
 # Add references to all registrars to main file to avoid
 # missing initialization.

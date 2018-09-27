@@ -32,9 +32,8 @@ HEADERS += StreamError.h
 StreamCore.o StreamCore.d: streamReferences
 
 # Update version string (contains __DATE__ and __TIME__)
-# each time make runs.
-StreamVersion.o: FORCE
-FORCE:
+# each time anything changes.
+StreamVersion.o: $(filter-out StreamVersion.o stream_exportAddress.o,$(LIBOBJS))
 
 streamReferences:
 	$(PERL) ../src/makeref.pl Interface $(BUSSES) > $@
