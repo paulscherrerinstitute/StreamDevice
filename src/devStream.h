@@ -32,7 +32,6 @@ extern "C" {
 
 #define STREAM_MAJOR 2
 #define STREAM_MINOR 8
-#define STREAM_PATCHLEVEL 0
 
 #ifndef OK
 #define OK 0
