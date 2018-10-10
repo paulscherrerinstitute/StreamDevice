@@ -79,12 +79,21 @@ static long readData(dbCommon *record, format_t *format)
     if (record->pact) return DO_NOT_CONVERT;
     /* In @init handler, no processing, enforce monitor updates. */
     monitor_mask = recGblResetAlarms(record);
+    if (mbbo->val > 15) {
+        recGblSetSevr(record, STATE_ALARM, mbbo->unsv);
+    } else {
+        recGblSetSevr(record, STATE_ALARM, (&(mbbo->zrsv))[mbbo->val]);
+    }
+    mbbo->lalm = mbbo->val;
+    if (mbbo->val != mbbo->lalm) {
+        if (!recGblSetSevr(record, COS_ALARM, mbbo->cosv)) mbbo->lalm = mbbo->val;
+    }
     if (mbbo->mlst != mbbo->val)
     {
         monitor_mask |= (DBE_VALUE | DBE_LOG);
         mbbo->mlst = mbbo->val;
     }
-    if (monitor_mask){
+    if (monitor_mask) {
         db_post_events(record, &mbbo->val, monitor_mask);
     }
     if (mbbo->oraw != mbbo->rval) {
