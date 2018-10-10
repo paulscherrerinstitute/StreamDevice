@@ -62,6 +62,7 @@ static long readData(dbCommon *record, format_t *format)
             char buffer[sizeof(mbbo->zrst)];
             if (streamScanfN(record, format, buffer, sizeof(buffer)) == ERROR)
                 return ERROR;
+            mbbo->val = 65535; /* initalize to unknown state*/
             for (val = 0; val < 16; val++)
             {
                 if (strcmp ((&mbbo->zrst)[val], buffer) == 0)
@@ -70,6 +71,7 @@ static long readData(dbCommon *record, format_t *format)
                     break;
                 }
             }
+            break;
         }
         default:
             return ERROR;
