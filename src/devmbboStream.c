@@ -33,11 +33,12 @@ static long readData(dbCommon *record, format_t *format)
     {
         case DBF_ULONG:
         case DBF_LONG:
+        case DBF_ENUM:
         {
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
+            if (mbbo->mask) val &= mbbo->mask;
             mbbo->rbv = val;
             mbbo->rval = val;
-            if (mbbo->mask) val &= mbbo->mask;
             if (mbbo->shft > 0) val >>= mbbo->shft;
             /* read VAL or RBV? Look if any value is defined */
             if (mbbo->sdef)
@@ -53,12 +54,6 @@ static long readData(dbCommon *record, format_t *format)
                 }
                 break;
             }
-            mbbo->val = (epicsEnum16)val;
-            break;
-        }
-        case DBF_ENUM:
-        {
-            if (streamScanf(record, format, &val) == ERROR) return ERROR;
             mbbo->val = (epicsEnum16)val;
             break;
         }
@@ -110,38 +105,37 @@ static long writeData(dbCommon *record, format_t *format)
     switch (format->type)
     {
         case DBF_ULONG:
+        case DBF_ENUM:
             /* print VAL or RVAL ? */
             val = mbbo->val;
+            if (mbbo->shft > 0) val <<= mbbo->shft;
             if (mbbo->sdef) for (i=0; i<16; i++)
             {
                 if ((&mbbo->zrvl)[i])
                 {
                     /* any values defined ? */
                     val = mbbo->rval;
-                    if (mbbo->mask) val &= mbbo->mask;
                     break;
                 }
             }
+            if (mbbo->mask) val &= mbbo->mask;
             return streamPrintf(record, format, val);
         case DBF_LONG:
         {
             /* print VAL or RVAL ? */
             val = (epicsInt16)mbbo->val;
+            if (mbbo->shft > 0) val <<= mbbo->shft;
             if (mbbo->sdef) for (i=0; i<16; i++)
             {
                 if ((&mbbo->zrvl)[i])
                 {
                     /* any values defined ? */
                     val = (epicsInt32)mbbo->rval;
-                    if (mbbo->mask) val &= mbbo->mask;
                     break;
                 }
             }
+            if (mbbo->mask) val &= mbbo->mask;
             return streamPrintf(record, format, val);
-        }
-        case DBF_ENUM:
-        {
-            return streamPrintf(record, format, mbbo->val);
         }
         case DBF_STRING:
         {

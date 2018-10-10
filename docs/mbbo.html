@@ -23,7 +23,7 @@ written or read value.
   <dd>
    Not allowed.
   </dd>
- <dt>LONG format (e.g. <code>%i</code>):</dt>
+ <dt>LONG <span class=new>or ENUM</span> format (e.g. <code>%i</code>):</dt>
   <dd>
    <dl>
     <dt>If any of <code>ZRVL</code> ... <code>FFVL</code> is set
@@ -41,16 +41,11 @@ written or read value.
      </dd>
     <dt>If none of <code>ZRVL</code> ... <code>FFVL</code> is set
         (all are <code>0</code>):</dt>
-     <dd>
-      <u>Output:</u> <code><i>x</i>=VAL</code><br>
-      <u>Input:</u> <code>VAL=<i>x</i></code><br>
+     <dd class=new>
+      <u>Output:</u> <code><i>x</i>=(VAL&lt;&lt;SHFT)&amp;MASK</code><br>
+      <u>Input:</u> <code>VAL=(RBV=(<i>x</i>&amp;MASK))&gt;&gt;SHFT</code><br>
      </dd>
     </dl>
-  </dd>
- <dt>ENUM format (e.g. <code>%{</code>):</dt>
-  <dd>
-   <u>Output:</u> <code><i>x</i>=VAL</code><br>
-   <u>Input:</u> <code>VAL=<i>x</i></code><br>
   </dd>
  <dt>STRING format (e.g. <code>%s</code>):</dt>
   <dd>
