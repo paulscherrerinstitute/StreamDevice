@@ -1088,7 +1088,7 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
         // FIELD in this record or VAL in other record
         StreamBuffer fullname;
         fullname.print("%s.%s", name(), fieldname);
-        if (dbNameToAddr(fullname(), &dbaddr) != OK)
+        if (dbNameToAddr(fullname(), &dbaddr) != OK || strcmp(((dbFldDes*)dbaddr.pfldDes)->name, fieldname) != 0)
         {
             // VAL in other record
             fullname.clear().print("%s.VAL", fieldname);
