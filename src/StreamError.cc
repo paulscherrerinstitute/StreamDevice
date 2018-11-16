@@ -18,6 +18,9 @@
 ***************************************************************/
 
 #include "StreamError.h"
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
@@ -39,6 +42,18 @@ FILE *StreamDebugFile = NULL;
 
 #ifdef _WIN32
 #define localtime_r(timet,tm) localtime_s(tm,timet)
+
+/* Enable ANSI colors in Windows console */
+static int win_console_init() {
+	DWORD dwMode = 0;
+    HANDLE hCons = GetStdHandle(STD_ERROR_HANDLE);
+	GetConsoleMode(hCons, &dwMode);
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(hCons, dwMode);
+	return 0;
+}
+static int s = win_console_init();
+
 #endif
 
 /* You can globally change the printTimestamp function
@@ -115,4 +130,3 @@ print(const char* fmt, ...)
     va_end(args);
     return 1;
 }
-
