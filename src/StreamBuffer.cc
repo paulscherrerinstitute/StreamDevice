@@ -24,10 +24,47 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#if defined(__vxworks) || defined(vxWorks)
-// These systems have no vsnprintf
-#define vsnprintf(p,l,f,v) vsprintf(p,f,v)
-#endif
+#ifdef vxWorks
+#include <version.h>
+#ifndef _WRS_VXWORKS_MAJOR
+// VxWorks 5 has no vsnprintf
+// Implementation taken from EPICS 3.14
+
+#include <vxWorks.h>
+#include <fioLib.h>
+
+struct outStr_s {
+    char *str;
+    int free;
+};
+
+static STATUS outRoutine(char *buffer, int nchars, int outarg) {
+    struct outStr_s *poutStr = (struct outStr_s *) outarg;
+    int free = poutStr->free;
+    int len;
+
+    if (free < 1) { /*let fioFormatV continue to count length*/
+        return OK;
+    } else if (free > 1) {
+        len = min(free-1, nchars);
+        strncpy(poutStr->str, buffer, len);
+        poutStr->str += len;
+        poutStr->free -= len;
+    }
+    /*make sure final string is null terminated*/
+    *poutStr->str = 0;
+    return OK;
+}
+
+int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
+    struct outStr_s outStr;
+    
+    outStr.str = str;
+    outStr.free = size;
+    return fioFormatV(format, ap, (FUNCPTR)outRoutine, (int)&outStr);
+}
+#endif // ! _WRS_VXWORKS_MAJOR
+#endif // vxWorks
 
 #define P PRINTF_SIZE_T_PREFIX
 
