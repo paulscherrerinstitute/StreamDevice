@@ -17,6 +17,11 @@
 *                                                              *
 ***************************************************************/
 
+// Make sure that vsnprintf is available
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE
+#endif
+
 #include "StreamBuffer.h"
 #include "StreamError.h"
 
