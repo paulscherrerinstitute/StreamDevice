@@ -24,7 +24,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-#if defined(__vxworks) || defined(vxWorks) || defined(__rtems__)
+#if defined(__vxworks) || defined(vxWorks)
 // These systems have no vsnprintf
 #define vsnprintf(p,l,f,v) vsprintf(p,f,v)
 #endif
