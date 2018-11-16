@@ -63,7 +63,7 @@ static STATUS outRoutine(char *buffer, int nchars, int outarg) {
 
 int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
     struct outStr_s outStr;
-    
+
     outStr.str = str;
     outStr.free = size;
     return fioFormatV(format, ap, (FUNCPTR)outRoutine, (int)&outStr);
@@ -338,7 +338,7 @@ StreamBuffer StreamBuffer::expand(ssize_t start, ssize_t length) const
     {
         c = buffer[i];
         if (c < 0x20 || c >= 0x7f)
-            result.print("\033[1m<%02x>\033[22m", c & 0xff);
+            result.print("\033[7m<%02x>\033[27m", c & 0xff);
         else
             result.append(c);
     }
@@ -358,7 +358,7 @@ dump() const
         c = buffer[i];
         if (offs && i == offs) result.append("\033[0m");
         if (c < 0x20 || c >= 0x7f)
-            result.print("\033[1m<%02x>\033[22m", c & 0xff);
+            result.print("\033[7m<%02x>\033[27m", c & 0xff);
         else
             result.append(c);
         if (i == offs+len-1) result.append("\033[47m");
