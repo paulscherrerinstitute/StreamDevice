@@ -919,14 +919,12 @@ evalIn()
             busUnlock();
             flags &= ~BusOwner;
         }
-        busReadRequest(pollPeriod, readTimeout,
+        return busReadRequest(pollPeriod, readTimeout,
             expectedInput, true);
-        return true;
     }
-    busReadRequest(replyTimeout, readTimeout,
+    return busReadRequest(replyTimeout, readTimeout,
         expectedInput, false);
     // continue with readCallback() in another thread
-    return true;
 }
 
 ssize_t StreamCore::
