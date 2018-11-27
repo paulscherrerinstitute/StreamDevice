@@ -11,12 +11,8 @@ DOCUDIR = docs
 
 PCRE=1
 ASYN=1
-ifdef EPICSVERSION
-ifndef RECORDTYPES
-include src/CONFIG_STREAM
-export RECORDTYPES BUSSES FORMATS
-endif
-endif
+-include ../src/CONFIG_STREAM
+-include src/CONFIG_STREAM
 
 SOURCES += $(RECORDTYPES:%=src/dev%Stream.c)
 SOURCES += $(FORMATS:%=src/%Converter.cc)
