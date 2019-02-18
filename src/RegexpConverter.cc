@@ -197,54 +197,63 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
             debug("pcre_exec: no match\n");
             break;
         }
-        if (!(fmt.flags & sign_flag) && n < fmt.prec) // without + flag
-        {
-            // do not yet replace this match
-            c += ovector[1];
-            continue;
-        }
-        // replace subexpressions
         l = ovector[1] - ovector[0];
-        debug("before [%d]= \"%s\"\n", ovector[0], buffer.expand(start+c,ovector[0])());
-        debug("match  [%d]= \"%s\"\n", l, buffer.expand(start+c+ovector[0],l)());
-        for (r = 1; r < rc; r++)
-            debug("sub%d = \"%s\"\n", r, buffer.expand(start+c+ovector[r*2], ovector[r*2+1]-ovector[r*2])());
-        debug("after     = \"%s\"\n", buffer.expand(start+c+ovector[1])());
-        s = subst;
-        debug("subs      = \"%s\"\n", s.expand()());
-        for (r = 0; r < (int)s.length(); r++)
+
+        // no prec: replace all matches
+        // prec with + flag: replace first prec matches
+        // prec without + flag: replace only match number prec
+
+        if ((fmt.flags & sign_flag) || n >= fmt.prec)
         {
-            debug("check \"%s\"\n", s.expand(r)());
-            if (s[r] == esc)
+            // replace subexpressions
+            debug("before [%d]= \"%s\"\n", ovector[0], buffer.expand(start+c,ovector[0])());
+            debug("match  [%d]= \"%s\"\n", l, buffer.expand(start+c+ovector[0],l)());
+            for (r = 1; r < rc; r++)
+                debug("sub%d = \"%s\"\n", r, buffer.expand(start+c+ovector[r*2], ovector[r*2+1]-ovector[r*2])());
+            debug("after     = \"%s\"\n", buffer.expand(start+c+ovector[1])());
+            s = subst;
+            debug("subs      = \"%s\"\n", s.expand()());
+            for (r = 0; r < (int)s.length(); r++)
             {
-                unsigned char ch = s[r+1];
-                debug("found escaped \\%u, in range 1-%d?\n", ch, rc-1);
-                if (ch != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
+                debug("check \"%s\"\n", s.expand(r)());
+                if (s[r] == esc)
                 {
-                    ch *= 2;
-                    rl = ovector[ch+1] - ovector[ch];
-                    debug("yes, replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
-                    s.replace(r, 2, buffer(start+c+ovector[ch]), rl);
-                    r += rl - 1;
+                    unsigned char ch = s[r+1];
+                    debug("found escaped \\%u, in range 1-%d?\n", ch, rc-1);
+                    if (ch != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
+                    {
+                        ch *= 2;
+                        rl = ovector[ch+1] - ovector[ch];
+                        debug("yes, replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
+                        s.replace(r, 2, buffer(start+c+ovector[ch]), rl);
+                        r += rl - 1;
+                    }
+                    else
+                    {
+                        debug("no, use literal \\%u\n", ch);
+                        s.remove(r, 1); // just remove escape
+                    }
                 }
-                else
+                else if (s[r] == '&') // unescaped & : replace with match
                 {
-                    debug("no, use literal \\%u\n", ch);
-                    s.remove(r, 1); // just remove escape
+                    debug("replace &: \"%s\"\n", buffer.expand(start+c+ovector[0], l)());
+                    s.replace(r, 1, buffer(start+c+ovector[0]), l);
+                    r += l - 1;
                 }
+                else continue;
+                debug("subs = \"%s\"\n", s.expand()());
             }
-            else if (s[r] == '&') // unescaped & : replace with match
-            {
-                debug("replace &: \"%s\"\n", buffer.expand(start+c+ovector[0], l)());
-                s.replace(r, 1, buffer(start+c+ovector[0]), l);
-                r += l - 1;
-            }
-            else continue;
-            debug("subs = \"%s\"\n", s.expand()());
+            buffer.replace(start+c+ovector[0], l, s);
+            length -= l;
+            length += s.length();
+            c += s.length();
         }
-        buffer.replace(start+c+ovector[0], l, s);
-        length += s.length() - l;
-        c += ovector[0] + s.length();
+        c += ovector[0];
+        if (l == 0)
+        {
+            debug("pcre_exec: empty match\n");
+            c++; // Empty strings may lead to an endless loop. Match them only once.
+        }
         if (n == fmt.prec) // max match reached
         {
             debug("pcre_exec: max match %d reached\n", n);

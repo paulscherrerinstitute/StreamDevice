@@ -666,6 +666,13 @@ Otherwise <em>precision</em> is the index (counting from 1) of the match to repl
 Without <em>precision</em> (or 0), all matches are replaced.
 </p>
 <p>
+When replacing multiple matches, the next match is searched directly after the currently
+replaced string, so that the <em>subst</em> string itself will never be modified recursively.
+<span class="new">
+However if an empty string is matched, searching advances by 1 character in order to
+avoid matching the same empty string again.</span>
+</p>
+<p>
 In input this converter pre-processes data received from the device before
 following converters read it.
 Converters preceding this one will read unmodified input.
