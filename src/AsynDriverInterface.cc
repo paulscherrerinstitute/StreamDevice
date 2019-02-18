@@ -457,10 +457,6 @@ connectToBus(const char* portname, int addr)
         return false;
     }
 
-    // disable asyn errors to avoid flooding when device is disconnected
-    // user can re-enable later
-    pasynTrace->setTraceMask(pasynUser, 0);
-
     asynInterface* pasynInterface;
 
     // find the asynCommon interface
