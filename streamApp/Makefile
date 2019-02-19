@@ -40,8 +40,9 @@ ifneq ($(words $(CALC) $(SYNAPPS)), 0)
 # With synApps scalcout record
 streamApp_DBD += calcSupport.dbd
 PROD_LIBS += calc
-# older calc versions require sscan
-#PROD_LIBS += sscan
+ifneq ($(words $(SSCAN) $(SYNAPPS)), 0)
+PROD_LIBS += sscan
+endif
 endif
 
 streamApp_DBD += stream.dbd
