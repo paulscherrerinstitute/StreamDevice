@@ -107,6 +107,9 @@ protected:
     ENUM(StartMode,
         StartNormal, StartInit, StartAsync);
 
+    ENUM (Commands,
+        end, in, out, wait, event, exec, connect, disconnect);
+
     class MutexLock
     {
         StreamCore* stream;
@@ -221,6 +224,9 @@ public:
     void printProtocol(FILE* = stdout);
     const char* name() { return streamname; }
     void printStatus(StreamBuffer& buffer);
+    
+private:
+    char* printCommands(StreamBuffer& buffer, const char* c);
 };
 
 #endif

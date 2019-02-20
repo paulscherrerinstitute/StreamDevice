@@ -25,12 +25,10 @@
 
 #define Z PRINTF_SIZE_T_PREFIX
 
-ENUM (Commands,
-    end, in, out, wait, event, exec, connect, disconnect);
-
 /// debug functions /////////////////////////////////////////////
 
-static char* printCommands(StreamBuffer& buffer, const char* c)
+char* StreamCore::
+printCommands(StreamBuffer& buffer, const char* c)
 {
     unsigned long timeout;
     unsigned long eventnumber;
