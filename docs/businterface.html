@@ -69,7 +69,7 @@ class MyInterface : StreamBusInterface
     bool <a href="#lock">lockRequest</a>(unsigned long lockTimeout_ms);
     bool <a href="#lock">unlock</a>();
     bool <a href="#write">writeRequest</a>(const void* output, size_t size, unsigned long writeTimeout_ms);
-    bool <a href="#read">readRequest</a>(unsigned long replyTimeout_ms, unsigned long readTimeout_ms, long expectedLength, bool async);
+    bool <a href="#read">readRequest</a>(unsigned long replyTimeout_ms, unsigned long readTimeout_ms, size_t expectedLength, bool async);
     bool <a href="#read">supportsAsyncRead</a>();
     bool <a href="#event">supportsEvent</a>();
     bool <a href="#event">acceptEvent</a>(unsigned long mask, unsigned long timeout_ms);
@@ -118,7 +118,7 @@ bool <a href="#write">writeRequest</a>(const&nbsp;void*&nbsp;output,
 <div class="indent"><code>
 bool <a href="#read">readRequest</a>(unsigned&nbsp;long&nbsp;replyTimeout_ms,
     unsigned&nbsp;long&nbsp;readTimeout_ms,
-    long&nbsp;expectedLength, bool&nbsp;async);
+    size_t&nbsp;expectedLength, bool&nbsp;async);
 </code></div>
 <div class="indent"><code>
 bool <a href="#read">supportsAsyncRead</a>();
@@ -460,7 +460,7 @@ The client may request more I/O or call <code>unlock()</code> after
 <div class="indent"><code>
 bool readRequest(unsigned&nbsp;long&nbsp;replyTimeout_ms,
     unsigned&nbsp;long&nbsp;readTimeout_ms,
-    long&nbsp;expectedLength, bool&nbsp;async);
+    size_t&nbsp;expectedLength, bool&nbsp;async);
 </code></div>
 <div class="indent"><code>
 ssize_t readCallback(IoStatus&nbsp;status,
