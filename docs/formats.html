@@ -38,6 +38,18 @@ A format converter consists of
 </ul>
 
 <p>
+An exception is <code>%%</code> sequence which describes a single
+% (percent) sign in the protocol. It doesn't take any flags. It's implemented
+as a simple pseudo converter and can be used in conjuction with other converters.
+</p>
+
+<p>
+The flags <code>*# +0-</code> work like in the C functions
+<em>printf()</em> and <em>scanf()</em>.
+The flags <code>?</code>, <code>=</code> and <code>!</code> are extensions.
+</p>
+
+<p>
 The flags <code>*# +0-</code> work like in the C functions
 <em>printf()</em> and <em>scanf()</em>.
 The flags <code>?</code>, <code>=</code> and <code>!</code> are extensions.
@@ -117,6 +129,10 @@ This feature has been added by Klemen Vodopivec, SNS.
  <tr>
   <td><code>in "%=.3f";</code></td>
   <td>Assure that the input is equal to the current value formatted as a float with precision 3</td>
+ </tr>
+ <tr>
+  <td><code>in "%d%%";</code></td>
+  <td>Read an integer value followed by a % sign</td>
  </tr>
 </table>
 

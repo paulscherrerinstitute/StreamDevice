@@ -739,3 +739,44 @@ scanString(const StreamFormat& fmt, const char* input,
 }
 
 RegisterConverter (StdCharsetConverter, "[");
+
+// Standard Percent Converter for '%'
+
+class StdPercentConverter : public StreamFormatConverter
+{
+    int parse(const StreamFormat&, StreamBuffer&, const char*&, bool);
+    bool printPseudo(const StreamFormat&, StreamBuffer&);
+    ssize_t scanPseudo(const StreamFormat&, StreamBuffer&, size_t& cursor);
+};
+
+int StdPercentConverter::
+parse(const StreamFormat& fmt, StreamBuffer& info,
+    const char*& source, bool scanFormat)
+{
+    if (fmt.flags != 0)
+    {
+        error("Use of modifiers "
+              "not allowed with %%%% conversion\n");
+        return false;
+    }
+    return pseudo_format;
+}
+
+bool StdPercentConverter::
+printPseudo(const StreamFormat& fmt, StreamBuffer& output)
+{
+    output.append("%");
+    return true;
+}
+
+ssize_t StdPercentConverter::
+scanPseudo(const StreamFormat& fmt, StreamBuffer& input, size_t& cursor)
+{
+    ssize_t consumed = 0;
+    if (cursor < input.length() && input[cursor] == '%') {
+        consumed = 1;
+    }
+    return consumed;
+}
+
+RegisterConverter (StdPercentConverter, "%");
