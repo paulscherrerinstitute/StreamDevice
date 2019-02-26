@@ -1124,6 +1124,13 @@ compileString(StreamBuffer& buffer, const char*& source,
                         continue;
                     }
                     if (c == '%') {
+                        if (buffer[formatpos+1] == '%') {
+                            // treat %% as literal % like printf/scanf do
+                            // replace with escaped %
+                            buffer[formatpos] = esc;
+                            formatpos+=2;
+                            continue;
+                        }
                         debug("StreamProtocolParser::Protocol::compileString "
                             "format=\"%s\"\n", buffer.expand(formatpos)());
                         nformats++;

@@ -37,6 +37,14 @@ A format converter consists of
  <li>Additional information required by some converters</li>
 </ul>
 
+<p class="new">
+An exception is the sequence <code>%%</code> which stands for a single
+literal <code>%</code>.
+This has been added for compatibility with the C functions
+<em>printf()</em> and <em>scanf()</em>.
+It behaves the same as the escaped percent <code>\%</code>.
+</p>
+
 <p>
 The flags <code>*# +0-</code> work like in the C functions
 <em>printf()</em> and <em>scanf()</em>.
@@ -83,8 +91,6 @@ formatted (like for output) and then compared to the input.
 The <code>!</code> flag demands that input is exactly <em>width</em>
 bytes long (normally <em>width</em> defines the maximum number of
 bytes read in many formats).
-For example <code>in "%!5d";</code> expects exactly 5 digits.
-Fewer digits are considered loss of data and make the format fail.
 This feature has been added by Klemen Vodopivec, SNS.
 </p>
 
@@ -117,6 +123,14 @@ This feature has been added by Klemen Vodopivec, SNS.
  <tr>
   <td><code>in "%=.3f";</code></td>
   <td>Assure that the input is equal to the current value formatted as a float with precision 3</td>
+ </tr>
+ <tr>
+  <td><code>in "%!5d";</code></td>
+  <td>Expect exactly 5 decimal digits. Fewer digits are considered loss of data and make the format fail.
+ </tr>
+ <tr>
+  <td><code>in "%d%%";</code></td>
+  <td>Read a decimal number followed by a % sign</td>
  </tr>
 </table>
 
