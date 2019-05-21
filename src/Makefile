@@ -35,6 +35,10 @@ endif
 LIBRARY_DEFAULT = stream
 
 DBD += $(LIBRARY_DEFAULT).dbd
+DBD += $(LIBRARY_DEFAULT)-base.dbd
+ifdef CALC
+DBD += $(LIBRARY_DEFAULT)-scalcout.dbd
+endif
 
 ifdef ASYN
 LIB_LIBS += asyn
@@ -84,9 +88,29 @@ streamReferences: ../CONFIG_STREAM
 	$(PERL) ../makeref.pl Interface $(BUSSES) > $@
 	$(PERL) ../makeref.pl Converter $(FORMATS) >> $@
 
-# create stream.dbd from all RECORDTYPES
-$(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: ../CONFIG_STREAM
-	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(RECORDTYPES) > $@
+# create stream-base.dbd from all RECORDTYPES except scalcout record
+$(COMMON_DIR)/$(LIBRARY_DEFAULT)-base.dbd: ../CONFIG_STREAM
+	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(filter-out scalcout, $(RECORDTYPES)) > $@
 
-$(LIBRARY_DEFAULT).dbd$(DEP): ../CONFIG_STREAM
-	echo $(LIBRARY_DEFAULT).dbd: $< > $@
+$(LIBRARY_DEFAULT)-base.dbd$(DEP): ../CONFIG_STREAM
+	echo $(LIBRARY_DEFAULT)-base.dbd: $< > $@
+
+STREAM_DBD_FILES = $(LIBRARY_DEFAULT)-base.dbd
+
+ifdef CALC
+# create stream-scalcout.dbd for scalcout record
+$(COMMON_DIR)/$(LIBRARY_DEFAULT)-scalcout.dbd: ../CONFIG_STREAM
+	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) scalcout > $@
+
+$(LIBRARY_DEFAULT)-scalcout.dbd$(DEP): ../CONFIG_STREAM
+	echo $(LIBRARY_DEFAULT)-scalcout.dbd: $< > $@
+
+STREAM_DBD_FILES += $(LIBRARY_DEFAULT)-scalcout.dbd
+endif
+
+# create stream.dbd for all record types
+$(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: $(addprefix $(COMMON_DIR)/, $(STREAM_DBD_FILES))
+	cat $? > $@
+
+$(LIBRARY_DEFAULT).dbd$(DEP):
+	echo "$(LIBRARY_DEFAULT).dbd: $(STREAM_DBD_FILES)" > $@
