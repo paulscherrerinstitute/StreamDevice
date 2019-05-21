@@ -601,7 +601,7 @@ It is only available if a PCRE library is installed.
 <div class="box">
 <p>
 If PCRE is not available for your host or cross architecture, download
-the sourcecode from <a target="ex" href="http://www.pcre.org/">www.pcre.org</a>
+the sourcecode from <a target="ex" href="https://www.pcre.org/">www.pcre.org</a>
 and try my EPICS compatible <a target="ex"
 href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>
 to compile it like a normal EPICS support module.
@@ -656,6 +656,13 @@ Matches of the <em>regex</em> are replaced by the string <em>subst</em> with all
 <code>\1</code> through <code>\9</code> replaced with the match of the corresponding
 sub-expression <span class="new"> if such a sub-expression exists.
 
+Occurrences of <code>\U<i>n</i></code>, <code>\L<i>n</i></code>, <code>\u<i>n</i></code>,
+or <code>\l<i>n</i></code> with <code><i>n</i></code> being a number <code>0</code>
+through <code>9</code> or <code>&</code> are replaced with the corresponding sub-expression
+converted to all upper case, all lower case, first letter upper case, or first letter lower
+case, respectively.</span>
+</p>
+<p><span class="new">
 Due to limitations of the parser, <code>\1</code> and <code>\x01</code> are the same 
 which makes it difficult to use literal bytes with values lower than 10 in <em>subst</em>.
 Therefore <code>\0</code> aways means a literal byte (incompatible change from earlier version!)
@@ -721,6 +728,9 @@ which is not at the end of a word.
 <div class="indent">
 <code>%#/([^+-])*([+-])/\2\1/</code> moves a postfix sign to the front.
 (<code>1.23-</code> becomes <code>-1.23</code>)<br>
+</div>
+<div class="indent">
+<code>%#-2/.*/\U0/</code> converts the previous 2 characters to upper case.
 </div>
 <a name="mantexp"></a>
 <h2>15. MantissaExponent DOUBLE converter (<code>%m</code>)</h2>

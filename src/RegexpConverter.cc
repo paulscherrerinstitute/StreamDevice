@@ -20,9 +20,10 @@
 
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
-#include "string.h"
 #include "pcre.h"
+#include <string.h>
 #include <limits.h>
+#include <ctype.h>
 
 #define Z PRINTF_SIZE_T_PREFIX
 
@@ -219,9 +220,40 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
                 if (s[r] == esc)
                 {
                     unsigned char ch = s[r+1];
-                    debug("found escaped \\%u, in range 1-%d?\n", ch, rc-1);
-                    if (ch != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
+                    if (strchr("ulUL", ch))
                     {
+                        unsigned char br = s[r+2] - '0';
+                        if (br == (unsigned char)('&'-'0')) br = 0;
+                        debug("found case conversion \\%c%u\n", ch, br);
+                        if (br >= rc)
+                        {
+                            s.remove(r, 1);
+                            continue;
+                        }
+                        br *= 2;
+                        rl = ovector[br+1] - ovector[br];
+                        s.replace(r, 3, buffer(start+c+ovector[br]), rl);
+                        switch (ch)
+                        {
+                            case 'u':
+                                if (islower(s[r])) s[r] = toupper(s[r]);
+                                break;
+                            case 'l':
+                                if (isupper(s[r])) s[r] = tolower(s[r]);
+                                break;
+                            case 'U':
+                                for (int i = 0; i < rl; i++)
+                                    if (islower(s[r+i])) s[r+i] = toupper(s[r+i]);
+                                break;
+                            case 'L':
+                                for (int i = 0; i < rl; i++)
+                                    if (isupper(s[r+i])) s[r+i] = tolower(s[r+i]);
+                                break;
+                        }
+                    }
+                    else if (ch != 0 && ch < rc) // escaped 1 - 9 : replace with subexpr
+                    {
+                        debug("found escaped \\%u\n", ch);
                         ch *= 2;
                         rl = ovector[ch+1] - ovector[ch];
                         debug("yes, replace \\%d: \"%s\"\n", ch/2, buffer.expand(start+c+ovector[ch], rl)());
@@ -230,7 +262,7 @@ static void regsubst(const StreamFormat& fmt, StreamBuffer& buffer, size_t start
                     }
                     else
                     {
-                        debug("no, use literal \\%u\n", ch);
+                        debug("use literal \\%u\n", ch);
                         s.remove(r, 1); // just remove escape
                     }
                 }
