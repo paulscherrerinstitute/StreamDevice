@@ -15,7 +15,7 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 #INSTALL_LOCATION_APP=<fullpathname>
 
 # For SynApps:
-RELEASE=
+SUPPORT=
 
 EPICS_BASE=/usr/local/epics/base-7.0.1
 ASYN=~/top-7/asyn4-33
