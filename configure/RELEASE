@@ -15,12 +15,16 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 #INSTALL_LOCATION_APP=<fullpathname>
 
 # For SynApps:
-SUPPORT=
+SUPPORT=/epics/support
+-include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
 
-EPICS_BASE=/usr/local/epics/base-7.0.1
 ASYN=~/top-7/asyn4-33
 CALC=~/top-7/SynApps/calc-2-8
 PCRE=~/top-7/pcre-7-2
+
+# EPICS_BASE usually appears last so other apps can override stuff:
+EPICS_BASE=/epics/base
+-include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
 
 #EPICS_BASE=/usr/local/epics/base-3.16.1
 #ASYN=~/top-3.16/asyn4-30
