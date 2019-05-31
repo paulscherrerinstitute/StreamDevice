@@ -766,13 +766,13 @@ writeHandler()
         case asynError:
             if (!connected)
             {
-                error("%s: device %s disconnected\n",
+                error(true, CAT_ASYN_WRITE, "%s: device %s disconnected\n",
                     clientName(), name());
                 disconnectCallback();
             }
             else
             {
-                error("%s: asynError in write: %s\n",
+                error(true, CAT_ASYN_WRITE, "%s: asynError in write: %s\n",
                     clientName(), pasynUser->errorMessage);
                 writeCallback(StreamIoFault);
             }
@@ -784,7 +784,7 @@ writeHandler()
             disconnectCallback();
             return;
         case asynDisabled:
-            error("%s: asynDisabled in write: %s\n",
+            error(true, CAT_ASYN_WRITE, "%s: asynDisabled in write: %s\n",
                 clientName(), pasynUser->errorMessage);
             writeCallback(StreamIoFault);
             return;
@@ -1085,26 +1085,26 @@ readHandler()
                 break;
             case asynError:
                 if (!connected) {
-                    error("%s: device %s disconnected\n",
+                    error(true, CAT_ASYN_READ,"%s: device %s disconnected\n",
                         clientName(), name());
                         disconnectCallback();
                 }
                 else
                 {
-                    error("%s: asynError in read: %s\n",
+                    error(true, CAT_ASYN_READ,"%s: asynError in read: %s\n",
                         clientName(), pasynUser->errorMessage);
                     readCallback(StreamIoFault, buffer, received);
                 }
                 break;
 #ifdef ASYN_VERSION // asyn >= 4.14
             case asynDisconnected:
-                error("%s: asynDisconnected in read: %s\n",
+                error(true, CAT_ASYN_READ,"%s: asynDisconnected in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 connected = false;
                 disconnectCallback();
                 return;
             case asynDisabled:
-                error("%s: asynDisabled in read: %s\n",
+                error(true, CAT_ASYN_READ, "%s: asynDisabled in read: %s\n",
                     clientName(), pasynUser->errorMessage);
                 readCallback(StreamIoFault);
                 return;
