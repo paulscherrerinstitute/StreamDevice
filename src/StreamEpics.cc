@@ -258,6 +258,21 @@ long streamSetLogfile(const char* filename)
     return OK;
 }
 
+extern "C" long streamMessageTimeout(int timeout)
+{
+    if (!pErrEngine)
+    {
+        // To avoid warning complaints from the compiler 
+        pthread_t thread_id = 0;
+        pErrEngine = createEngine(thread_id);
+        pErrEngine->setTimeout(timeout);
+    }
+
+    pErrEngine->setTimeout(timeout);
+
+    return OK;
+}
+
 #ifndef EPICS_3_13
 static const iocshArg streamReloadArg0 =
     { "recordname", iocshArgString };
@@ -295,11 +310,27 @@ void streamSetLogfileFunc (const iocshArgBuf *args)
     streamSetLogfile(args[0].sval);
 }
 
+// Setting a timeout for messages at the IOC Console will trigger the message
+// engine thread.
+static const iocshArg streamMessageTimeoutArg0 =
+    { "timeout (s)", iocshArgInt };
+static const iocshArg * const streamMessageTimeoutArgs[] =
+    { &streamMessageTimeoutArg0 };
+static const iocshFuncDef messageTimeoutDef =
+    { "streamMessageTimeout", 1, streamMessageTimeoutArgs };
+
+extern "C" void messageTimeoutFunc (const iocshArgBuf *args)
+{
+    streamMessageTimeout(args[0].ival);
+}
+
+
 static void streamRegistrar ()
 {
     iocshRegister(&streamReloadDef, streamReloadFunc);
     iocshRegister(&streamReportRecordDef, streamReportRecordFunc);
     iocshRegister(&streamSetLogfileDef, streamSetLogfileFunc);
+    iocshRegister(&messageTimeoutDef, messageTimeoutFunc);
     // make streamReload available for subroutine records
     registryFunctionAdd("streamReload",
         (REGISTRYFUNCTION)streamReloadSub);
@@ -308,7 +339,7 @@ static void streamRegistrar ()
 }
 
 extern "C" {
-epicsExportRegistrar(streamRegistrar);
+    epicsExportRegistrar(streamRegistrar);
 }
 
 
