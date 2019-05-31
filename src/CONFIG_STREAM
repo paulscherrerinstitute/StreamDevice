@@ -93,3 +93,4 @@ STREAM_SRCS += StreamFormatConverter.cc
 STREAM_SRCS += StreamCore.cc
 STREAM_SRCS += StreamBusInterface.cc
 STREAM_SRCS += StreamEpics.cc
+STREAM_SRCS += messageEngine.cc
