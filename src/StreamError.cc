@@ -27,6 +27,8 @@
 
 int streamDebug = 0;
 int streamError = 0;
+StreamErrorEngine* pErrEngine = NULL;
+
 extern "C" {
 #ifdef _WIN32
 __declspec(dllexport)
@@ -75,7 +77,7 @@ void StreamError(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    StreamVError(0, NULL, fmt, args);
+    StreamVError(0, NULL, CAT_NONE, fmt, args);
     va_end(args);
 }
 
@@ -83,13 +85,38 @@ void StreamError(int line, const char* file, const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    StreamVError(line, file, fmt, args);
+    StreamVError(line, file, CAT_NONE, fmt, args);
     va_end(args);
 }
 
-void StreamVError(int line, const char* file, const char* fmt, va_list args)
+// Need to place a useless bool parameter to avoid overload ambiguity
+void StreamError(bool useless, ErrorCategory category, 
+                 const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    StreamVError(0, NULL, category, fmt, args);
+    va_end(args);
+}
+
+// Need to place a useless bool parameter to avoid overload ambiguity
+void StreamError(bool useless, int line, const char* file,
+                 ErrorCategory category, const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    StreamVError(line, file, category, fmt, args);
+    va_end(args);
+}
+
+void StreamVError(int line, const char* file, 
+                  ErrorCategory category, const char* fmt, va_list args)
 {
     char timestamp[40];
+    char buffer1[500];
+    char buffer2[500];
+    char bufferAux[500];
+
     if (!streamError) return; // Error logging disabled
     StreamPrintTimestampFunction(timestamp, 40);
 #ifdef va_copy
@@ -103,14 +130,35 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
         va_end(args2);
     }
 #endif
-    fprintf(stderr, "\033[31;1m");
-    fprintf(stderr, "%s ", timestamp);
+    // I'm using an easy way to protect against buffer overflow: I use snprintf
+    // alternating buffer1 and buffer2, limiting by the size of the data to the
+    // buffers.
+    snprintf(buffer1, sizeof(buffer1), "\033[31;1m");
+    snprintf(buffer2, sizeof(buffer2), "%s%s ", buffer1, timestamp);
     if (file)
     {
-        fprintf(stderr, "%s line %d: ", file, line);
+        snprintf(buffer1, sizeof(buffer1), "%s%s line %d: ", buffer2, file, line);
     }
-    vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\033[0m");
+    else
+    {
+        snprintf(buffer1, sizeof(buffer1), "%s", buffer2);
+    }
+    // Copy only a number of characters that will not overflow buffer, with
+    // additional space for the final required "\033[0m" and \0 (5 characters).
+    vsnprintf(bufferAux, sizeof(bufferAux) - strlen(buffer1) - 5, fmt, args);
+
+    snprintf(buffer2, sizeof(buffer2), "%s%s\033[0m", buffer1, bufferAux);
+
+    if (category == CAT_NONE || pErrEngine == NULL || 
+                    pErrEngine->getTimeout() <= 0)
+    {
+        // We don't want to use the message engine
+        fprintf(stderr, buffer2);
+    }
+    else
+    {
+        pErrEngine->callError(category, buffer2);
+    }
 }
 
 int StreamDebugClass::
