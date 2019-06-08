@@ -85,6 +85,8 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #include <sysSymTbl.h>
 #endif
 
+#include "epicsExport.h"
+
 #include "devStream.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
