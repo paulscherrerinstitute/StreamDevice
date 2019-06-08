@@ -110,7 +110,7 @@ endif
 
 # create stream.dbd for all record types
 $(COMMON_DIR)/$(LIBRARY_DEFAULT).dbd: $(addprefix $(COMMON_DIR)/, $(STREAM_DBD_FILES))
-	cat $? > $@
+	$(CAT) $? > $@
 
 $(LIBRARY_DEFAULT).dbd$(DEP):
 	echo "$(LIBRARY_DEFAULT).dbd: $(STREAM_DBD_FILES)" > $@
