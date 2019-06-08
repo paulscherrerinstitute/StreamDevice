@@ -43,6 +43,11 @@ FILE *StreamDebugFile = NULL;
 #ifdef _WIN32
 #define localtime_r(timet,tm) localtime_s(tm,timet)
 
+/* this may not be defined if using older Windows SDKs */
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+
 /* Enable ANSI colors in Windows console */
 static int win_console_init() {
 	DWORD dwMode = 0;
