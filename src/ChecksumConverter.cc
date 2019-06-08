@@ -28,6 +28,12 @@
 #define SCNx8  "hhx"
 #define uint_fast8_t uint8_t
 #define int_fast8_t int8_t
+#elif defined(_MSC_VER) && _MSC_VER < 1700 /* Visual Studio 2010 does not have inttypes.h */
+#include <stdint.h>
+#define PRIX32 "X"
+#define PRIu32 "u"
+#define PRIX8  "X"
+#define SCNx8  "hhx"
 #else
 #define __STDC_FORMAT_MACROS
 #include <stdint.h>
