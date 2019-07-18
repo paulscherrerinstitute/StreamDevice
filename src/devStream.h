@@ -52,6 +52,7 @@ extern "C" {
 #ifdef epicsExportSharedSymbols
 #   define devStream_epicsExportSharedSymbols
 #   undef epicsExportSharedSymbols
+#   include <shareLib.h>
 #endif
 
 #include "dbCommon.h"
@@ -65,7 +66,9 @@ extern "C" {
 #include "epicsMath.h"
 
 #ifdef devStream_epicsExportSharedSymbols
+#   undef devStream_epicsExportSharedSymbols
 #   define epicsExportSharedSymbols
+#   include <shareLib.h>
 #endif
 
 #if defined(_WIN32)
