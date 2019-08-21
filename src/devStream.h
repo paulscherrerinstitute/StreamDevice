@@ -26,10 +26,6 @@
 #include <string.h>
 #include <sys/types.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
 #define STREAM_MAJOR 2
 #define STREAM_MINOR 8
 
@@ -47,6 +43,10 @@ extern "C" {
 #include "epicsVersion.h"
 #ifdef BASE_VERSION
 #define EPICS_3_13
+/* EPICS 3.13 include files are not C++ ready. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #endif
 
 #ifdef epicsExportSharedSymbols
@@ -71,7 +71,13 @@ extern "C" {
 #   include <shareLib.h>
 #endif
 
-#if defined(_WIN32)
+#ifdef EPICS_3_13
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+#ifdef _WIN32
 typedef ptrdiff_t ssize_t;
 #endif
 
@@ -85,6 +91,10 @@ extern const char StreamVersion [];
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 long streamInit(int after);
 long streamInitRecord(dbCommon *record,
     const struct link *ioLink,
@@ -97,6 +107,10 @@ long streamPrintf(dbCommon *record, format_t *format, ...);
 ssize_t streamScanfN(dbCommon *record, format_t *format,
     void*, size_t maxStringSize);
 
+#ifdef __cplusplus
+}
+#endif
+
 /* backward compatibility stuff */
 #define streamScanf(record, format, value) \
     streamScanfN(record, format, value, MAX_STRING_SIZE)
@@ -108,10 +122,6 @@ ssize_t streamScanfN(dbCommon *record, format_t *format,
 #define epicsExportAddress(a,b) extern int dummy
 #else
 #include "epicsExport.h"
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif
