@@ -447,10 +447,10 @@ finishProtocol(ProtocolResult status)
     debug("StreamCore::finishProtocol(%s, %s) %sbus owner\n",
         name(), toStr(status), flags & BusOwner ? "" : "not ");
 
-    if (flags & BusPending)
+    if (status == Success && flags & BusPending)
     {
-        error("StreamCore::finishProtocol(%s): Still waiting for %s%s%s\n",
-            name(),
+        error("StreamCore::finishProtocol(%s, %s): Still waiting for %s%s%s\n",
+            name(), toStr(status),
             flags & LockPending ? "lockSuccess() " : "",
             flags & WritePending ? "writeSuccess() " : "",
             flags & WaitPending ? "timerCallback()" : "");
