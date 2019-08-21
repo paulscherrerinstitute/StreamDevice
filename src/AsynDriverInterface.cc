@@ -40,7 +40,6 @@ extern "C" {
 #include "epicsAssert.h"
 #include "epicsTime.h"
 #include "epicsTimer.h"
-#include "epicsStdioRedirect.h"
 #include "iocsh.h"
 #endif
 

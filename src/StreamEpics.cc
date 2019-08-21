@@ -63,7 +63,6 @@ extern DBBASE *pdbbase;
 #include "epicsThread.h"
 #include "epicsString.h"
 #include "registryFunction.h"
-#include "epicsStdioRedirect.h"
 #include "iocsh.h"
 #include "epicsExport.h"
 

@@ -64,6 +64,7 @@ extern "C" {
 #include "recGbl.h"
 #include "dbEvent.h"
 #include "epicsMath.h"
+#include "epicsStdioRedirect.h"
 
 #ifdef devStream_epicsExportSharedSymbols
 #   undef devStream_epicsExportSharedSymbols
