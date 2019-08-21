@@ -382,10 +382,10 @@ See the <a href="protocol.html">next chapter</a> for protocol files in depth.
 <p>
 Generation of debug and error messages is controlled with two shell variables,
 <code>streamDebug</code> and <code>streamError</code>.
-Per default no debug messages are printed and error messages are only printed
-while loading protocol files.
 Setting those variables to 1 (actually to any number but 0) enables the
 messages.
+Per default debug messages are switched off and error messages are switched on.
+Errors occuring while loading protocol files are always shown.
 </p>
 <p>
 Warning: Enabling debug messages can create a lot of output!
