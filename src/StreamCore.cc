@@ -901,11 +901,10 @@ evalIn()
         debug("StreamCore::evalIn(%s): early input: %s\n",
             name(), inputBuffer.expand()());
         expectedInput = readCallback(lastInputStatus, NULL, 0);
-        if (!expectedInput)
-        {
-            // no more input needed
+        if (expectedInput == 0)
             return true;
-        }
+        if (expectedInput == -1) // don't know how much
+            expectedInput = 0;
     }
     if (flags & AsyncMode)
     {
@@ -1078,7 +1077,7 @@ readCallback(StreamIoStatus status,
             if (maxInput)
                 return maxInput - inputBuffer.length();
             else
-                return -1;
+                return -1; // We don't know for how much to wait
         }
         // try to parse what we got
         end = inputBuffer.length();
