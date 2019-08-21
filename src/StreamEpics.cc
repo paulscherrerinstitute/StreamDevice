@@ -65,6 +65,7 @@ extern DBBASE *pdbbase;
 #include "registryFunction.h"
 #include "epicsStdioRedirect.h"
 #include "iocsh.h"
+#include "epicsExport.h"
 
 #if defined(VERSION_INT) || EPICS_MODIFICATION >= 11
 #include "initHooks.h"
@@ -84,8 +85,6 @@ extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #include <symLib.h>
 #include <sysSymTbl.h>
 #endif
-
-#include "epicsExport.h"
 
 #include "devStream.h"
 
