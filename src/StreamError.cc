@@ -95,7 +95,7 @@ void StreamError(int line, const char* file, const char* fmt, ...)
 void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
     char timestamp[40];
-    if (!streamError) return; // Error logging disabled
+    if (!(streamError || streamDebug)) return; // Error logging disabled
     StreamPrintTimestampFunction(timestamp, 40);
 #ifdef va_copy
     if (StreamDebugFile)
