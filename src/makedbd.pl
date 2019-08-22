@@ -1,3 +1,6 @@
+if (@ARGV[0] eq "--rec-only") {
+    shift;
+} else {
 if (@ARGV[0] eq "--with-asyn") {
     shift;
     $asyn = 1;
@@ -11,6 +14,7 @@ if (@ARGV[0] eq "-3.13") {
     if ($asyn) { print "registrar(AsynDriverInterfaceRegistrar)\n"; }
 }
 print "driver(stream)\n";
+}
 for (@ARGV) {
      print "device($_,INST_IO,dev${_}Stream,\"stream\")\n";
 }
