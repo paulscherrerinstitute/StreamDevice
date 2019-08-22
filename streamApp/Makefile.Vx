@@ -7,19 +7,27 @@ include $(TOP)/config/CONFIG_APP
 
 LIBNAME = streamApp
 
+DBD += base-3-13.dbd
+DBD += stream.dbd
+
 LDLIBS += $(TOP)/bin/$(T_A)/streamLib
+ifdef ASYN
 LDLIBS += $(ASYN)/bin/$(T_A)/asynLib
+DBD += asyn.dbd
+endif
+ifdef COMPAT
 LDLIBS += $(COMPAT)/bin/$(T_A)/compatLib
+endif
 
 include ../base-3-13LIBOBJS
 
-streamApp_DBD += base-3-13.dbd
-streamApp_DBD += stream.dbd
 DBDNAME = streamApp.dbd
-DBDEXPAND = streamAppInclude-3-13.dbd
+DBDEXPAND = streamAppInclude.dbd
 
-# Write StreamDevice debug output to this file
-#CPPFLAGS += -DDEBUGFILE=StreamDebug.log
+$(DBDNAME): ../$(DBDEXPAND)
+.PHONY:: ../$(DBDEXPAND)
+../$(DBDEXPAND):
+	echo -e '$(DBD:%=include "%"\n)' > $@
 
 include $(EPICS_BASE)/config/RULES.Vx
 include ../../config/RULES.munch
