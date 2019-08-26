@@ -14,37 +14,18 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-# For SynApps:
-SUPPORT=
+SUPPORT=$(TOP)/..
+-include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
 
-EPICS_BASE=/usr/local/epics/base-7.0.1
-ASYN=~/top-7/asyn4-33
-CALC=~/top-7/SynApps/calc-2-8
-PCRE=~/top-7/pcre-7-2
+ASYN=$(SUPPORT)/asyn4-36
+CALC=$(SUPPORT)/calc-3-7
+PCRE=$(SUPPORT)/pcre-7-2
 
-#EPICS_BASE=/usr/local/epics/base-3.16.1
-#ASYN=~/top-3.16/asyn4-30
-#CALC=~/top-3.16/SynApps/calc-2-8
-#PCRE=~/top-3.16/pcre-7-2
-#PCRE_INCLUDE_SL6-x86=/usr/include
-#PCRE_INCLUDE_SL6-x86_64=/usr/include
-#PCRE_INCLUDE_SL6-x86_64-clang=/usr/include
+# EPICS_BASE usually appears last so other apps can override stuff:
+EPICS_BASE=/usr/local/epics/base-7.0.3
 
-#EPICS_BASE=/usr/local/epics/base-3.15.5
-#ASYN=~/top-3.15/asyn4-30
-#CALC=~/top-3.15/SynApps/calc-2-8
-#PCRE=~/top-3.15/pcre-7-2
-
-#EPICS_BASE=/usr/local/epics/base-3.14.12
-#ASYN=~/top/asyn4-30
-#CALC=~/top/SynApps/calc-2-8
-#PCRE=~/top/pcre-7-2
-
-#3.14.8 does not understand ~
-#EPICS_BASE=/usr/local/epics/base-3.14.8
-#ASYN=/afs/psi.ch/user/z/zimoch/top/asyn-4.10
-
-##Example 3.13 build
-#EPICS_BASE=/usr/local/epics/base-3.13.10
-#ASYN=/afs/psi.ch/user/z/zimoch/top_3.13/4-6
-#COMPAT=/afs/psi.ch/user/z/zimoch/top_3.13
+# These lines allow developers to override these RELEASE settings
+# without having to modify this file directly.
+-include $(TOP)/../RELEASE.local
+-include $(TOP)/../RELEASE.$(EPICS_HOST_ARCH).local
+-include $(TOP)/configure/RELEASE.local
