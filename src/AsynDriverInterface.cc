@@ -906,7 +906,7 @@ readHandler()
     size_t bytesToRead = peeksize;
     size_t buffersize;
 
-    if (expectedLength > 0)
+    if ((ssize_t) expectedLength > 0)
     {
         buffersize = expectedLength;
         if (peeksize > 1)
