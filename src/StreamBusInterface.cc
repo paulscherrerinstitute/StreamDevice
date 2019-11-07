@@ -118,7 +118,7 @@ writeRequest(const void*, size_t, unsigned long)
 }
 
 bool StreamBusInterface::
-readRequest(unsigned long, unsigned long, size_t, bool)
+readRequest(unsigned long, unsigned long, ssize_t, bool)
 {
     return false;
 }
