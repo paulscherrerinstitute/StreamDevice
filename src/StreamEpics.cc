@@ -1100,7 +1100,7 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
 }
 
 static const unsigned char dbfMapping[] =
-#ifdef DBF_INT64
+#ifdef DBR_INT64
     {0, DBF_UINT64, DBF_INT64, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
 #else
     {0, DBF_ULONG, DBF_LONG, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
