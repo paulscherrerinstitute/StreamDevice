@@ -68,7 +68,7 @@ static long readData(dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         ((epicsFloat32 *)aao->bptr)[aao->nord] = (epicsFloat32)lval;
                         break;
-#ifdef DBF_INT64
+#ifdef DBR_INT64
                     case DBF_INT64:
                     case DBF_UINT64:
                         ((epicsInt64 *)aao->bptr)[aao->nord] = (epicsInt64)lval;
@@ -171,7 +171,7 @@ end_no_check:
 #endif
     if (monitor_mask)
         db_post_events(aao, aao->bptr, monitor_mask);
-    
+
     return OK;
 }
 
@@ -196,7 +196,7 @@ static long writeData(dbCommon *record, format_t *format)
                     case DBF_FLOAT:
                         dval = ((epicsFloat32 *)aao->bptr)[nowd];
                         break;
-#ifdef DBF_INT64
+#ifdef DBR_INT64
                     case DBF_INT64:
                         dval = ((epicsInt64 *)aao->bptr)[nowd];
                         break;
@@ -239,7 +239,7 @@ static long writeData(dbCommon *record, format_t *format)
             {
                 switch (aao->ftvl)
                 {
-#ifdef DBF_INT64
+#ifdef DBR_INT64
                     case DBF_INT64:
                         lval = ((epicsInt64 *)aao->bptr)[nowd];
                         break;

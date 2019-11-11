@@ -37,7 +37,7 @@ class DebugInterface : StreamBusInterface
     bool writeRequest(const void* output, size_t size,
         unsigned long writeTimeout_ms);
     bool readRequest(unsigned long replyTimeout_ms,
-        unsigned long readTimeout_ms, size_t expectedLength, bool async);
+        unsigned long readTimeout_ms, ssize_t expectedLength, bool async);
 
 protected:
     ~DebugInterface();
@@ -169,9 +169,9 @@ writeRequest(const void* output, size_t size, unsigned long writeTimeout_ms)
 // Return false if the read request cannot be accepted.
 bool DebugInterface::
 readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
-    size_t expectedLength, bool async)
+    ssize_t expectedLength, bool async)
 {
-    debug("DebugInterface::readRequest(%s, %ld msec reply, %ld msec read, expect %" Z "u bytes, asyn=%s)\n",
+    debug("DebugInterface::readRequest(%s, %ld msec reply, %ld msec read, expect %" Z "d bytes, asyn=%s)\n",
         clientName(), replyTimeout_ms, readTimeout_ms, expectedLength, async?"yes":"no");
 
     // Debug interface does not support async mode.

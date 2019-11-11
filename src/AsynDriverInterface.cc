@@ -21,6 +21,14 @@
 #include "StreamError.h"
 #include "StreamBuffer.h"
 
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInt32.h"
+#include "asynUInt32Digital.h"
+#include "asynGpibDriver.h"
+
+#include "devStream.h"
+
 #ifdef EPICS_3_13
 #include <assert.h>
 #include <wdLib.h>
@@ -32,17 +40,9 @@ extern "C" {
 #include "epicsAssert.h"
 #include "epicsTime.h"
 #include "epicsTimer.h"
-#include "epicsStdioRedirect.h"
 #include "iocsh.h"
 #endif
 
-#include "asynDriver.h"
-#include "asynOctet.h"
-#include "asynInt32.h"
-#include "asynUInt32Digital.h"
-#include "asynGpibDriver.h"
-
-#include "devStream.h"
 #include "MacroMagic.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
@@ -162,7 +162,7 @@ class AsynDriverInterface : StreamBusInterface
     double writeTimeout;
     double readTimeout;
     double replyTimeout;
-    size_t expectedLength;
+    ssize_t expectedLength;
     unsigned long eventMask;
     unsigned long receivedEvent;
     StreamBuffer inputBuffer;
@@ -187,7 +187,7 @@ class AsynDriverInterface : StreamBusInterface
     bool writeRequest(const void* output, size_t size,
         unsigned long writeTimeout_ms);
     bool readRequest(unsigned long replyTimeout_ms,
-        unsigned long readTimeout_ms, size_t expectedLength, bool async);
+        unsigned long readTimeout_ms, ssize_t expectedLength, bool async);
     bool acceptEvent(unsigned long mask, unsigned long replytimeout_ms);
     bool supportsEvent();
     bool supportsAsyncRead();
@@ -800,7 +800,7 @@ writeHandler()
 // interface function: we want to read something
 bool AsynDriverInterface::
 readRequest(unsigned long replyTimeout_ms, unsigned long readTimeout_ms,
-    size_t _expectedLength, bool async)
+    ssize_t _expectedLength, bool async)
 {
     debug("AsynDriverInterface::readRequest(%s, %ld msec reply, "
         "%ld msec read, expect %" Z "u bytes, async=%s)\n",

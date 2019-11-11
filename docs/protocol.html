@@ -390,6 +390,9 @@ what they influence.
   the moment.
   How many milliseconds to wait after last poll or last received
   input before polling again?
+  A good value is about half the time of the expected input period.
+  Longer values cause latency and shorter values may increase CPU
+  consumption.
   If not set the same value as for <code>ReplyTimeout</code> is
   used.
  </dd>

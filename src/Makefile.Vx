@@ -26,6 +26,9 @@ endif
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
 
+CXXCMPLR=NORMAL
+G++_NORMAL = $(G++)
+
 LIBNAME = streamLib
 
 SRCS.cc += $(BUSSES:%=../%Interface.cc)

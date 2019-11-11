@@ -26,7 +26,7 @@
 #include <stdio.h>
 
 int streamDebug = 0;
-int streamError = 0;
+int streamError = 1;
 StreamErrorEngine* pErrEngine = NULL;
 
 extern "C" {
@@ -44,6 +44,11 @@ FILE *StreamDebugFile = NULL;
 
 #ifdef _WIN32
 #define localtime_r(timet,tm) localtime_s(tm,timet)
+
+/* this may not be defined if using older Windows SDKs */
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
 
 /* Enable ANSI colors in Windows console */
 static int win_console_init() {
@@ -117,7 +122,7 @@ void StreamVError(int line, const char* file,
     char buffer2[500];
     char bufferAux[500];
 
-    if (!streamError) return; // Error logging disabled
+    if (!(streamError || streamDebug)) return; // Error logging disabled
     StreamPrintTimestampFunction(timestamp, 40);
 #ifdef va_copy
     if (StreamDebugFile)

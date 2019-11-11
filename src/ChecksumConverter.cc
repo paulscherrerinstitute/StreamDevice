@@ -28,6 +28,12 @@
 #define SCNx8  "hhx"
 #define uint_fast8_t uint8_t
 #define int_fast8_t int8_t
+#elif defined(_MSC_VER) && _MSC_VER < 1700 /* Visual Studio 2010 does not have inttypes.h */
+#include <stdint.h>
+#define PRIX32 "X"
+#define PRIu32 "u"
+#define PRIX8  "X"
+#define SCNx8  "hhx"
 #else
 #define __STDC_FORMAT_MACROS
 #include <stdint.h>
@@ -700,13 +706,14 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input to check: \"%s\n",
         checksumMap[fnum].name, input.expand(start,length)());
 
-    uint_fast8_t expectedLength =
+    uint_fast8_t nDigits =
         // get number of decimal digits from number of bytes: ceil(bytes*2.5)
         format.flags & sign_flag ? (checksumMap[fnum].bytes + 1) * 25 / 10 - 2 :
         format.flags & (zero_flag|left_flag) ? 2 * checksumMap[fnum].bytes :
         checksumMap[fnum].bytes;
+    ssize_t expectedLength = nDigits;
 
-    if (input.length() - cursor < expectedLength)
+    if ((ssize_t)( input.length() - cursor ) < expectedLength)
     {
         debug("ChecksumConverter %s: Input '%s' too short for checksum\n",
             checksumMap[fnum].name, input.expand(cursor)());
@@ -725,7 +732,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     if (format.flags & sign_flag) // decimal
     {
         uint32_t sumin = 0;
-        size_t i;
+        ssize_t i;
         for (i = 0; i < expectedLength; i++)
         {
             inchar = input[cursor+i];
@@ -747,7 +754,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                if (sscanf(input(cursor+2*i), "%2" SCNx8, &inchar) != 1)
+                if (sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar) != 1)
                 {
                     debug("ChecksumConverter %s: Input byte '%s' is not a hex byte\n",
                         checksumMap[fnum].name, input.expand(cursor+2*i,2)());
@@ -791,7 +798,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                sscanf(input(cursor+2*i), "%2" SCNx8, &inchar);
+                sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar);
             }
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F

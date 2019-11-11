@@ -17,7 +17,7 @@
 <p>
 <em>StreamDevice</em> works with
 <a href="https://epics.anl.gov/base/index.php">EPICS base</a>
-versions from R3.14.6 on, tested up to 7.0.1.
+versions from R3.14.6 on, tested up to 7.0.3.
 It also works (with limitations) with older
 <a href="https://epics.anl.gov/base/R3-13.php">R3.13</a> 
 versions from R3.13.7 on.
@@ -377,8 +377,43 @@ protocol is loaded.
 See the <a href="protocol.html">next chapter</a> for protocol files in depth.
 </p>
 
+<a name="debug"></a>
+<h2>5. Debug and Error Messages</h2>
+<p>
+Generation of debug and error messages is controlled with two shell variables,
+<code>streamDebug</code> and <code>streamError</code>.
+Setting those variables to 1 (actually to any number but 0) enables the
+messages.
+Per default debug messages are switched off and error messages are switched on.
+Errors occuring while loading protocol files are always shown.
+</p>
+<p>
+Warning: Enabling debug messages can create a lot of output!
+At the moment, there is no way to set filters on debug or error messages.
+</p>
+<p>
+Debug output can be redirected to a file with the command
+<code>streamSetLogfile("<var>filename</var>")</code>.
+When called without a filename, debug output is directed back
+to the console.
+</p>
+
+<h3>Example (vxWorks):</h3>
+<pre>
+streamError=1
+streamDebug=1
+streamSetLogfile("logfile.txt")
+</pre>
+
+<h3>Example (iocsh):</h3>
+<pre>
+var streamError 1
+var streamDebug 1
+streamSetLogfile("logfile.txt")
+</pre>
+
 <a name="rec"></a>
-<h2>5. Configuring the Records</h2>
+<h2>6. Configuring the Records</h2>
 <p>
 To tell a record to use <em>StreamDevice</em>, set its <code>DTYP</code> field to
 <code>"stream"</code>.

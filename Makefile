@@ -9,7 +9,7 @@ else ifneq ($(wildcard ../config),)
 else
   # Using our own local configuration
   TOP = .
-  DIRS = config configure 
+  DIRS = configure
   src_DEPEND_DIRS := $(DIRS)
   include $(TOP)/configure/CONFIG
 endif

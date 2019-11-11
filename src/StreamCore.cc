@@ -447,10 +447,10 @@ finishProtocol(ProtocolResult status)
     debug("StreamCore::finishProtocol(%s, %s) %sbus owner\n",
         name(), toStr(status), flags & BusOwner ? "" : "not ");
 
-    if (flags & BusPending)
+    if (status == Success && flags & BusPending)
     {
-        error("StreamCore::finishProtocol(%s): Still waiting for %s%s%s\n",
-            name(),
+        error("StreamCore::finishProtocol(%s, %s): Still waiting for %s%s%s\n",
+            name(), toStr(status),
             flags & LockPending ? "lockSuccess() " : "",
             flags & WritePending ? "writeSuccess() " : "",
             flags & WaitPending ? "timerCallback()" : "");
@@ -901,11 +901,10 @@ evalIn()
         debug("StreamCore::evalIn(%s): early input: %s\n",
             name(), inputBuffer.expand()());
         expectedInput = readCallback(lastInputStatus, NULL, 0);
-        if (!expectedInput)
-        {
-            // no more input needed
+        if (expectedInput == 0)
             return true;
-        }
+        if (expectedInput == -1) // don't know how much
+            expectedInput = 0;
     }
     if (flags & AsyncMode)
     {
@@ -1078,7 +1077,7 @@ readCallback(StreamIoStatus status,
             if (maxInput)
                 return maxInput - inputBuffer.length();
             else
-                return -1;
+                return -1; // We don't know for how much to wait
         }
         // try to parse what we got
         end = inputBuffer.length();
