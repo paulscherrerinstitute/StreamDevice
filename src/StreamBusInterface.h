@@ -76,7 +76,7 @@ public:
             return businterface && businterface->writeRequest(output, size, timeout_ms);
         }
         bool busReadRequest(unsigned long replytimeout_ms,
-            unsigned long readtimeout_ms, size_t expectedLength,
+            unsigned long readtimeout_ms, ssize_t expectedLength,
             bool async) {
             return businterface && businterface->readRequest(replytimeout_ms,
                     readtimeout_ms, expectedLength, async);
@@ -133,7 +133,7 @@ protected:
     virtual bool writeRequest(const void* output, size_t size,
         unsigned long timeout_ms);
     virtual bool readRequest(unsigned long replytimeout_ms,
-        unsigned long readtimeout_ms, size_t expectedLength,
+        unsigned long readtimeout_ms, ssize_t expectedLength,
         bool async);
     virtual bool supportsEvent(); // defaults to false
     virtual bool supportsAsyncRead(); // defaults to false
