@@ -40,6 +40,12 @@
 #define DO_NOT_CONVERT 2
 #define INIT_RUN (!interruptAccept)
 
+#ifdef epicsExportSharedSymbols
+#   define devStream_epicsExportSharedSymbols
+#   undef epicsExportSharedSymbols
+#   include "shareLib.h"
+#endif
+
 #include "epicsVersion.h"
 #ifdef BASE_VERSION
 #define EPICS_3_13
@@ -47,12 +53,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#endif
-
-#ifdef epicsExportSharedSymbols
-#   define devStream_epicsExportSharedSymbols
-#   undef epicsExportSharedSymbols
-#   include <shareLib.h>
 #endif
 
 #include "dbCommon.h"
@@ -65,18 +65,18 @@ extern "C" {
 #include "dbEvent.h"
 #include "epicsMath.h"
 
-#ifdef devStream_epicsExportSharedSymbols
-#   undef devStream_epicsExportSharedSymbols
-#   define epicsExportSharedSymbols
-#   include <shareLib.h>
-#endif
-
 #ifdef EPICS_3_13
 #ifdef __cplusplus
 }
 #endif
 #else
 #include "epicsStdioRedirect.h"
+#endif
+
+#ifdef devStream_epicsExportSharedSymbols
+#   undef devStream_epicsExportSharedSymbols
+#   define epicsExportSharedSymbols
+#   include "shareLib.h"
 #endif
 
 #ifdef _WIN32
