@@ -17,18 +17,6 @@
 *                                                              *
 ***************************************************************/
 
-#include "StreamBusInterface.h"
-#include "StreamError.h"
-#include "StreamBuffer.h"
-
-#include "asynDriver.h"
-#include "asynOctet.h"
-#include "asynInt32.h"
-#include "asynUInt32Digital.h"
-#include "asynGpibDriver.h"
-
-#include "devStream.h"
-
 #ifdef EPICS_3_13
 #include <assert.h>
 #include <wdLib.h>
@@ -42,6 +30,18 @@ extern "C" {
 #include "epicsTimer.h"
 #include "iocsh.h"
 #endif
+
+#include "StreamBusInterface.h"
+#include "StreamError.h"
+#include "StreamBuffer.h"
+
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInt32.h"
+#include "asynUInt32Digital.h"
+#include "asynGpibDriver.h"
+
+#include "devStream.h"
 
 #include "MacroMagic.h"
 
