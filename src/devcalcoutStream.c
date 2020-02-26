@@ -46,7 +46,7 @@ static long readData(dbCommon *record, format_t *format)
             break;
         }
         default:
-            return ERROR;        
+            return ERROR;
     }
     if (record->pact) return OK;
     /* In @init handler, no processing, enforce monitor updates. */
@@ -60,10 +60,10 @@ static long readData(dbCommon *record, format_t *format)
         monitor_mask |= DBE_LOG;
         co->alst = co->val;
     }
-    if (monitor_mask){
+    if (monitor_mask) {
         db_post_events(record, &co->val, monitor_mask);
     }
-    
+
     return OK;
 }
 

@@ -25,7 +25,7 @@
    of the device support.
    Fix: sCalcoutRecord.c, end of init_record() add
 
-        if(pscalcoutDSET->init_record ) {
+        if (pscalcoutDSET->init_record ) {
             return (*pscalcoutDSET->init_record)(pcalc);
         }
 */

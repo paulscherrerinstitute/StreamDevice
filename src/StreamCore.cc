@@ -34,7 +34,7 @@ printCommands(StreamBuffer& buffer, const char* c)
     unsigned long eventnumber;
     while (1)
     {
-        switch(*c++)
+        switch (*c++)
         {
             case end:
                 return buffer();
@@ -1343,7 +1343,7 @@ normal_format:
                     {
                         int i = 0;
                         while (commandIndex[i] >= ' ') i++;
-                        error("%s: Input \"%s%s%s\"\n", 
+                        error("%s: Input \"%s%s%s\"\n",
                             name(),
                             consumedInput > 20 ? "..." : "",
                             inputLine.expand(consumedInput > 20 ? consumedInput-20 : 0, 40)(),
@@ -1356,7 +1356,7 @@ normal_format:
                             consumedInput > 10 ? "..." : "",
                             inputLine.expand(consumedInput > 10 ? consumedInput-10 : 0,
                                 consumedInput > 10 ? 10 : consumedInput)());
-                        
+
                         error("%s: got \"%s%s\" where \"%s\" was expected\n",
                             name(),
                             inputLine.expand(consumedInput, 10)(),

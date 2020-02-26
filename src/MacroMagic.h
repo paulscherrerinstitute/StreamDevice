@@ -28,7 +28,7 @@
 
 #define ENUM(type, args...) \
 enum type { args }; \
-static inline const char* type##ToStr(int x) {switch(x){MACRO_FOR_EACH(_CASE_LINE,args)default: return "invalid";}}\
+static inline const char* type##ToStr(int x) {switch(x) {MACRO_FOR_EACH(_CASE_LINE,args)default: return "invalid";}}\
 _ENUM_CAST(type)
 
 #else
@@ -65,7 +65,7 @@ _ENUM_CAST(type)
 
 #define ENUM(type,...) \
 enum type { __VA_ARGS__ }; \
-static inline const char* type##ToStr(int x) {switch(x){_EXPAND(MACRO_FOR_EACH(_CASE_LINE,__VA_ARGS__)) default: return "invalid";}} \
+static inline const char* type##ToStr(int x) {switch(x) {_EXPAND(MACRO_FOR_EACH(_CASE_LINE,__VA_ARGS__)) default: return "invalid";}} \
 _ENUM_CAST(type)
 #endif
 

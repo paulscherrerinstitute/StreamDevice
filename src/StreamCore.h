@@ -224,7 +224,7 @@ public:
     void printProtocol(FILE* = stdout);
     const char* name() { return streamname; }
     void printStatus(StreamBuffer& buffer);
-    
+
 private:
     char* printCommands(StreamBuffer& buffer, const char* c);
 };

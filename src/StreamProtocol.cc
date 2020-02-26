@@ -286,7 +286,7 @@ parseProtocol(Protocol& protocol, StreamBuffer* commands)
         }
         if (token[0] == '{')
         {
-            error(line, filename(), "Expect %s name before '%c'\n", 
+            error(line, filename(), "Expect %s name before '%c'\n",
                 isGlobalContext(commands) ? "protocol" : "handler",
                 token[0]);
             return false;
@@ -1039,7 +1039,7 @@ compileNumber(unsigned long& number, const char*& source, unsigned long max)
             *source, source);
         if (*source == '$')
         {
-            if(!replaceVariable(buffer, source)) return false;
+            if (!replaceVariable(buffer, source)) return false;
             debug("buffer=%s\n", buffer.expand()());
             buffer.truncate(-1-(int)sizeof(int));
         }

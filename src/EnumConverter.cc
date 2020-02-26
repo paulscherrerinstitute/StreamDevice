@@ -127,7 +127,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
     if (numEnums < 0) numEnums=-numEnums-1;
     while (numEnums-- && (value != index))
     {
-        while(*s)
+        while (*s)
         {
             if (*s == esc) s++;
             s++;
@@ -140,7 +140,7 @@ printLong(const StreamFormat& fmt, StreamBuffer& output, long value)
         error("Value %li not found in enum set\n", value);
         return false;
     }
-    while(*s)
+    while (*s)
     {
         if (*s == esc) s++;
         output.append(*s++);
@@ -165,7 +165,7 @@ scanLong(const StreamFormat& fmt, const char* input, long& value)
         debug("EnumConverter::scanLong: check #%ld \"%s\"\n", index, s);
         consumed = 0;
         match = true;
-        while(*s)
+        while (*s)
         {
             if (*s == StreamProtocolParser::skip)
             {

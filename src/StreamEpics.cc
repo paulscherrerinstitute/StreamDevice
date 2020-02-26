@@ -211,7 +211,7 @@ long streamReload(const char* recordname)
     int oldStreamError = streamError;
     streamError = 1;
 
-    if(!pdbbase) {
+    if (!pdbbase) {
         error("No database has been loaded\n");
         streamError = oldStreamError;
         return ERROR;
@@ -223,7 +223,7 @@ long streamReload(const char* recordname)
         if (recordname && recordname[0] &&
 #ifdef EPICS_3_13
             strcmp(stream->name(), recordname) == 0)
-#else        
+#else
             !epicsStrGlobMatch(stream->name(), recordname))
 #endif
             continue;
@@ -747,7 +747,7 @@ parseLink(const struct link *ioLink, char* filename,
             "  in \"@%s\"\n", name(),
             ioLink->value.instio.string);
         return S_dev_badInitRet;
-    }    
+    }
     return OK;
 }
 
@@ -871,7 +871,7 @@ process()
     if (!startProtocol(record->proc == 2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
         debug("Stream::process(%s): could not start %sprotocol, status=%s (%d)\n",
-            name(), record->proc == 2 ? "@init " : "", 
+            name(), record->proc == 2 ? "@init " : "",
                 status >= 0 && status < ALARM_NSTATUS ?
                     epicsAlarmConditionStrings[status] : "ERROR",
             status);
