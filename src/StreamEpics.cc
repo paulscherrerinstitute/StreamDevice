@@ -29,6 +29,9 @@
 
 #ifdef EPICS_3_13
 extern "C" {
+
+static char* epicsStrDup(const char *s) { char* c = (char*)malloc(strlen(s)+1); strcpy(c, s); return c; }
+
 #endif
 
 #define epicsAlarmGLOBAL
@@ -161,10 +164,7 @@ class Stream : protected StreamCore
     Stream(dbCommon* record, const struct link *ioLink,
         streamIoFunction readData, streamIoFunction writeData);
     ~Stream();
-    long parseLink(const struct link *ioLink, char* filename, char* protocol,
-        char* busname, int* addr, char* busparam);
-    long initRecord(const char* filename, const char* protocol,
-        const char* busname, int addr, const char* busparam);
+    long initRecord(char* linkstring);
     bool print(format_t *format, va_list ap);
     ssize_t scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
@@ -534,12 +534,7 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 {
     long status;
-    char filename[256];
-    char protocol[256];
-    char busname[256];
-    int addr = -1;
-    char busparam[256];
-    memset(busparam, 0 ,sizeof(busparam));
+    char* linkstring;
 
     debug("streamInitRecord(%s): SEVR=%d\n", record->name, record->sevr);
     Stream* stream = static_cast<Stream*>(record->dpvt);
@@ -556,19 +551,30 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
             record->name);
         stream->finishProtocol(Stream::Abort);
     }
-    // scan the i/o link
-    debug("streamInitRecord(%s): parse link \"%s\"\n",
-        record->name, ioLink->value.instio.string);
-    status = stream->parseLink(ioLink, filename, protocol,
-        busname, &addr, busparam);
-    // (re)initialize bus and protocol
-    if (status == 0)
+    if (ioLink->type != INST_IO)
     {
-        debug("streamInitRecord(%s): calling initRecord\n",
-            record->name);
-        status = stream->initRecord(filename, protocol,
-            busname, addr, busparam);
+        error("%s: Wrong I/O link type %s\n", record->name,
+            pamaplinkType[ioLink->type].strvalue);
+        return S_dev_badInitRet;
     }
+    if (!ioLink->value.instio.string[0])
+    {
+        error("%s: Empty I/O link. "
+            "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
+            record->name);
+        return S_dev_badInitRet;
+    }
+    // (re)initialize bus and protocol
+    linkstring = epicsStrDup(ioLink->value.instio.string);
+    if (!linkstring)
+    {
+        error("%s: Out of memory", record->name);
+        return S_dev_noMemory;
+    }
+    debug("streamInitRecord(%s): calling initRecord\n",
+        record->name);
+    status = stream->initRecord(linkstring);
+    free(linkstring);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
@@ -698,71 +704,71 @@ Stream::
 }
 
 long Stream::
-parseLink(const struct link *ioLink, char* filename,
-    char* protocol, char* busname, int* addr, char* busparam)
+initRecord(char* linkstring /* modifiable copy */)
 {
-    // parse link parameters: filename protocol busname addr busparam
-    int n1, n2;
-    if (ioLink->type != INST_IO)
-    {
-        error("%s: Wrong I/O link type %s\n", name(),
-            pamaplinkType[ioLink->type].strvalue);
-        return S_dev_badInitRet;
-    }
-    if (0 >= sscanf(ioLink->value.instio.string, "%s%n", filename, &n1))
-    {
-        error("%s: Empty I/O link. "
-            "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
-            name());
-        return S_dev_badInitRet;
-    }
-    if (0 >= sscanf(ioLink->value.instio.string+n1, " %[^ \t(] %n", protocol, &n2))
-    {
-        error("%s: Missing protocol name\n"
-            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
-            "  in \"@%s\"\n", name(),
-            ioLink->value.instio.string);
-        return S_dev_badInitRet;
-    }
-    n1+=n2;
-    if (ioLink->value.instio.string[n1] == '(')
-    {
-        n2 = 0;
-        sscanf(ioLink->value.instio.string+n1, " %[^)] %n", protocol+strlen(protocol), &n2);
-        n1+=n2;
-        if (ioLink->value.instio.string[n1++] != ')')
-        {
-            error("%s: Missing ')' after protocol arguments '%s'\n"
-                "  expect \"@file protocol(arg1,...) bus [addr] [params]\"\n"
-                "  in \"@%s\"\n", name(), protocol,
-                ioLink->value.instio.string);
-            return S_dev_badInitRet;
-        }
-        strcat(protocol, ")");
-    }
-    if (0 >= sscanf(ioLink->value.instio.string+n1, "%s %i %99c", busname, addr, busparam))
-    {
-        error("%s: Missing bus name\n"
-            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
-            "  in \"@%s\"\n", name(),
-            ioLink->value.instio.string);
-        return S_dev_badInitRet;
-    }
-    return OK;
-}
+    char *filename;
+    char *protocol;
+    char *busname;
+    char *busparam;
+    long addr = -1;
 
-long Stream::
-initRecord(const char* filename, const char* protocol,
-    const char* busname, int addr, const char* busparam)
-{
-    // It is safe to call this function again with different arguments
+    debug("Stream::initRecord %s: parse link string \"%s\"\n", name(), linkstring);
+
+    while (isspace(*linkstring)) linkstring++;
+    filename = linkstring;
+    while (*linkstring && !isspace(*linkstring)) linkstring++;
+    if (*linkstring) *linkstring++ = 0;
+
+    while (isspace(*linkstring)) linkstring++;
+    protocol = linkstring;
+    while (*linkstring && !isspace(*linkstring) && *linkstring != '(') linkstring++;
+    while (isspace(*linkstring)) linkstring++;
+    if (*linkstring == '(') {
+        int brackets = 0;
+        while(*++linkstring) {
+            if (*linkstring == '(') brackets++;
+            else if (*linkstring == ')') brackets--;
+            else if (*linkstring == '\\' && !*++linkstring) break;
+            else if (isspace(*linkstring) && brackets < 0) break;
+        }
+    }
+    else if (*linkstring) linkstring--;
+    if (*linkstring) *linkstring++ = 0;
+
+    while (isspace(*linkstring)) linkstring++;
+    busname = linkstring;
+    while (*linkstring && !isspace(*linkstring)) linkstring++;
+    if (*linkstring) *linkstring++ = 0;
+
+    if (linkstring) addr = strtol(linkstring, &linkstring, 0);
+    while (isspace(*linkstring)) linkstring++;
+    busparam = linkstring;
+
+    debug("Stream::initRecord %s: filename=\"%s\" protocol=\"%s\" bus=\"%s\" addr=%ld params=\"%s\"\n",
+        name(), filename, protocol, busname, addr, busparam);
+
+    if (!*filename)
+    {
+        error("%s: Missing protocol file name\n", name());
+        return S_dev_badInitRet;
+    }
+    if (!*protocol)
+    {
+        error("%s: Missing protocol name\n", name());
+        return S_dev_badInitRet;
+    }
+    if (!*busname)
+    {
+        error("%s: Missing bus name\n", name());
+        return S_dev_badInitRet;
+    }
 
     // attach to bus interface
-    debug("Stream::initRecord %s: attachBus(%s, %d, \"%s\")\n",
+    debug("Stream::initRecord %s: attachBus(%s, %ld, \"%s\")\n",
         name(), busname, addr, busparam);
     if (!attachBus(busname, addr, busparam))
     {
-        error("%s: Can't attach to bus %s %d\n",
+        error("%s: Can't attach to bus %s %ld\n",
             name(), busname, addr);
         return S_dev_noDevice;
     }
