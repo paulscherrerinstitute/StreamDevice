@@ -482,12 +482,63 @@ To make this easier, <em>protocol arguments</em> can be used:
 move { out "\$1 GOTO %d"; }
 </pre>
 <p>
-Now, the protocol can be references in the <code>OUT</code> link
+Now the same protocol can be used in the <code>OUT</code> link
 of three different records as <code>move(X)</code>,
 <code>move(Y)</code> and <code>move(Z)</code>.
-Up to 9 parameters, referenced as <code>$1</code> ... <code>$9</code>
-can be specified in parentheses, separated by comma.
-The variable <code>$0</code> is replaced by the name of the protocol.
+</p>
+<p>
+Up to 9 parameters can be specified in parentheses, separated by comma.
+In the protocol, they are referenced as <code>$1</code> ...
+<code>$9</code> outside quotes or <code>\$1</code> ... <code>\$9</code>
+within quotes. The parameter <code>$0</code> resolves to the protocol name.
+</p>
+<div class="new">
+<p>
+To make links more readable, one space is allowed before and after each comma
+and the enclosing parentheses. This space is not part of the parameter string.
+Any additional space is part of the parameter.
+</p>
+<p>
+If a parameter contains matching pairs of parentheses, these and all commas
+inside are part of the parameter.
+This allows to pass parameter strings like <code>(1,2)</code> easily without
+much escaping.
+</p>
+<p>
+Unmatched parentheses must be escaped with double backslash <code>\\</code>
+as well as must be commas outside pairs of parentheses.
+Double backslash is necessary because one backslash is already consumed by
+the db file parser.
+To pass a literal backslash in a parameter string use 4 backslashes
+<code>\\\\</code>.
+</p>
+</div>
+<p>
+Note that macros can be used in parameters. That makes it possible to
+pass part of the record name to the protocol to be used in
+<a href="formats.html#redirection">redirections</a>.
+</p>
+
+<h4>Example:</h3>
+<pre>
+record(ai, "$(PREFIX)recX5") {
+    field(DTYP, "stream")
+    field(INP,  "@$(PROTOCOLFILE) read(5, X\\,Y $(PREFIX)) $(PORT)")
+}
+record(ai, "$(PREFIX)recY5") {}
+
+read { out 0x8$1 "READ \$2"; in "%f,%(\$3recY\$1)f" }
+</pre>
+<p>
+The protocol resolves to:
+</p>
+<pre>
+read { out 0x85 "READ X,Y"; in "%f,%($(PREFIX)recY5)f" }
+</pre>
+<p>
+Here <code>$(PREFIX)</code> is replaced with its macro value.
+But be aware that the macro is actually replaced before the link is parsed so
+that macro values containing comma or parentheses may have unintended effects.
 </p>
 
 <a name="usrvar"></a>
@@ -565,7 +616,7 @@ There is a fixed set of exception handler names starting with
   
  </dd>
 </dl>
-<h3>Example:</h3>
+<h4>Example:</h3>
 <pre>
 setPosition {
     out "POS %f";

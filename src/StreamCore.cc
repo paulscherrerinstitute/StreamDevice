@@ -189,14 +189,26 @@ parse(const char* filename, const char* _protocolname)
     ssize_t i = protocolname.find('(');
     if (i >= 0)
     {
-        while (i >= 0)
+        while (i < (ssize_t)protocolname.length())
         {
             if (protocolname[i-1] == ' ')
                 protocolname.remove(--i, 1); // remove trailing space
-            protocolname[i] = '\0'; // replace '(' and ',' with '\0'
+            protocolname[i] = '\0'; // replace initial '(' and separating ',' with '\0'
             if (protocolname[i+1] == ' ')
                 protocolname.remove(i+1, 1); // remove leading space
-            i = protocolname.find(',', i+1);
+            int brackets = 0;
+            do {
+                i++;
+                i += strcspn(protocolname(i), ",()\\");
+                char c = protocolname[i];
+                if (c == '(') brackets++;
+                else if (c == ')') brackets--;
+                else if (c == ',' && brackets <= 0) break;
+                else if (c == '\\') {
+                    if (protocolname[i+1] == '\\') i++; // keep '\\'
+                    else protocolname.remove(i, 1); // else skip over next char
+                }
+            } while (i < (ssize_t)protocolname.length());
         }
         // should have closing parentheses
         if (protocolname[-1] != ')')
@@ -206,9 +218,8 @@ parse(const char* filename, const char* _protocolname)
         }
         protocolname.truncate(-1); // remove ')'
         if (protocolname[-1] == ' ')
-        {
             protocolname.truncate(-1); // remove trailing space
-        }
+        debug("StreamCore::parse \"%s\" -> \"%s\"\n", _protocolname, protocolname.expand()());
     }
     StreamProtocolParser::Protocol* protocol;
     protocol = StreamProtocolParser::getProtocol(filename, protocolname);

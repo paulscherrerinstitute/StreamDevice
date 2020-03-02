@@ -764,7 +764,7 @@ initRecord(char* linkstring /* modifiable copy */)
     }
 
     // attach to bus interface
-    debug("Stream::initRecord %s: attachBus(%s, %ld, \"%s\")\n",
+    debug("Stream::initRecord %s: attachBus(\"%s\", %ld, \"%s\")\n",
         name(), busname, addr, busparam);
     if (!attachBus(busname, addr, busparam))
     {
@@ -774,7 +774,7 @@ initRecord(char* linkstring /* modifiable copy */)
     }
 
     // parse protocol file
-    debug("Stream::initRecord %s: parse(%s, %s)\n",
+    debug("Stream::initRecord %s: parse(\"%s\", \"%s\")\n",
         name(), filename, protocol);
     if (!parse(filename, protocol))
     {
