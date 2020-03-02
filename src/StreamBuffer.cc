@@ -306,7 +306,7 @@ print(const char* fmt, ...)
             return *this;
         }
         if (printed > -1) grow(len+printed);
-        else grow(len);
+        else grow(cap*2-1);
     }
 }
 
