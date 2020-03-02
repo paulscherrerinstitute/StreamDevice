@@ -88,14 +88,15 @@ typedef const struct format_s {
     const struct StreamFormat* priv;
 } format_t;
 
-epicsShareExtern FILE* StreamDebugFile;
-extern const char StreamVersion [];
+extern FILE* StreamDebugFile;
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern const char StreamVersion [];
 
 long streamInit(int after);
 long streamInitRecord(dbCommon *record,

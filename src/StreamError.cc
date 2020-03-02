@@ -27,12 +27,7 @@
 
 int streamDebug = 0;
 int streamError = 1;
-extern "C" {
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
 FILE *StreamDebugFile = NULL;
-}
 
 #ifndef va_copy
 #ifdef __va_copy
