@@ -199,11 +199,10 @@ public:
 
     // find: get index of data in buffer or -1
     ssize_t find(char c, ssize_t start=0) const
-        {char* p;
+        {if (start < 0 && (start -= len) < 0) start = 0;
+         char* p;
          return (p = static_cast<char*>(
-            memchr(buffer+offs+(start<0?start+len:start),
-                c, start<0?-start:len-start)))?
-            p-(buffer+offs) : -1;}
+            memchr(buffer+offs+start, c, len-start)))? p-(buffer+offs) : -1;}
 
     ssize_t find(const void* s, size_t size, ssize_t start=0) const;
 
