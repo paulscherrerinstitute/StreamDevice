@@ -1,22 +1,24 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the kernel of StreamDevice.                          *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the core of StreamDevice.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 1999,2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "StreamCore.h"
 #include "StreamError.h"
@@ -1798,6 +1800,24 @@ printStatus(StreamBuffer& buffer)
     if (flags & WaitPending)      buffer.append(" WaitPending");
     if (flags & Aborted)          buffer.append(" Aborted");
     busPrintStatus(buffer);
+}
+
+const char* StreamCore::
+license(void)
+{
+    return
+        "StreamDevice is free software: You can redistribute it and/or modify\n"
+        "it under the terms of the GNU Lesser General Public License as published\n"
+        "by the Free Software Foundation, either version 3 of the License, or\n"
+        "(at your option) any later version.\n"
+        "\n"
+        "StreamDevice is distributed in the hope that it will be useful,\n"
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
+        "GNU Lesser General Public License for more details\n"
+        "\n"
+        "You should have received a copy of the GNU Lesser General Public License\n"
+        "along with StreamDevice. If not, see https://www.gnu.org/licenses/.\n";
 }
 
 #include "streamReferences"
