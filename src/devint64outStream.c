@@ -33,6 +33,8 @@ static long readData(dbCommon *record, format_t *format)
 
     switch (format->type)
     {
+        case DBF_INT64:
+        case DBF_UINT64:
         case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
@@ -72,6 +74,8 @@ static long writeData(dbCommon *record, format_t *format)
 
     switch (format->type)
     {
+        case DBF_INT64:
+        case DBF_UINT64:
         case DBF_ULONG:
         case DBF_ENUM:
         case DBF_LONG:

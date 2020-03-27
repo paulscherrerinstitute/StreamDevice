@@ -905,6 +905,10 @@ print(format_t *format, va_list ap)
 {
     switch (format->type)
     {
+#ifdef DBR_INT64
+        case DBF_INT64:
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
@@ -931,6 +935,10 @@ scan(format_t *format, void* value, size_t maxStringSize)
     currentValueLength = 0;
     switch (format->type)
     {
+#ifdef DBR_INT64
+        case DBF_INT64:
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         case DBF_LONG:
         case DBF_ENUM:
