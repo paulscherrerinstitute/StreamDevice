@@ -38,6 +38,10 @@ static long readData(dbCommon *record, format_t *format)
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
             break;
         }
+#ifdef DBR_INT64
+        case DBF_INT64:
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         case DBF_LONG:
         {
@@ -45,7 +49,11 @@ static long readData(dbCommon *record, format_t *format)
             if (streamScanf(record, format, &rval) == ERROR) return ERROR;
             ao->rbv = rval;
             ao->rval = rval;
+#ifdef DBR_INT64
+            if (format->type == DBF_ULONG || format->type == DBF_UINT64)
+#else
             if (format->type == DBF_ULONG)
+#endif
                 val = (unsigned long)rval;
             else
                 val = rval;
@@ -119,6 +127,9 @@ static long writeData(dbCommon *record, format_t *format)
         {
             return streamPrintf(record, format, val);
         }
+#ifdef DBR_INT64
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         {
             if (ao->linr == 0)
@@ -128,6 +139,9 @@ static long writeData(dbCommon *record, format_t *format)
             }
             return streamPrintf(record, format, (unsigned long)ao->rval);
         }
+#ifdef DBR_INT64
+        case DBF_INT64:
+#endif
         case DBF_LONG:
         {
             if (ao->linr == 0)

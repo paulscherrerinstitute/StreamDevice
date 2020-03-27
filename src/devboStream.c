@@ -31,6 +31,10 @@ static long readData(dbCommon *record, format_t *format)
 
     switch (format->type)
     {
+#ifdef DBR_INT64
+        case DBF_INT64:
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         case DBF_LONG:
         {

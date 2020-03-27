@@ -35,6 +35,10 @@ static long readData(dbCommon *record, format_t *format)
             if (streamScanf(record, format, &val) == ERROR) return ERROR;
             break;
         }
+#ifdef DBR_INT64
+        case DBF_INT64:
+        case DBF_UINT64:
+#endif
         case DBF_ULONG:
         case DBF_LONG:
         {
