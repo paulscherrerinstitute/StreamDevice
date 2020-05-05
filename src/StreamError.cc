@@ -48,12 +48,12 @@ FILE *StreamDebugFile = NULL;
 
 /* Enable ANSI colors in Windows console */
 static int win_console_init() {
-	DWORD dwMode = 0;
+    DWORD dwMode = 0;
     HANDLE hCons = GetStdHandle(STD_ERROR_HANDLE);
-	GetConsoleMode(hCons, &dwMode);
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(hCons, dwMode);
-	return 0;
+    GetConsoleMode(hCons, &dwMode);
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hCons, dwMode);
+    return 0;
 }
 static int s = win_console_init();
 

@@ -126,7 +126,7 @@ static long readData(dbCommon *record, format_t *format)
                         }
                         aai->nord = (long)length;
                         return OK;
-				    }
+                    }
                     default:
                         errlogSevPrintf(errlogFatal,
                             "readData %s: can't convert from string to %s\n",

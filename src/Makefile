@@ -51,7 +51,7 @@ endif
 
 ifeq ($(LOADABLE_MODULE),YES)
 SRCS += $(LIBRARY_DEFAULT)_registerRecordDeviceDriver.cpp
-endif 
+endif
 SRCS += $(BUSSES:%=%Interface.cc)
 SRCS += $(FORMATS:%=%Converter.cc)
 SRCS += $(RECORDTYPES:%=dev%Stream.c)

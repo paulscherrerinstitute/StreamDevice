@@ -79,15 +79,15 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
-    	for (n = nbOfBytes-1; n >= 0; n--)
-    	{
+        for (n = nbOfBytes-1; n >= 0; n--)
+        {
             output.append(buffer.bytes[n]);
-    	}
+        }
     } else {
-    	for (n = 0; n < nbOfBytes; n++)
-    	{
+        for (n = 0; n < nbOfBytes; n++)
+        {
             output.append(buffer.bytes[n]);
-    	}
+        }
     }
     return true;
 }
@@ -116,15 +116,15 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
-    	for (n = nbOfBytes-1, i = 0; n >= 0; n--, i++)
-    	{
+        for (n = nbOfBytes-1, i = 0; n >= 0; n--, i++)
+        {
             buffer.bytes[n] = input[i];
-    	}
+        }
     } else {
-    	for (n = 0; n < nbOfBytes; n++)
-    	{
+        for (n = 0; n < nbOfBytes; n++)
+        {
             buffer.bytes[n] = input[n];
-    	}
+        }
     }
 
     if (nbOfBytes == 4)

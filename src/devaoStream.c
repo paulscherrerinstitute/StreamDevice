@@ -52,16 +52,16 @@ static long readData(dbCommon *record, format_t *format)
             break;
             val += ao->roff;
             if (ao->linr == menuConvertNO_CONVERSION) {
-	        ; /*do nothing*/
+                ; /*do nothing*/
             } else if ((ao->linr == menuConvertLINEAR)
 #ifndef EPICS_3_13
-		    || (ao->linr == menuConvertSLOPE)
+                    || (ao->linr == menuConvertSLOPE)
 #endif
                     ) {
                 val = val * ao->eslo + ao->eoff;
             } else {
                 if (cvtRawToEngBpt(&val, ao->linr, 0,
-		        (void *)&ao->pbrk, &ao->lbrk) == ERROR) return ERROR;
+                    (void *)&ao->pbrk, &ao->lbrk) == ERROR) return ERROR;
             }
         }
         default:

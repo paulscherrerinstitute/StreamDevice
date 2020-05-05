@@ -42,7 +42,7 @@ value can also be gained from tm_gmtoff of the tm-structure.
     defined(__DragonFly__)
 static int timezone_bsd=0;
 #define timezone timezone_bsd
-#define tzset() { struct tm tm; time_t timet; tzset(); time(&timet);	\
+#define tzset() { struct tm tm; time_t timet; tzset(); time(&timet);    \
                   localtime_r(&timet, &tm); timezone=tm.tm_gmtoff; }
 #endif
 
