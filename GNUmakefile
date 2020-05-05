@@ -19,18 +19,25 @@ SOURCES += $(FORMATS:%=src/%Converter.cc)
 SOURCES += $(BUSSES:%=src/%Interface.cc)
 SOURCES += $(STREAM_SRCS:%=src/%)
 
-HEADERS += devStream.h
-HEADERS += StreamFormat.h
-HEADERS += StreamFormatConverter.h
-HEADERS += StreamBuffer.h
-HEADERS += StreamError.h
+HEADERS += src/devStream.h
+HEADERS += src/StreamFormat.h
+HEADERS += src/StreamFormatConverter.h
+HEADERS += src/StreamBuffer.h
+HEADERS += src/StreamError.h
+HEADERS += src/StreamVersion.h
 
-StreamCore.o StreamCore.d: streamReferences
+CPPFLAGS += -DSTREAM_INTERNAL
 
 # Update version string (contains __DATE__ and __TIME__)
-# each time anything changes.
-StreamVersion.o: $(filter-out StreamVersion.o stream_exportAddress.o,$(LIBOBJS))
+# each time anything changed.
+StreamVersion$(OBJ): StreamVersion.h $(filter-out StreamVersion$(OBJ) stream_exportAddress$(OBJ),$(LIBOBJS) $(LIBRARY_OBJS))
 
+MAKE_FIRST=src/StreamVersion.h
+src/StreamVersion.h: $(SOURCES) $(filter-out %StreamVersion.h, $(HEADERS))
+	@echo Creating $@ from git tag
+	$(PERL) src/makeStreamVersion.pl > $@
+
+StreamCore$(OBJ) StreamCore$(DEP): streamReferences
 streamReferences:
 	$(PERL) ../src/makeref.pl Interface $(BUSSES) > $@
 	$(PERL) ../src/makeref.pl Converter $(FORMATS) >> $@

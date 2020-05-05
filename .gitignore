@@ -6,3 +6,4 @@ dbd
 include
 *.pdf
 *.*log
+StreamVersion.h

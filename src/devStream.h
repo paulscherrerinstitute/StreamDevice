@@ -28,9 +28,9 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define STREAM_MAJOR 2
-#define STREAM_MINOR 8
-#define STREAM_PATCHLEVEL 12
+#ifndef STREAM_INTERNAL
+#include "StreamVersion.h"
+#endif
 
 #ifndef OK
 #define OK 0

@@ -1,9 +1,8 @@
 ##########################################################################
-# This is an EPICS 3.13 Makefile for StreamDevice.
-# Normally it should not be necessary to modify this file.
-# All configuration can be done in CONFIG_STREAM
+# This is a helper script for StreamDevice.
+# It generates a version file from git tags.
 #
-# (C) 2007,2018 Dirk Zimoch (dirk.zimoch@psi.ch)
+# (C) 2020 Dirk Zimoch (dirk.zimoch@psi.ch)
 #
 # This file is part of StreamDevice.
 #
@@ -21,12 +20,31 @@
 # along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 #########################################################################/
 
-TOP = ../..
-ifneq ($(wildcard ../../../config),)
-TOP = ../../..
-endif
+use strict;
 
-include $(TOP)/config/CONFIG_APP
-include ../CONFIG_STREAM
+my $dir = "O.Common";
+my $versionfile = "StreamVersion.h";
 
-include $(EPICS_BASE)/config/RULES.Host
+my $version = `git describe --tags --dirty --match '[0-9]*'`
+    or die "Cannot run git.\n";
+
+my ( $major, $minor, $patch, $dev );
+
+$version =~ m/(\d+)\.(\d+)\.(\d+)?(.*)?/
+    or die "Unexpected git tag format $version\n";
+
+$major = $1; $minor=$2; $patch=$3; $dev=$4;
+
+print << "EOF";
+/* Generated file $versionfile */
+
+#ifndef StreamVersion_h
+#define StreamVersion_h
+
+#define STREAM_MAJOR $major
+#define STREAM_MINOR $minor
+#define STREAM_PATCHLEVEL $patch
+#define STREAM_DEV "$dev"
+
+#endif /* StreamVersion_h */
+EOF

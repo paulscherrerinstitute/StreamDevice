@@ -42,17 +42,37 @@ SRCS.c += $(filter %.c,$(STREAM_SRCS:%=%../%))
 
 LIBOBJS = $(patsubst ../%,%.o,$(basename $(SRCS.cc) $(SRCS.c)))
 
+DBDNAME = stream.dbd
+
+INC += devStream.h
+INC += StreamFormat.h
+INC += StreamFormatConverter.h
+INC += StreamBuffer.h
+INC += StreamError.h
+INC += StreamVersion.h
+
 include $(EPICS_BASE)/config/RULES.Vx
 include ../../config/RULES.munch
 
 DEPENDS: depends
 -include DEPENDS
 
+CPPFLAGS += -DSTREAM_INTERNAL
+
 # Update version string whenever something changes
-StreamVersion.o: ../*.c ../*.h ../*.cc ../CONFIG_STREAM
 $(LIBNAME): StreamVersion.o
+
+StreamVersion.o: StreamVersion.h $(filter-out StreamVersion.o,$(LIBOBJS)) ../CONFIG_STREAM
+StreamVersion.h: $(SRCS.cc) $(SRCS.c) $(add-prefix ../,$(filter-out StreamVersion.h, $(INC)))
+	@echo Creating $@ from git tag
+	$(PERL) ../makeStreamVersion.pl > $@
 
 StreamCore.o: streamReferences
 
 streamReferences:
 	touch $@
+
+# create stream.dbd from all RECORDTYPES
+stream.dbd: ../CONFIG_STREAM
+	$(PERL) ../makedbd.pl -3.13 $(RECORDTYPES) > $@
+
