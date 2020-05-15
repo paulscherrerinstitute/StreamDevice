@@ -25,7 +25,7 @@ use strict;
 my $dir = "O.Common";
 my $versionfile = "StreamVersion.h";
 
-my $version = `git describe --tags --dirty --match '[0-9]*'`
+my $version = `git describe --tags --dirty --match "[0-9]*"`
     or die "Cannot run git.\n";
 
 my ( $major, $minor, $patch, $dev );
