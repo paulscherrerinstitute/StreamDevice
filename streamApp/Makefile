@@ -68,6 +68,10 @@ PROD_LIBS += sscan
 endif
 endif
 
+ifneq ($(words $(SNCSEQ) $(SYNAPPS)), 0)
+PROD_LIBS += seq pv
+endif
+
 streamApp_DBD += stream.dbd
 
 ifdef PCRE
