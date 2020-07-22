@@ -25,8 +25,11 @@
 #define STR2(x) #x
 #define STR(x) STR2(x)
 const char StreamVersion [] =
-    "StreamDevice " STR(STREAM_MAJOR)
+    "StreamDevice"
+#if STREAM_MAJOR+0
+    " " STR(STREAM_MAJOR)
     "." STR(STREAM_MINOR)
     "." STR(STREAM_PATCHLEVEL)
     STREAM_DEV
+#endif
     " commit:" STREAM_COMMIT_HASH;

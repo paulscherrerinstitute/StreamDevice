@@ -25,7 +25,7 @@ use strict;
 
 my ( $major, $minor, $patch, $dev, $branch, $date, $hash );
 
-if (my $version = `git describe --tags --dirty --match "[0-9]*" 2>/dev/null`) {
+if (my $version = `git describe --tags --abbrev=0 --dirty --match "[0-9]*" 2>/dev/null`) {
     if ($version =~ m/(\d+)\.(\d+)\.(\d+)?(.*)?/) {
         $major = $1; $minor = $2; $patch = $3; $dev = $4;
     }
