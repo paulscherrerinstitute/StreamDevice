@@ -157,7 +157,7 @@ StreamProtocolParser* StreamProtocolParser::
 readFile(const char* filename)
 {
     FILE* file;
-#ifdef windows
+#ifdef _WIN32
     const char pathseparator = ';';
     const char dirseparator = '\\';
 #else
