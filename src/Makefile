@@ -90,8 +90,8 @@ CPPFLAGS += -DSTREAM_INTERNAL
 # Update version string whenever something changed.
 StreamVersion$(OBJ): $(COMMON_DIR)/StreamVersion.h $(filter-out StreamVersion$(OBJ),$(LIBOBJS) $(LIBRARY_OBJS)) ../CONFIG_STREAM
 $(COMMON_DIR)/StreamVersion.h: $(SRCS) $(filter-out StreamVersion.h, $(INC))
-	@echo Creating $@ from git tag
-	$(PERL) ../makeStreamVersion.pl > $@
+	@echo Creating $@
+	$(PERL) ../makeStreamVersion.pl $@
 
 # Add references to all registrars to main file to avoid
 # missing initialization.

@@ -29,4 +29,4 @@ const char StreamVersion [] =
     "." STR(STREAM_MINOR)
     "." STR(STREAM_PATCHLEVEL)
     STREAM_DEV
-    " built " __DATE__ " " __TIME__;
+    " commit:" STREAM_COMMIT_HASH;

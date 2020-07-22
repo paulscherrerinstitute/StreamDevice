@@ -26,16 +26,14 @@ HEADERS += src/StreamBuffer.h
 HEADERS += src/StreamError.h
 HEADERS += src/StreamVersion.h
 
-CPPFLAGS += -DSTREAM_INTERNAL
+CPPFLAGS += -DSTREAM_INTERNAL -I$(COMMON_DIR)
 
-# Update version string (contains __DATE__ and __TIME__)
-# each time anything changed.
-StreamVersion$(OBJ): StreamVersion.h $(filter-out StreamVersion$(OBJ) stream_exportAddress$(OBJ),$(LIBOBJS) $(LIBRARY_OBJS))
+# Update version string each time anything changes
+StreamVersion$(OBJ) StreamVersion$(DEP): $(COMMON_DIR)/StreamVersion.h $(filter-out StreamVersion$(OBJ) stream_exportAddress$(OBJ),$(LIBOBJS) $(LIBRARY_OBJS))
 
-MAKE_FIRST=src/StreamVersion.h
-src/StreamVersion.h: $(SOURCES) $(filter-out %StreamVersion.h, $(HEADERS))
-	@echo Creating $@ from git tag
-	$(PERL) src/makeStreamVersion.pl > $@
+$(COMMON_DIR)/StreamVersion.h: $(filter-out StreamVersion.h,$(notdir $(SOURCES) $(HEADERS)))
+	@echo Creating $@
+	$(PERL) ../src/makeStreamVersion.pl $@
 
 StreamCore$(OBJ) StreamCore$(DEP): streamReferences
 streamReferences:

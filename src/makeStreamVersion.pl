@@ -22,21 +22,38 @@
 
 use strict;
 
-my $dir = "O.Common";
-my $versionfile = "StreamVersion.h";
 
-my $version = `git describe --tags --dirty --match "[0-9]*"`
-    or die "Cannot run git.\n";
+my ( $major, $minor, $patch, $dev, $branch, $date, $hash );
 
-my ( $major, $minor, $patch, $dev );
+if (my $version = `git describe --tags --dirty --match "[0-9]*" 2>/dev/null`) {
+    if ($version =~ m/(\d+)\.(\d+)\.(\d+)?(.*)?/) {
+        $major = $1; $minor = $2; $patch = $3; $dev = $4;
+    }
+    if (`git log -1 --format="%H %ci"`=~ m/([[:xdigit:]]+) (.+)/) {
+        $hash = $1; $date = $2;
+    }
+}
+if (!$major) {
+    if (open(my $fh, '<', '../../.VERSION')) {
+        while (my $line = <$fh>) {
+            if ($line =~ m/COMMIT: *([[:xdigit:]]+)/) {
+                $hash = $1;
+            }
+            if ($line =~ m/REFS: *tag: *((\d+)\.(\d+)\.(\d+)?,)? *(.*)/) {
+                $major = $2; $minor = $3; $patch = $4; $branch = $5;
+            }
+            if ($line =~ m/DATE: *(.+)/) {  
+                $date = $1;
+            }
+        }
+    } else {
+        print "neither git repo nor .VERSION file found\n";
+    }
+}
 
-$version =~ m/(\d+)\.(\d+)\.(\d+)?(.*)?/
-    or die "Unexpected git tag format $version\n";
-
-$major = $1; $minor=$2; $patch=$3; $dev=$4;
-
-print << "EOF";
-/* Generated file $versionfile */
+open my $out, '>', @ARGV or die $!;
+print $out <<EOF;
+/* Generated file */
 
 #ifndef StreamVersion_h
 #define StreamVersion_h
@@ -45,6 +62,10 @@ print << "EOF";
 #define STREAM_MINOR $minor
 #define STREAM_PATCHLEVEL $patch
 #define STREAM_DEV "$dev"
+#define STREAM_COMMIT_HASH "$hash"
+#define STREAM_COMMIT_DATE "$date"
 
 #endif /* StreamVersion_h */
 EOF
+
+close $out

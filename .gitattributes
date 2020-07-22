@@ -1,0 +1,2 @@
+GNUmakefile export-ignore
+.VERSION export-subst
