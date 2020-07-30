@@ -23,7 +23,7 @@
 use strict;
 
 
-my ( $major, $minor, $patch, $dev, $branch, $date, $hash );
+my ( $major, $minor, $patch, $dev, $date, $hash );
 
 if (my $version = `git describe --tags --abbrev=0 --dirty --match "[0-9]*" 2>/dev/null`) {
     if ($version =~ m/(\d+)\.(\d+)\.(\d+)?(.*)?/) {
@@ -39,10 +39,10 @@ if (!$major) {
             if ($line =~ m/COMMIT: *([[:xdigit:]]+)/) {
                 $hash = $1;
             }
-            if ($line =~ m/REFS: *tag: *((\d+)\.(\d+)\.(\d+)?,)? *(.*)/) {
-                $major = $2; $minor = $3; $patch = $4; $branch = $5;
+            if ($line =~ m/REFS: .*tag: *(\d+)\.(\d+)\.?(\d+)?/) {
+                $major = $1; $minor = $2; $patch = $3 or $patch = 0;
             }
-            if ($line =~ m/DATE: *(.+)/) {  
+            if ($line =~ m/DATE: *([-0-9:+ ]*)/) {  
                 $date = $1;
             }
         }
@@ -58,14 +58,20 @@ print $out <<EOF;
 #ifndef StreamVersion_h
 #define StreamVersion_h
 
+EOF
+if ($major) {
+    print $out <<EOF;
 #define STREAM_MAJOR $major
 #define STREAM_MINOR $minor
 #define STREAM_PATCHLEVEL $patch
 #define STREAM_DEV "$dev"
-#define STREAM_COMMIT_HASH "$hash"
-#define STREAM_COMMIT_DATE "$date"
-
-#endif /* StreamVersion_h */
 EOF
-
+}
+if ($hash) {
+    print $out "#define STREAM_COMMIT_HASH \"$hash\"\n";
+}
+if ($date) {
+    print $out "#define STREAM_COMMIT_DATE \"$date\"\n";
+}
+print $out "#endif /* StreamVersion_h */\n";
 close $out
