@@ -187,9 +187,12 @@ bool StreamCore::
 parse(const char* filename, const char* _protocolname)
 {
     protocolname = _protocolname;
-    // extract substitutions from protocolname "name(sub1,sub2)"
+    // extract substitutions from protocolname "name ( sub1, sub2 ) "
     ssize_t i = protocolname.find('(');
-    if (i >= 0)
+    if (i < 0) i = 0;
+    while (protocolname[i-1] == ' ')
+        protocolname.remove(--i, 1);
+    if (protocolname[i] == '(')
     {
         while (i < (ssize_t)protocolname.length())
         {
