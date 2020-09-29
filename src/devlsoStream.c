@@ -39,7 +39,7 @@ static long readData(dbCommon *record, format_t *format)
     {
         lso->val[length] = 0;
     }
-    lso->len = length;
+    lso->len = (epicsUInt32)length;
     if (record->pact) return OK;
     /* In @init handler, no processing, enforce monitor updates. */
     monitor_mask = recGblResetAlarms(record);

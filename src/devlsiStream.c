@@ -37,7 +37,7 @@ static long readData(dbCommon *record, format_t *format)
     {
         lsi->val[length] = 0;
     }
-    lsi->len = length;
+    lsi->len = (epicsUInt32)length;
     return OK;
 }
 

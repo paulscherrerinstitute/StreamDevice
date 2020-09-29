@@ -171,10 +171,10 @@ static long writeData(dbCommon *record, format_t *format)
                         break;
 #ifdef DBR_INT64
                     case DBF_INT64:
-                        dval = ((epicsInt64 *)aai->bptr)[nowd];
+                        dval = (double)((epicsInt64 *)aai->bptr)[nowd];
                         break;
                     case DBF_UINT64:
-                        dval = ((epicsUInt64 *)aai->bptr)[nowd];
+                        dval = (double)((epicsUInt64 *)aai->bptr)[nowd];
                         break;
 #endif
                     case DBF_LONG:
@@ -214,10 +214,10 @@ static long writeData(dbCommon *record, format_t *format)
                 {
 #ifdef DBR_INT64
                     case DBF_INT64:
-                        lval = ((epicsInt64 *)aai->bptr)[nowd];
+                        lval = (long)((epicsInt64 *)aai->bptr)[nowd];
                         break;
                     case DBF_UINT64:
-                        lval = ((epicsUInt64 *)aai->bptr)[nowd];
+                        lval = (long)((epicsUInt64 *)aai->bptr)[nowd];
                         break;
 #endif
                     case DBF_LONG:
