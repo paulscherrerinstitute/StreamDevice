@@ -71,6 +71,10 @@ INC += StreamFormatConverter.h
 INC += StreamBuffer.h
 INC += StreamError.h
 INC += StreamVersion.h
+INC += StreamProtocol.h
+INC += StreamBusInterface.h
+INC += StreamCore.h
+INC += MacroMagic.h
 
 # switch off annoying rset warnings in 3.16+
 CPPFLAGS += -DUSE_TYPED_RSET
