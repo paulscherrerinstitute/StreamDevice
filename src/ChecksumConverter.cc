@@ -24,8 +24,15 @@
 #include "StreamError.h"
 #include <ctype.h>
 #if defined(__vxworks) || defined(vxWorks)
+#include <version.h>
+#if defined(_WRS_VXWORKS_MAJOR) && _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR > 8)
+#include <stdint.h>
+#define PRIX32 "X"
+#define PRIu32 "u"
+#else
 #define PRIX32 "lX"
 #define PRIu32 "lu"
+#endif
 #define PRIX8  "X"
 #define SCNx8  "hhx"
 #define uint_fast8_t uint8_t
