@@ -34,7 +34,6 @@
 #define PRIu32 "lu"
 #endif
 #define PRIX8  "X"
-#define SCNx8  "hhx"
 #define uint_fast8_t uint8_t
 #define int_fast8_t int8_t
 #elif defined(_MSC_VER) && _MSC_VER < 1700 /* Visual Studio 2010 does not have inttypes.h */
@@ -42,7 +41,6 @@
 #define PRIX32 "X"
 #define PRIu32 "u"
 #define PRIX8  "X"
-#define SCNx8  "hhx"
 #else
 #define __STDC_FORMAT_MACROS
 #include <stdint.h>
@@ -754,7 +752,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input checksum is 0x%0*" PRIX32 "\n",
         checksumMap[fnum].name, 2*checksumMap[fnum].bytes, sum);
 
-    uint_fast8_t inchar;
+    unsigned int inchar;
 
     if (format.flags & sign_flag) // decimal
     {
@@ -781,7 +779,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                if (sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar) != 1)
+                if (sscanf(input(cursor+2*i), "%2x", &inchar) != 1)
                 {
                     debug("ChecksumConverter %s: Input byte '%s' is not a hex byte\n",
                         checksumMap[fnum].name, input.expand(cursor+2*i,2)());
@@ -825,7 +823,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar);
+                sscanf(input(cursor+2*i), "%2x", &inchar);
             }
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F
