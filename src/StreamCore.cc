@@ -72,9 +72,9 @@ printCommands(StreamBuffer& buffer, const char* c)
                 buffer.append("    disconnect;\n");
                 break;
             default:
-                buffer.append("\033[31;1mGARBAGE: ");
+                buffer.append(ansiEscape(ANSI_RED_BOLD)).append("GARBAGE: ");
                 c = StreamProtocolParser::printString(buffer, c-1);
-                buffer.append("\033[0m\n");
+                buffer.append(ansiEscape(ANSI_RESET)).append("\n");
         }
     }
 }

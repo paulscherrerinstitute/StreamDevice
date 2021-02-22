@@ -23,10 +23,13 @@
 #include "StreamError.h"
 #ifdef _WIN32
 #include <windows.h>
-#endif
+#include <io.h>
+#endif /* _WIN32 */
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
+#include <errlog.h>
+#include <epicsStdio.h>
 
 int streamDebug = 0;
 int streamError = 1;
@@ -46,18 +49,31 @@ FILE *StreamDebugFile = NULL;
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
 
-/* Enable ANSI colors in Windows console */
-static int win_console_init() {
-    DWORD dwMode = 0;
-    HANDLE hCons = GetStdHandle(STD_ERROR_HANDLE);
-    GetConsoleMode(hCons, &dwMode);
-    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-    SetConsoleMode(hCons, dwMode);
-    return 0;
+/* Enable ANSI color support in Windows console */
+static bool win_console_init() {
+    HANDLE hCons[] = { GetStdHandle(STD_ERROR_HANDLE),
+                       GetStdHandle(STD_OUTPUT_HANDLE) };
+    for(int i=0; i < sizeof(hCons) / sizeof(HANDLE); ++i)
+    {
+        DWORD dwMode = 0;
+        if (hCons[i] == INVALID_HANDLE_VALUE ||
+            !GetConsoleMode(hCons[i], &dwMode))
+        {
+            return false;
+        }
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(hCons[i], dwMode))
+        {
+            return false;
+        }
+    }
+    return true;
 }
-static int s = win_console_init();
 
-#endif
+/* true if console supports ANSI color codes */
+static bool win_console_colored = win_console_init();
+
+#endif /* _WIN32 */
 
 /* You can globally change the printTimestamp function
    by setting the StreamPrintTimestampFunction variable
@@ -106,14 +122,13 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
         va_end(args2);
     }
 #endif
-    fprintf(stderr, "\033[31;1m");
-    fprintf(stderr, "%s ", timestamp);
+    fprintf(stderr, "%s%s", ansiEscape(ANSI_RED_BOLD), timestamp);
     if (file)
     {
         fprintf(stderr, "%s line %d: ", file, line);
     }
     vfprintf(stderr, fmt, args);
-    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "%s", ansiEscape(ANSI_RESET));
 }
 
 int StreamDebugClass::
@@ -132,4 +147,32 @@ print(const char* fmt, ...)
     fflush(fp);
     va_end(args);
     return 1;
+}
+
+/**
+ * Return an ANSI escape code if coloured debug output is enabled
+ * If auto mode if selected (default), return code if a supported console type
+ */
+const char* ansiEscape(AnsiMode mode)
+{
+    static const char* AnsiEscapes[] = { "\033[7m", "\033[27m", "\033[47m",
+                                         "\033[0m", "\033[31;1m" };
+    static const char* stream_debug_color = getenv("STREAM_DEBUG_COLOR");
+    bool color_output = false;
+    if (stream_debug_color == NULL || stream_debug_color[0] == 'A'||
+        stream_debug_color[0] == 'a') // auto
+    {
+#ifdef _WIN32
+        color_output =  win_console_colored &&
+                        _isatty(_fileno(epicsGetStdout()));
+#else
+        color_output =  isatty(fileno(epicsGetStdout()));
+#endif /* _WIN32 */
+    }
+    else if (stream_debug_color[0] == 'Y' || stream_debug_color[0] == 'y' ||
+             stream_debug_color[0] == '1') // yes
+    {
+        color_output = true;
+    }
+    return color_output ? AnsiEscapes[mode] : "";
 }

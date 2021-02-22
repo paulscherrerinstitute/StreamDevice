@@ -66,4 +66,11 @@ StreamDebugObject(const char* file, int line)
 #define error StreamError
 #define debug (!streamDebug)?0:StreamDebugObject(__FILE__,__LINE__).print
 
+/*
+ * ANSI escape sequences for terminal output
+ */
+enum AnsiMode { ANSI_REVERSE_VIDEO, ANSI_NOT_REVERSE_VIDEO, ANSI_BG_WHITE,
+                ANSI_RESET, ANSI_RED_BOLD };
+extern const char* ansiEscape(AnsiMode mode);
+
 #endif
