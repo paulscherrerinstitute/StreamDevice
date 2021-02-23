@@ -24,6 +24,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
+#else
+#include <unistd.h>
 #endif /* _WIN32 */
 #include <string.h>
 #include <time.h>
