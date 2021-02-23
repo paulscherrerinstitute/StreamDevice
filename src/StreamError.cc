@@ -29,7 +29,6 @@
 #include <time.h>
 #include <stdio.h>
 #include <errlog.h>
-#include <epicsStdio.h>
 
 int streamDebug = 0;
 int streamError = 1;
@@ -71,8 +70,12 @@ static bool win_console_init() {
     return true;
 }
 
-/* true if console supports ANSI color codes */
-static bool win_console_colored = win_console_init();
+/* do isatty() call second as always want to run win_console_init() */
+int streamDebugColored = win_console_init() && _isatty(_fileno(stdout));
+
+#else
+
+int streamDebugColored = isatty(fileno(stdout));
 
 #endif /* _WIN32 */
 
@@ -158,22 +161,5 @@ const char* ansiEscape(AnsiMode mode)
 {
     static const char* AnsiEscapes[] = { "\033[7m", "\033[27m", "\033[47m",
                                          "\033[0m", "\033[31;1m" };
-    static const char* stream_debug_color = getenv("STREAM_DEBUG_COLOR");
-    bool color_output = false;
-    if (stream_debug_color == NULL || stream_debug_color[0] == 'A'||
-        stream_debug_color[0] == 'a') // auto
-    {
-#ifdef _WIN32
-        color_output =  win_console_colored &&
-                        _isatty(_fileno(epicsGetStdout()));
-#else
-        color_output =  isatty(fileno(epicsGetStdout()));
-#endif /* _WIN32 */
-    }
-    else if (stream_debug_color[0] == 'Y' || stream_debug_color[0] == 'y' ||
-             stream_debug_color[0] == '1') // yes
-    {
-        color_output = true;
-    }
-    return color_output ? AnsiEscapes[mode] : "";
+    return streamDebugColored ? AnsiEscapes[mode] : "";
 }

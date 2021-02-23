@@ -198,6 +198,7 @@ public:
 extern "C" { // needed for Windows
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
+epicsExportAddress(int, streamDebugColored);
 }
 
 // for subroutine record

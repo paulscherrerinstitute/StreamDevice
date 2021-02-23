@@ -32,6 +32,7 @@ if (@ARGV[0] eq "-3.13") {
 } else {
     print "variable(streamDebug, int)\n";
     print "variable(streamError, int)\n";
+    print "variable(streamDebugColored, int)\n";
     print "registrar(streamRegistrar)\n";
     if ($asyn) { print "registrar(AsynDriverInterfaceRegistrar)\n"; }
 }
