@@ -122,7 +122,7 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
         va_end(args2);
     }
 #endif
-    fprintf(stderr, "%s%s", ansiEscape(ANSI_RED_BOLD), timestamp);
+    fprintf(stderr, "%s%s ", ansiEscape(ANSI_RED_BOLD), timestamp);
     if (file)
     {
         fprintf(stderr, "%s line %d: ", file, line);
