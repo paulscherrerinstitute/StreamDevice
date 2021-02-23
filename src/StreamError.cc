@@ -56,7 +56,8 @@ static bool win_console_init() {
     for(int i=0; i < sizeof(hCons) / sizeof(HANDLE); ++i)
     {
         DWORD dwMode = 0;
-        if (hCons[i] == INVALID_HANDLE_VALUE ||
+        if (hCons[i] == NULL ||
+            hCons[i] == INVALID_HANDLE_VALUE ||
             !GetConsoleMode(hCons[i], &dwMode))
         {
             return false;
