@@ -28,7 +28,6 @@
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
-#include <errlog.h>
 
 int streamDebug = 0;
 int streamError = 1;
