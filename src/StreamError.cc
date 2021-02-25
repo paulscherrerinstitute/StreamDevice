@@ -156,7 +156,6 @@ print(const char* fmt, ...)
 
 /**
  * Return an ANSI escape code if coloured debug output is enabled
- * If auto mode if selected (default), return code if a supported console type
  */
 const char* ansiEscape(AnsiMode mode)
 {
