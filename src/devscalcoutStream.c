@@ -1,21 +1,24 @@
-/***************************************************************
-* Stream Device record interface for string calcout records    *
-*                                                              *
-* (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is an EPICS record Interface for StreamDevice.          *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the StreamDevice interface for EPICS scalcout records.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "sCalcoutRecord.h"
 #include "devStream.h"
@@ -25,7 +28,7 @@
    of the device support.
    Fix: sCalcoutRecord.c, end of init_record() add
 
-        if(pscalcoutDSET->init_record ) {
+        if (pscalcoutDSET->init_record ) {
             return (*pscalcoutDSET->init_record)(pcalc);
         }
 */

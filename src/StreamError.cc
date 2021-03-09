@@ -1,26 +1,32 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is error and debug message handling of StreamDevice.    *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is error and debug message handling of StreamDevice.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "StreamError.h"
 #ifdef _WIN32
 #include <windows.h>
-#endif
+#include <io.h>
+#else
+#include <unistd.h>
+#endif /* _WIN32 */
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
@@ -28,13 +34,7 @@
 int streamDebug = 0;
 int streamError = 1;
 StreamErrorEngine* pErrEngine = NULL;
-
-extern "C" {
-#ifdef _WIN32
-__declspec(dllexport)
-#endif
 FILE *StreamDebugFile = NULL;
-}
 
 #ifndef va_copy
 #ifdef __va_copy
@@ -50,18 +50,36 @@ FILE *StreamDebugFile = NULL;
 #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 #endif
 
-/* Enable ANSI colors in Windows console */
-static int win_console_init() {
-	DWORD dwMode = 0;
-    HANDLE hCons = GetStdHandle(STD_ERROR_HANDLE);
-	GetConsoleMode(hCons, &dwMode);
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(hCons, dwMode);
-	return 0;
+/* Enable ANSI color support in Windows console */
+static bool win_console_init() {
+    HANDLE hCons[] = { GetStdHandle(STD_ERROR_HANDLE),
+                       GetStdHandle(STD_OUTPUT_HANDLE) };
+    for(int i=0; i < sizeof(hCons) / sizeof(HANDLE); ++i)
+    {
+        DWORD dwMode = 0;
+        if (hCons[i] == NULL ||
+            hCons[i] == INVALID_HANDLE_VALUE ||
+            !GetConsoleMode(hCons[i], &dwMode))
+        {
+            return false;
+        }
+        dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        if (!SetConsoleMode(hCons[i], dwMode))
+        {
+            return false;
+        }
+    }
+    return true;
 }
-static int s = win_console_init();
 
-#endif
+/* do isatty() call second as always want to run win_console_init() */
+int streamDebugColored = win_console_init() && _isatty(_fileno(stdout));
+
+#else
+
+int streamDebugColored = isatty(fileno(stdout));
+
+#endif /* _WIN32 */
 
 /* You can globally change the printTimestamp function
    by setting the StreamPrintTimestampFunction variable
@@ -135,11 +153,7 @@ void StreamVError(int line, const char* file,
         va_end(args2);
     }
 #endif
-    // I'm using an easy way to protect against buffer overflow: I use snprintf
-    // alternating buffer1 and buffer2, limiting by the size of the data to the
-    // buffers.
-    snprintf(buffer1, sizeof(buffer1), "\033[31;1m");
-    snprintf(buffer2, sizeof(buffer2), "%s%s ", buffer1, timestamp);
+    snprintf(buffer2, "%s%s ", ansiEscape(ANSI_RED_BOLD), timestamp);
     if (file)
     {
         snprintf(buffer1, sizeof(buffer1), "%s%s line %d: ", buffer2, file, line);
@@ -149,10 +163,10 @@ void StreamVError(int line, const char* file,
         snprintf(buffer1, sizeof(buffer1), "%s", buffer2);
     }
     // Copy only a number of characters that will not overflow buffer, with
-    // additional space for the final required "\033[0m" and \0 (5 characters).
-    vsnprintf(bufferAux, sizeof(bufferAux) - strlen(buffer1) - 5, fmt, args);
+    // additional space for the final required ANSI_RESET and \0.
+    vsnprintf(bufferAux, sizeof(bufferAux) - strlen(buffer1) - strlen(ansiEscape(ANSI_RESET)) - 1, fmt, args);
 
-    snprintf(buffer2, sizeof(buffer2), "%s%s\033[0m", buffer1, bufferAux);
+    snprintf(buffer2, sizeof(buffer2), "%s%s%s", buffer1, bufferAux, ansiEscape(ANSI_RESET));
 
     if (category == CAT_NONE || pErrEngine == NULL || 
                     pErrEngine->getTimeout() <= 0)
@@ -182,4 +196,14 @@ print(const char* fmt, ...)
     fflush(fp);
     va_end(args);
     return 1;
+}
+
+/**
+ * Return an ANSI escape code if coloured debug output is enabled
+ */
+const char* ansiEscape(AnsiMode mode)
+{
+    static const char* AnsiEscapes[] = { "\033[7m", "\033[27m", "\033[47m",
+                                         "\033[0m", "\033[31;1m" };
+    return streamDebugColored ? AnsiEscapes[mode] : "";
 }

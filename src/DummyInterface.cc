@@ -1,20 +1,25 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 2011 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the interface to a "dummy" bus driver for            *
-* StreamDevice. It does not provide any I/O functionality.     *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is a debug and example bus interface for StreamDevice.
+* It does not provide any I/O functionality.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "StreamBusInterface.h"
 #include "StreamError.h"

@@ -19,18 +19,27 @@ SOURCES += $(FORMATS:%=src/%Converter.cc)
 SOURCES += $(BUSSES:%=src/%Interface.cc)
 SOURCES += $(STREAM_SRCS:%=src/%)
 
-HEADERS += devStream.h
-HEADERS += StreamFormat.h
-HEADERS += StreamFormatConverter.h
-HEADERS += StreamBuffer.h
-HEADERS += StreamError.h
+HEADERS += src/devStream.h
+HEADERS += src/StreamFormat.h
+HEADERS += src/StreamFormatConverter.h
+HEADERS += src/StreamBuffer.h
+HEADERS += src/StreamError.h
+HEADERS += src/StreamVersion.h
+HEADERS += src/StreamProtocol.h
+HEADERS += src/StreamBusInterface.h
+HEADERS += src/StreamCore.h
+HEADERS += src/MacroMagic.h
 
-StreamCore.o StreamCore.d: streamReferences
+CPPFLAGS += -DSTREAM_INTERNAL -I$(COMMON_DIR)
 
-# Update version string (contains __DATE__ and __TIME__)
-# each time anything changes.
-StreamVersion.o: $(filter-out StreamVersion.o stream_exportAddress.o,$(LIBOBJS))
+# Update version string each time anything changes
+StreamVersion$(OBJ) StreamVersion$(DEP): $(COMMON_DIR)/StreamVersion.h $(filter-out StreamVersion$(OBJ) stream_exportAddress$(OBJ),$(LIBOBJS) $(LIBRARY_OBJS))
 
+$(COMMON_DIR)/StreamVersion.h: $(filter-out StreamVersion.h,$(notdir $(SOURCES) $(HEADERS)))
+	@echo Creating $@
+	$(PERL) ../src/makeStreamVersion.pl $@
+
+StreamCore$(OBJ) StreamCore$(DEP): streamReferences
 streamReferences:
 	$(PERL) ../src/makeref.pl Interface $(BUSSES) > $@
 	$(PERL) ../src/makeref.pl Converter $(FORMATS) >> $@

@@ -1,22 +1,24 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the raw format converter of StreamDevice.            *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the raw floating point format converter of StreamDevice.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 1999,2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
@@ -77,15 +79,15 @@ printDouble(const StreamFormat& format, StreamBuffer& output, double value)
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
-    	for (n = nbOfBytes-1; n >= 0; n--)
-    	{
+        for (n = nbOfBytes-1; n >= 0; n--)
+        {
             output.append(buffer.bytes[n]);
-    	}
+        }
     } else {
-    	for (n = 0; n < nbOfBytes; n++)
-    	{
+        for (n = 0; n < nbOfBytes; n++)
+        {
             output.append(buffer.bytes[n]);
-    	}
+        }
     }
     return true;
 }
@@ -114,15 +116,15 @@ scanDouble(const StreamFormat& format, const char* input, double& value)
     if (!(format.flags & alt_flag) ^ (endian == 4321))
     {
         // swap if byte orders differ
-    	for (n = nbOfBytes-1, i = 0; n >= 0; n--, i++)
-    	{
+        for (n = nbOfBytes-1, i = 0; n >= 0; n--, i++)
+        {
             buffer.bytes[n] = input[i];
-    	}
+        }
     } else {
-    	for (n = 0; n < nbOfBytes; n++)
-    	{
+        for (n = 0; n < nbOfBytes; n++)
+        {
             buffer.bytes[n] = input[n];
-    	}
+        }
     }
 
     if (nbOfBytes == 4)

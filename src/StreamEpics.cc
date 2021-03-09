@@ -1,22 +1,24 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the interface to EPICS for StreamDevice.             *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the StreamDevice interface to EPICS.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 1999,2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include <errno.h>
 #include "StreamCore.h"
@@ -29,6 +31,9 @@
 
 #ifdef EPICS_3_13
 extern "C" {
+
+static char* epicsStrDup(const char *s) { char* c = (char*)malloc(strlen(s)+1); strcpy(c, s); return c; }
+
 #endif
 
 #define epicsAlarmGLOBAL
@@ -161,10 +166,7 @@ class Stream : protected StreamCore
     Stream(dbCommon* record, const struct link *ioLink,
         streamIoFunction readData, streamIoFunction writeData);
     ~Stream();
-    long parseLink(const struct link *ioLink, char* filename, char* protocol,
-        char* busname, int* addr, char* busparam);
-    long initRecord(const char* filename, const char* protocol,
-        const char* busname, int addr, const char* busparam);
+    long initRecord(char* linkstring);
     bool print(format_t *format, va_list ap);
     ssize_t scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
@@ -196,6 +198,7 @@ public:
 extern "C" { // needed for Windows
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
+epicsExportAddress(int, streamDebugColored);
 }
 
 // for subroutine record
@@ -211,7 +214,7 @@ long streamReload(const char* recordname)
     int oldStreamError = streamError;
     streamError = 1;
 
-    if(!pdbbase) {
+    if (!pdbbase) {
         error("No database has been loaded\n");
         streamError = oldStreamError;
         return ERROR;
@@ -223,7 +226,7 @@ long streamReload(const char* recordname)
         if (recordname && recordname[0] &&
 #ifdef EPICS_3_13
             strcmp(stream->name(), recordname) == 0)
-#else        
+#else
             !epicsStrGlobMatch(stream->name(), recordname))
 #endif
             continue;
@@ -386,6 +389,13 @@ report(int interest)
 {
     debug("Stream::report(interest=%d)\n", interest);
     printf("  %s\n", StreamVersion);
+    printf("  (C) 1999 Dirk Zimoch (dirk.zimoch@psi.ch)\n");
+    if (interest == 100)
+    {
+        printf("\n%s", license());
+        return OK;
+    }
+    printf("  Use interest level 100 for license information\n");
 
     printf("  registered bus interfaces:\n");
     StreamBusInterfaceClass interface;
@@ -396,6 +406,7 @@ report(int interest)
     }
 
     if (interest < 1) return OK;
+
     printf("  registered converters:\n");
     StreamFormatConverter* converter;
     int c;
@@ -565,12 +576,7 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
     streamIoFunction readData, streamIoFunction writeData)
 {
     long status;
-    char filename[256];
-    char protocol[256];
-    char busname[256];
-    int addr = -1;
-    char busparam[256];
-    memset(busparam, 0 ,sizeof(busparam));
+    char* linkstring;
 
     debug("streamInitRecord(%s): SEVR=%d\n", record->name, record->sevr);
     Stream* stream = static_cast<Stream*>(record->dpvt);
@@ -587,19 +593,30 @@ long streamInitRecord(dbCommon* record, const struct link *ioLink,
             record->name);
         stream->finishProtocol(Stream::Abort);
     }
-    // scan the i/o link
-    debug("streamInitRecord(%s): parse link \"%s\"\n",
-        record->name, ioLink->value.instio.string);
-    status = stream->parseLink(ioLink, filename, protocol,
-        busname, &addr, busparam);
-    // (re)initialize bus and protocol
-    if (status == 0)
+    if (ioLink->type != INST_IO)
     {
-        debug("streamInitRecord(%s): calling initRecord\n",
-            record->name);
-        status = stream->initRecord(filename, protocol,
-            busname, addr, busparam);
+        error("%s: Wrong I/O link type %s\n", record->name,
+            pamaplinkType[ioLink->type].strvalue);
+        return S_dev_badInitRet;
     }
+    if (!ioLink->value.instio.string[0])
+    {
+        error("%s: Empty I/O link. "
+            "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
+            record->name);
+        return S_dev_badInitRet;
+    }
+    // (re)initialize bus and protocol
+    linkstring = epicsStrDup(ioLink->value.instio.string);
+    if (!linkstring)
+    {
+        error("%s: Out of memory", record->name);
+        return S_dev_noMemory;
+    }
+    debug("streamInitRecord(%s): calling initRecord\n",
+        record->name);
+    status = stream->initRecord(linkstring);
+    free(linkstring);
     if (status != OK && status != DO_NOT_CONVERT)
     {
         error("%s: Record initialization failed\n", record->name);
@@ -729,77 +746,77 @@ Stream::
 }
 
 long Stream::
-parseLink(const struct link *ioLink, char* filename,
-    char* protocol, char* busname, int* addr, char* busparam)
+initRecord(char* linkstring /* modifiable copy */)
 {
-    // parse link parameters: filename protocol busname addr busparam
-    int n1, n2;
-    if (ioLink->type != INST_IO)
-    {
-        error("%s: Wrong I/O link type %s\n", name(),
-            pamaplinkType[ioLink->type].strvalue);
-        return S_dev_badInitRet;
-    }
-    if (0 >= sscanf(ioLink->value.instio.string, "%s%n", filename, &n1))
-    {
-        error("%s: Empty I/O link. "
-            "Forgot the leading '@' or confused INP with OUT or link is too long ?\n",
-            name());
-        return S_dev_badInitRet;
-    }
-    if (0 >= sscanf(ioLink->value.instio.string+n1, " %[^ \t(] %n", protocol, &n2))
-    {
-        error("%s: Missing protocol name\n"
-            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
-            "  in \"@%s\"\n", name(),
-            ioLink->value.instio.string);
-        return S_dev_badInitRet;
-    }
-    n1+=n2;
-    if (ioLink->value.instio.string[n1] == '(')
-    {
-        n2 = 0;
-        sscanf(ioLink->value.instio.string+n1, " %[^)] %n", protocol+strlen(protocol), &n2);
-        n1+=n2;
-        if (ioLink->value.instio.string[n1++] != ')')
-        {
-            error("%s: Missing ')' after protocol arguments '%s'\n"
-                "  expect \"@file protocol(arg1,...) bus [addr] [params]\"\n"
-                "  in \"@%s\"\n", name(), protocol,
-                ioLink->value.instio.string);
-            return S_dev_badInitRet;
-        }
-        strcat(protocol, ")");
-    }
-    if (0 >= sscanf(ioLink->value.instio.string+n1, "%s %i %99c", busname, addr, busparam))
-    {
-        error("%s: Missing bus name\n"
-            "  expect \"@file protocol[(arg1,...)] bus [addr] [params]\"\n"
-            "  in \"@%s\"\n", name(),
-            ioLink->value.instio.string);
-        return S_dev_badInitRet;
-    }    
-    return OK;
-}
+    char *filename;
+    char *protocol;
+    char *busname;
+    char *busparam;
+    long addr = -1;
 
-long Stream::
-initRecord(const char* filename, const char* protocol,
-    const char* busname, int addr, const char* busparam)
-{
-    // It is safe to call this function again with different arguments
+    debug("Stream::initRecord %s: parse link string \"%s\"\n", name(), linkstring);
+
+    while (isspace(*linkstring)) linkstring++;
+    filename = linkstring;
+    while (*linkstring && !isspace(*linkstring)) linkstring++;
+    if (*linkstring) *linkstring++ = 0;
+
+    while (isspace(*linkstring)) linkstring++;
+    protocol = linkstring;
+    while (*linkstring && !isspace(*linkstring) && *linkstring != '(') linkstring++;
+    while (isspace(*linkstring)) linkstring++;
+    if (*linkstring == '(') {
+        int brackets = 0;
+        while(*++linkstring) {
+            if (*linkstring == '(') brackets++;
+            else if (*linkstring == ')') brackets--;
+            else if (*linkstring == '\\' && !*++linkstring) break;
+            else if (isspace(*linkstring) && brackets < 0) break;
+        }
+    }
+    else if (*linkstring) linkstring--;
+    if (*linkstring) *linkstring++ = 0;
+
+    while (isspace(*linkstring)) linkstring++;
+    busname = linkstring;
+    while (*linkstring && !isspace(*linkstring)) linkstring++;
+    if (*linkstring) *linkstring++ = 0;
+
+    if (linkstring) addr = strtol(linkstring, &linkstring, 0);
+    while (isspace(*linkstring)) linkstring++;
+    busparam = linkstring;
+
+    debug("Stream::initRecord %s: filename=\"%s\" protocol=\"%s\" bus=\"%s\" addr=%ld params=\"%s\"\n",
+        name(), filename, protocol, busname, addr, busparam);
+
+    if (!*filename)
+    {
+        error("%s: Missing protocol file name\n", name());
+        return S_dev_badInitRet;
+    }
+    if (!*protocol)
+    {
+        error("%s: Missing protocol name\n", name());
+        return S_dev_badInitRet;
+    }
+    if (!*busname)
+    {
+        error("%s: Missing bus name\n", name());
+        return S_dev_badInitRet;
+    }
 
     // attach to bus interface
-    debug("Stream::initRecord %s: attachBus(%s, %d, \"%s\")\n",
+    debug("Stream::initRecord %s: attachBus(\"%s\", %ld, \"%s\")\n",
         name(), busname, addr, busparam);
     if (!attachBus(busname, addr, busparam))
     {
-        error("%s: Can't attach to bus %s %d\n",
+        error("%s: Can't attach to bus %s %ld\n",
             name(), busname, addr);
         return S_dev_noDevice;
     }
 
     // parse protocol file
-    debug("Stream::initRecord %s: parse(%s, %s)\n",
+    debug("Stream::initRecord %s: parse(\"%s\", \"%s\")\n",
         name(), filename, protocol);
     if (!parse(filename, protocol))
     {
@@ -902,7 +919,7 @@ process()
     if (!startProtocol(record->proc == 2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
         debug("Stream::process(%s): could not start %sprotocol, status=%s (%d)\n",
-            name(), record->proc == 2 ? "@init " : "", 
+            name(), record->proc == 2 ? "@init " : "",
                 status >= 0 && status < ALARM_NSTATUS ?
                     epicsAlarmConditionStrings[status] : "ERROR",
             status);
@@ -1130,11 +1147,7 @@ getFieldAddress(const char* fieldname, StreamBuffer& address)
 }
 
 static const unsigned char dbfMapping[] =
-#ifdef DBR_INT64
-    {0, DBF_UINT64, DBF_INT64, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
-#else
     {0, DBF_ULONG, DBF_LONG, DBF_ENUM, DBF_DOUBLE, DBF_STRING};
-#endif
 
 bool Stream::
 formatValue(const StreamFormat& format, const void* fieldaddress)

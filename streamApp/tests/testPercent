@@ -16,7 +16,7 @@ set records {
 
 set protocol {
     Terminator = LF;
-    test1 {out "\%\e%d\e\e\%";}
+    test1 {out "\%\e%d%%\e\e\%";}
 }
 
 set startup {
@@ -28,6 +28,6 @@ set debug 0
 startioc
 
 put DZ:test1 1
-assure "%\0331\033\033%\n"
+assure "%\0331%\033\033%\n"
 
 finish

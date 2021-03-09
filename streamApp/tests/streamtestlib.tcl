@@ -62,14 +62,17 @@ proc startioc {} {
         puts $fd "streamApp_registerRecordDeviceDriver"
     }
     puts $fd "streamSetLogfile StreamDebug.log"
+    puts $fd "var streamDebug 1"
+    puts $fd "var streamError 1"
     puts $fd "epicsEnvSet STREAM_PROTOCOL_PATH ."
     puts $fd "drvAsynIPPortConfigure device localhost:$port"
+    if [info exists startup] {
+        puts $fd $startup
+    }
     puts $fd "dbLoadRecords test.db"
-    puts $fd $startup
     puts $fd "iocInit"
     puts $fd "dbl"
     puts $fd "dbior stream 2"
-    puts $fd "var streamDebug 1"
     close $fd
     if [info exists streamversion] {
         set ioc [open "|iocsh test.cmd >& $testname.ioclog 2>@stderr" w]

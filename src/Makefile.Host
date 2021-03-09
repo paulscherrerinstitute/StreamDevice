@@ -1,22 +1,25 @@
-################################################################
-# StreamDevice Support                                         #
-#                                                              #
-# (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          #
-# (C) 2006 Dirk Zimoch (dirk.zimoch@psi.ch)                    #
-#                                                              #
-# This is the EPICS 3.13 Makefile of StreamDevice.             #
-# Normally it should not be necessary to modify this file.     #
-# All configuration can be done in CONFIG_STREAM               #
-#                                                              #
-# If you do any changes in this file, you are not allowed to   #
-# redistribute it any more. If there is a bug or a missing     #
-# feature, send me an email and/or your patch. If I accept     #
-# your changes, they will go to the next release.              #
-#                                                              #
-# DISCLAIMER: If this software breaks something or harms       #
-# someone, it's your problem.                                  #
-#                                                              #
-################################################################
+##########################################################################
+# This is an EPICS 3.13 Makefile for StreamDevice.
+# Normally it should not be necessary to modify this file.
+# All configuration can be done in CONFIG_STREAM
+#
+# (C) 2007,2018 Dirk Zimoch (dirk.zimoch@psi.ch)
+#
+# This file is part of StreamDevice.
+#
+# StreamDevice is free software: You can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# StreamDevice is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+#########################################################################/
 
 TOP = ../..
 ifneq ($(wildcard ../../../config),)
@@ -26,11 +29,4 @@ endif
 include $(TOP)/config/CONFIG_APP
 include ../CONFIG_STREAM
 
-DBDNAME = stream.dbd
-INC += devStream.h
-
 include $(EPICS_BASE)/config/RULES.Host
-
-# create stream.dbd from all RECORDTYPES
-stream.dbd: ../CONFIG_STREAM
-	$(PERL) ../makedbd.pl -3.13 $(RECORDTYPES) > $@

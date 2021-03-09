@@ -1,3 +1,25 @@
+/*************************************************************************
+* This header provides macros for enum to string conversions.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 2018 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
+
 #ifndef _MacroMagic_h
 #define _MacroMagic_h
 
@@ -28,7 +50,7 @@
 
 #define ENUM(type, args...) \
 enum type { args }; \
-static inline const char* type##ToStr(int x) {switch(x){MACRO_FOR_EACH(_CASE_LINE,args)default: return "invalid";}}\
+static inline const char* type##ToStr(int x) {switch(x) {MACRO_FOR_EACH(_CASE_LINE,args)default: return "invalid";}}\
 _ENUM_CAST(type)
 
 #else
@@ -65,7 +87,7 @@ _ENUM_CAST(type)
 
 #define ENUM(type,...) \
 enum type { __VA_ARGS__ }; \
-static inline const char* type##ToStr(int x) {switch(x){_EXPAND(MACRO_FOR_EACH(_CASE_LINE,__VA_ARGS__)) default: return "invalid";}} \
+static inline const char* type##ToStr(int x) {switch(x) {_EXPAND(MACRO_FOR_EACH(_CASE_LINE,__VA_ARGS__)) default: return "invalid";}} \
 _ENUM_CAST(type)
 #endif
 

@@ -1,20 +1,41 @@
+##########################################################################
+# This is an example and debug EPICS database for StreamDevice.
+#
+# (C) 2010 Dirk Zimoch (dirk.zimoch@psi.ch)
+#
+# This file is part of StreamDevice.
+#
+# StreamDevice is free software: You can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# StreamDevice is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+#########################################################################/
+
 record (stringout, "$(P):cmd")
 {
     field (DTYP, "stream")
-    field (OUT,  "@test.proto command terminal")
+    field (OUT,  "@test.proto command  terminal")
     field (PRIO, "HIGH")
     field (VAL, "")
 }
 record (stringout, "$(P):info")
 {
     field (DTYP, "stream")
-    field (OUT,  "@test.proto info terminal")
+    field (OUT,  "@test.proto info terminal   ")
     field (PRIO, "HIGH")
 }
 record (stringout, "$(P):request")
 {
     field (DTYP, "stream")
-    field (OUT,  "@test.proto request($(P):reply.VAL) terminal")
+    field (OUT,  "@test.proto request ($(P):reply.VAL) terminal")
     field (PRIO, "HIGH")
 }
 record (stringin, "$(P):reply")
@@ -23,7 +44,7 @@ record (stringin, "$(P):reply")
 record (stringout, "$(P):checksum")
 {
     field (DTYP, "stream")
-    field (OUT,  "@test.proto checksum($(CHKSUM=sum)) terminal")
+    field (OUT,  "@test.proto checksum     ($(CHKSUM=sum))   terminal")
 }
 record (stringin, "$(P):spy")
 {
@@ -139,4 +160,3 @@ record (waveform, "$(P):spybin")
     field (NELM, "2000")
     field (SCAN, "I/O Intr")
 }
-

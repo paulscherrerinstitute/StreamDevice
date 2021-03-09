@@ -1,22 +1,24 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the header for the EPICS interface to StreamDevice.  *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the header for StreamDevice interfaces to EPICS.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 1999,2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #ifndef devStream_h
 #define devStream_h
@@ -26,8 +28,9 @@
 #include <string.h>
 #include <sys/types.h>
 
-#define STREAM_MAJOR 2
-#define STREAM_MINOR 8
+#ifndef STREAM_INTERNAL
+#include "StreamVersion.h"
+#endif
 
 #ifndef OK
 #define OK 0
@@ -40,6 +43,12 @@
 #define DO_NOT_CONVERT 2
 #define INIT_RUN (!interruptAccept)
 
+#ifdef epicsExportSharedSymbols
+#   define devStream_epicsExportSharedSymbols
+#   undef epicsExportSharedSymbols
+#   include "shareLib.h"
+#endif
+
 #include "epicsVersion.h"
 #ifdef BASE_VERSION
 #define EPICS_3_13
@@ -47,12 +56,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#endif
-
-#ifdef epicsExportSharedSymbols
-#   define devStream_epicsExportSharedSymbols
-#   undef epicsExportSharedSymbols
-#   include <shareLib.h>
 #endif
 
 #include "dbCommon.h"
@@ -65,18 +68,18 @@ extern "C" {
 #include "dbEvent.h"
 #include "epicsMath.h"
 
-#ifdef devStream_epicsExportSharedSymbols
-#   undef devStream_epicsExportSharedSymbols
-#   define epicsExportSharedSymbols
-#   include <shareLib.h>
-#endif
-
 #ifdef EPICS_3_13
 #ifdef __cplusplus
 }
 #endif
 #else
 #include "epicsStdioRedirect.h"
+#endif
+
+#ifdef devStream_epicsExportSharedSymbols
+#   undef devStream_epicsExportSharedSymbols
+#   define epicsExportSharedSymbols
+#   include "shareLib.h"
 #endif
 
 #ifdef _WIN32
@@ -88,14 +91,15 @@ typedef const struct format_s {
     const struct StreamFormat* priv;
 } format_t;
 
-epicsShareExtern FILE* StreamDebugFile;
-extern const char StreamVersion [];
+extern FILE* StreamDebugFile;
 
 typedef long (*streamIoFunction) (dbCommon*, format_t*);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern const char StreamVersion [];
 
 long streamInit(int after);
 long streamInitRecord(dbCommon *record,

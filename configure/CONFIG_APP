@@ -24,4 +24,3 @@ endif
 
 # dbst based database optimization (default: NO)
 DB_OPT = NO
-HOST_OPT=NO

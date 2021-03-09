@@ -1,31 +1,39 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 1999 Dirk Zimoch (zimoch@delta.uni-dortmund.de)          *
-* (C) 2006-2018 Dirk Zimoch (dirk.zimoch@psi.ch)               *
-*                                                              *
-* This is the checksum pseudo-converter of StreamDevice.       *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
+/*************************************************************************
+* This is the checksum pseudo-converter of StreamDevice.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 1999,2006,2018 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 #include <ctype.h>
 #if defined(__vxworks) || defined(vxWorks)
+#include <version.h>
+#if defined(_WRS_VXWORKS_MAJOR) && _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR > 8)
+#include <stdint.h>
+#define PRIX32 "X"
+#define PRIu32 "u"
+#else
 #define PRIX32 "lX"
 #define PRIu32 "lu"
+#endif
 #define PRIX8  "X"
-#define SCNx8  "hhx"
 #define uint_fast8_t uint8_t
 #define int_fast8_t int8_t
 #elif defined(_MSC_VER) && _MSC_VER < 1700 /* Visual Studio 2010 does not have inttypes.h */
@@ -33,7 +41,6 @@
 #define PRIX32 "X"
 #define PRIu32 "u"
 #define PRIX8  "X"
-#define SCNx8  "hhx"
 #else
 #define __STDC_FORMAT_MACROS
 #include <stdint.h>
@@ -504,6 +511,18 @@ static uint32_t leybold(const uint8_t* data, size_t len, uint32_t sum)
     return sum;
 }
 
+// Checksum used by Brooks Cryopumps
+static uint32_t brksCryo(const uint8_t* data, size_t len, uint32_t sum)
+{
+    uint32_t xsum;
+    while (len--)  {
+        sum += (*data++) & 0x7F;
+    }
+    xsum = (((sum >> 6) ^ sum) & 0x3F) + 0x30;
+    return xsum;
+}
+
+
 struct checksum
 {
     const char* name;
@@ -521,8 +540,13 @@ static checksum checksumMap[] =
     {"sum8",    sum,              0x00,       0x00,       1}, // 0xDD
     {"sum16",   sum,              0x0000,     0x0000,     2}, // 0x01DD
     {"sum32",   sum,              0x00000000, 0x00000000, 4}, // 0x000001DD
+    {"nsum8",   sum,              0xFF,       0xFF,       1}, // 0x23
+    {"nsum16",  sum,              0xFFFF,     0xFFFF,     2}, // 0xFE23
+    {"nsum32",  sum,              0xFFFFFFFF, 0xFFFFFFFF, 4}, // 0xFFFFFE23
+    {"notsum",  sum,              0x00,       0xFF,       1}, // 0x22
     {"xor",     xor8,             0x00,       0x00,       1}, // 0x31
     {"xor8",    xor8,             0x00,       0x00,       1}, // 0x31
+    {"xor8ff",  xor8,             0x00,       0xFF,       1}, // 0xCE
     {"xor7",    xor7,             0x00,       0x00,       1}, // 0x31
     {"crc8",    crc_0x07,         0x00,       0x00,       1}, // 0xF4
     {"ccitt8",  crc_0x31,         0x00,       0x00,       1}, // 0xA1
@@ -541,6 +565,7 @@ static checksum checksumMap[] =
     {"hexsum8", hexsum,           0x00,       0x00,       1}, // 0x2D
     {"cpi",     CPI,              0x00,       0x00,       1}, // 0x7E
     {"leybold", leybold,          0x00,       0x00,       1}, // 0x22
+    {"brksCryo",brksCryo,         0x00,       0x00,       1}  // 0x4A
 };
 
 static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
@@ -727,7 +752,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input checksum is 0x%0*" PRIX32 "\n",
         checksumMap[fnum].name, 2*checksumMap[fnum].bytes, sum);
 
-    uint_fast8_t inchar;
+    unsigned int inchar;
 
     if (format.flags & sign_flag) // decimal
     {
@@ -754,7 +779,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                if (sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar) != 1)
+                if (sscanf(input(cursor+2*i), "%2x", &inchar) != 1)
                 {
                     debug("ChecksumConverter %s: Input byte '%s' is not a hex byte\n",
                         checksumMap[fnum].name, input.expand(cursor+2*i,2)());
@@ -798,7 +823,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         {
             if (format.flags & zero_flag) // ASCII
             {
-                sscanf(input(cursor+2*i), "%2" SCNx8, (int8_t *) &inchar);
+                sscanf(input(cursor+2*i), "%2x", &inchar);
             }
             else
             if (format.flags & left_flag) // poor man's hex: 0x30 - 0x3F

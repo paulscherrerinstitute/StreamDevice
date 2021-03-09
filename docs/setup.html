@@ -54,15 +54,17 @@ git clone https://github.com/paulscherrerinstitute/StreamDevice.git
 <p class="new">
 <em>StreamDevice</em> now comes with a standard
 <kbd>configure</kbd> directory.
-But it can still be built in an external <em>&lt;top&gt;</em>
+<del>But it can still be built in an external <em>&lt;top&gt;</em>
 directory as in previous versions.
 It will automatically detect <em>&lt;top&gt;</em> locations
 from the presence of <kbd>../configure</kbd> or <kbd>../config</kbd>
-directories.
+directories.</del> Using an upper level <kbd>../configure</kbd> is
+no longer supported due to compatibility issues with <em>SynApps</em>.
 </p>
 <p class="new">
 Edit the <kbd>configure/RELEASE</kbd> file to specify the install location
-of EPICS base and of additional software modules, for example:
+of EPICS base and of additional software modules or add a
+<kbd>configure/RELEASE.local</kbd> file to overwrite, for example:
 <pre>
 EPICS_BASE=/home/epics/base-3.16.1
 </pre>

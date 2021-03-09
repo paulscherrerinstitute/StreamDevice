@@ -63,7 +63,7 @@ fi
 for o in $O
 do
     g++ -I ../../src $o test.cc -o test.exe
-    test.exe
+    ./test.exe
     if [ $? != 0 ]
     then
         echo -e "\033[31;7mTest failed.\033[0m"

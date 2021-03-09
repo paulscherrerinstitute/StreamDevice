@@ -1,0 +1,61 @@
+#!/usr/bin/env tclsh
+source streamtestlib.tcl
+
+# Define records, protocol and startup (text goes to files)
+# The asynPort "device" is connected to a network TCP socket
+# Talk to the socket with send/receive/assure
+# Send commands to the ioc shell with ioccmd
+
+set records {
+    record(ao, "DZ:test1")
+    {
+        field (DTYP, "stream")
+        field (OUT, "@test.proto test1(ARG(10),20,30) device")
+    }
+
+    record(ao, "DZ:test2")
+    {
+        field (DTYP, "stream")
+        field (OUT, "@test.proto test1 (ARG(10,20), 30) device")
+    }
+    record(ao, "DZ:test3")
+    {
+        field (DTYP, "stream")
+        field (OUT, "@test.proto test1 ( ARG ( 10 , 20 ) , 30 )  device")
+    }
+    record(ao, "DZ:test4")
+    {
+        field (DTYP, "stream")
+        field (OUT, "@test.proto test1(      ARG    \\(  10    ,   20   ,   30    )    device")
+    }
+    record(ao, "DZ:test5")
+    {
+        field (DTYP, "stream")
+        field (OUT,  "@test.proto test1(\\ ARG\\,\\\\(10,20)\\,30) device")
+    }
+}
+
+set protocol {
+    Terminator = LF;
+    test1 { out "VAL:\$1:%d"}
+}
+
+set startup {
+}
+
+set debug 0
+
+startioc
+
+put DZ:test1 "1"
+assure "VAL:ARG(10):1\n"
+put DZ:test2 "1"
+assure "VAL:ARG(10,20):1\n"
+put DZ:test3 "1"
+assure "VAL:ARG ( 10 , 20 ):1\n"
+put DZ:test4 "1"
+assure "VAL:     ARG    (  10   :1\n"
+put DZ:test5 "1"
+assure "VAL: ARG,\\(10,20),30:1\n"
+
+#finish

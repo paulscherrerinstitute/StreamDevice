@@ -1,33 +1,24 @@
-/***************************************************************
-* StreamDevice Support                                         *
-*                                                              *
-* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)                    *
-*                                                              *
-* This is the interface to asyn driver for StreamDevice.       *
-* Please refer to the HTML files in ../docs/ for a detailed    *
-* documentation.                                               *
-*                                                              *
-* If you do any changes in this file, you are not allowed to   *
-* redistribute it any more. If there is a bug or a missing     *
-* feature, send me an email and/or your patch. If I accept     *
-* your changes, they will go to the next release.              *
-*                                                              *
-* DISCLAIMER: If this software breaks something or harms       *
-* someone, it's your problem.                                  *
-*                                                              *
-***************************************************************/
-
-#include "StreamBusInterface.h"
-#include "StreamError.h"
-#include "StreamBuffer.h"
-
-#include "asynDriver.h"
-#include "asynOctet.h"
-#include "asynInt32.h"
-#include "asynUInt32Digital.h"
-#include "asynGpibDriver.h"
-
-#include "devStream.h"
+/*************************************************************************
+* This is the interface to asyn driver for StreamDevice.
+* Please see ../docs/ for detailed documentation.
+*
+* (C) 2005 Dirk Zimoch (dirk.zimoch@psi.ch)
+*
+* This file is part of StreamDevice.
+*
+* StreamDevice is free software: You can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* StreamDevice is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with StreamDevice. If not, see https://www.gnu.org/licenses/.
+*************************************************************************/
 
 #ifdef EPICS_3_13
 #include <assert.h>
@@ -42,6 +33,18 @@ extern "C" {
 #include "epicsTimer.h"
 #include "iocsh.h"
 #endif
+
+#include "StreamBusInterface.h"
+#include "StreamError.h"
+#include "StreamBuffer.h"
+
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInt32.h"
+#include "asynUInt32Digital.h"
+#include "asynGpibDriver.h"
+
+#include "devStream.h"
 
 #include "MacroMagic.h"
 
