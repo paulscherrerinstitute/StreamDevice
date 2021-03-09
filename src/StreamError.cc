@@ -153,7 +153,7 @@ void StreamVError(int line, const char* file,
         va_end(args2);
     }
 #endif
-    snprintf(buffer2, "%s%s ", ansiEscape(ANSI_RED_BOLD), timestamp);
+    snprintf(buffer2, sizeof(buffer2), "%s%s ", ansiEscape(ANSI_RED_BOLD), timestamp);
     if (file)
     {
         snprintf(buffer1, sizeof(buffer1), "%s%s line %d: ", buffer2, file, line);

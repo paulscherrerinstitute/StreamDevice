@@ -266,8 +266,7 @@ extern "C" long streamMessageTimeout(int timeout)
     if (!pErrEngine)
     {
         // To avoid warning complaints from the compiler 
-        pthread_t thread_id = 0;
-        pErrEngine = createEngine(thread_id);
+        pErrEngine = createEngine();
         pErrEngine->setTimeout(timeout);
     }
 

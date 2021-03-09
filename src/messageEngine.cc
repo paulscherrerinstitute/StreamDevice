@@ -1,16 +1,19 @@
-#include <unistd.h>
 #include <stdio.h>
 #include <cstring>
 #include <new>
 #include <cstdlib>
+#include <epicsThread.h>
 
 #include "messageEngine.h"
 
-StreamErrorEngine* createEngine(pthread_t thread_id)
+StreamErrorEngine* createEngine()
 {
     StreamErrorEngine* newEngine = new StreamErrorEngine;
-    pthread_create(&thread_id, NULL, engineJob, 
-                   reinterpret_cast<void *>(newEngine));
+    epicsThreadCreate("messageThread", 
+                      epicsThreadPriorityMedium, 
+                      epicsThreadGetStackSize(epicsThreadStackMedium),
+                      (EPICSTHREADFUNC) engineJob,
+                      reinterpret_cast<void *>(newEngine));
     return newEngine;
 }
 
@@ -27,7 +30,7 @@ void *engineJob(void* engineObj)
         if (engine->mustStop())
         {
             // Time to finish the thread
-            pthread_exit(0);
+            break;
         }
 
         // Loop through all error categories
@@ -41,7 +44,7 @@ void *engineJob(void* engineObj)
             }
 
             // Lock access to error data
-            pthread_mutex_lock(&errData->mutex);
+            errData->mutex->lock();
             
             // Timeout?
             elapsedTime = difftime(time(NULL),
@@ -70,11 +73,11 @@ void *engineJob(void* engineObj)
             } // if timeout
 
             // Release lock
-            pthread_mutex_unlock(&errData->mutex);
+            errData->mutex->unlock();
 
         } // for
 
-        sleep(ENGINE_POLLING_TIME);
+        epicsThreadSleep(ENGINE_POLLING_TIME);
     } // while(1)
 
     return 0;
@@ -90,7 +93,7 @@ StreamErrorEngine::StreamErrorEngine()
         categories[iii].lastPrintTime = time(NULL);
         categories[iii].numberOfCalls = 0;
         strcpy(categories[iii].lastErrorMessage, "\0");
-        pthread_mutex_init(&categories[iii].mutex, NULL);
+        categories[iii].mutex = new epicsMutex();
     }
 }
 
@@ -98,15 +101,6 @@ StreamErrorEngine::~StreamErrorEngine()
 {
     // Order message engine thread to stop
     stopThread = true;
-
-    // Wait for thread to stop
-    pthread_join(thread_id, NULL);
-
-    // Cleanup
-    for (int iii=0; iii<TOTAL_CATEGORIES; ++iii)
-    {
-        pthread_mutex_destroy(&categories[iii].mutex);
-    }
 }
 
 void StreamErrorEngine::callError(ErrorCategory category, char* message)
@@ -120,7 +114,7 @@ void StreamErrorEngine::callError(ErrorCategory category, char* message)
     errorData_t* errData = &categories[category];
     
     // Lock access to error data
-    pthread_mutex_lock(&errData->mutex);
+    errData->mutex->lock();
 
     // If it is waiting timeout, just increment the number of calls for that
     // error category.
@@ -146,7 +140,7 @@ void StreamErrorEngine::callError(ErrorCategory category, char* message)
     }
     
     // Release lock
-    pthread_mutex_unlock(&errData->mutex);
+    errData->mutex->unlock();
 }
 
 void StreamErrorEngine::setTimeout(int tmout)

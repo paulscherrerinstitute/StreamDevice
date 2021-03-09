@@ -3,7 +3,7 @@
 
 #include <string>
 #include <time.h>
-#include <pthread.h>
+#include <epicsMutex.h>
 
 struct errorData_t 
 {
@@ -11,7 +11,7 @@ struct errorData_t
     time_t lastPrintTime;
     int numberOfCalls;
     char lastErrorMessage[500];
-    pthread_mutex_t mutex;
+    epicsMutex* mutex;
 } ;
 
 // Polling time in seconds
@@ -30,12 +30,11 @@ enum ErrorCategory
     CAT_PROTO_FORMAT
 };
 
-class StreamErrorEngine 
+class StreamErrorEngine
 {
 private:
     struct errorData_t categories[TOTAL_CATEGORIES];
     int timeout; // in seconds
-    pthread_t thread_id;
     bool stopThread;
 public:
     StreamErrorEngine();
@@ -48,7 +47,7 @@ public:
 };
 
 // Wrappers for C functions because we don't have C++11
-StreamErrorEngine* createEngine(pthread_t thread_id);
+StreamErrorEngine* createEngine();
 void *engineJob(void* engineObj);
 
 #endif
