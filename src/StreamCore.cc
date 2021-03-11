@@ -489,6 +489,7 @@ finishProtocol(ProtocolResult status)
         switch (status)
         {
             case Success:
+                previousResult = Success;
                 handler = NULL;
                 break;
             case WriteTimeout:
@@ -991,8 +992,11 @@ readCallback(StreamIoStatus status,
                 evalIn();
                 return 0;
             }
-            error("%s: No reply within %ld ms to \"%s\"\n",
-                name(), replyTimeout, outputLine.expand()());
+            if (previousResult != ReplyTimeout) {
+                previousResult = ReplyTimeout;
+                error("%s: No reply within %ld ms to \"%s\"\n",
+                    name(), replyTimeout, outputLine.expand()());
+            }
             inputBuffer.clear();
             finishProtocol(ReplyTimeout);
             return 0;

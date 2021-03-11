@@ -74,7 +74,6 @@ void acceptEvent(unsigned short mask, unsigned short timeout)
 
 #include "MacroMagic.h"
 
-
 // Flags: 0x00FFFFFF reserved for StreamCore
 const unsigned long None             = 0x0000;
 const unsigned long IgnoreExtraInput = 0x0001;
@@ -170,6 +169,7 @@ protected:
     StreamBuffer inputBuffer;
     StreamBuffer inputLine;
     size_t consumedInput;
+    ProtocolResult previousResult = Success;
     ProtocolResult runningHandler;
     StreamBuffer fieldAddress;
 
