@@ -489,6 +489,7 @@ finishProtocol(ProtocolResult status)
         {
             case Success:
                 previousResult = Success;
+                numberOfErrors = 0;
                 handler = NULL;
                 break;
             case WriteTimeout:
@@ -991,14 +992,7 @@ readCallback(StreamIoStatus status,
                 evalIn();
                 return 0;
             }
-            if (previousResult != ReplyTimeout) {
-                previousResult = ReplyTimeout;
-                time(&lastErrorTime);
-                error("%s: No reply within %ld ms to \"%s\"\n",
-                    name(), replyTimeout, outputLine.expand()());
-            }
-            else if (time(NULL) - lastErrorTime > 5) {
-                time(&lastErrorTime);
+            if (checkShouldPrint(ReplyTimeout)) {
                 error("%s: No reply within %ld ms to \"%s\"\n",
                     name(), replyTimeout, outputLine.expand()());
             }
@@ -1830,6 +1824,39 @@ license(void)
         "\n"
         "You should have received a copy of the GNU Lesser General Public License\n"
         "along with StreamDevice. If not, see https://www.gnu.org/licenses/.\n";
+}
+
+/**
+ * \brief Checks whether an error message should be printed based on the new error type.
+ *
+ * Will check based on the error type and the time since last error of the same type
+ * whether to print the new error. Also has a number of side effects such as counting 
+ * up errors of each type and resetting the time since last error.
+ *
+ * \param[in] newErrorType the type of the new error
+ * \return true if the error should be preinted, else false
+ */
+bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType) 
+{
+    if (previousResult != newErrorType) {
+        previousResult = newErrorType;
+        numberOfErrors = 0;
+        time(&lastErrorTime);
+        return true;
+    }
+    else if (time(NULL) - lastErrorTime > 5) {
+        time(&lastErrorTime);
+        if (numberOfErrors != 0) {
+            error("%s: %i additional errors of the following type seen in the last %i seconds\n",
+                name(), numberOfErrors, 5);
+        }
+        numberOfErrors = 0;
+        return true;
+    }
+    else {
+        numberOfErrors++;
+        return false;
+    }
 }
 
 #include "streamReferences"
