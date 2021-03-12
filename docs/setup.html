@@ -399,11 +399,25 @@ Debug output can be redirected to a file with the command
 When called without a filename, debug output is directed back
 to the console.
 </p>
+<p>
+By default the debug/error output is set to be colored if the terminal allows
+it but this can be set to always colored or never colored by setting 
+<code>streamDebugColored</code> to 1 or 0 respectively.
+</p>
+<p>
+When a device is disconnected StreamDevice can produce many repeated timeout 
+messages. To reduce this logging you can set <code>streamErrorDeadTime</code>
+to an integer number of seconds. When this is set repeated timeout messages 
+will not be printed in the specified dead time after the last message. The 
+default dead time is 0, resulting in every message being printed.
+</p>
 
 <h3>Example (vxWorks):</h3>
 <pre>
 streamError=1
 streamDebug=1
+streamDebugColored=1
+streamErrorDeadTime=30
 streamSetLogfile("logfile.txt")
 </pre>
 
@@ -411,6 +425,8 @@ streamSetLogfile("logfile.txt")
 <pre>
 var streamError 1
 var streamDebug 1
+var streamDebugColored 1
+var streamErrorDeadTime 30
 streamSetLogfile("logfile.txt")
 </pre>
 

@@ -96,7 +96,7 @@ const unsigned long ClearOnStart     = InitRun|AsyncMode|GotValue|Aborted|
                                        AcceptInput|AcceptEvent|BusPending;
 
 // The amount of time to wait before printing duplicated messages
-extern int DeadTime;
+extern int streamErrorDeadTime;
 
 struct StreamFormat;
 
