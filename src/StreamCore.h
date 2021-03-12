@@ -173,8 +173,10 @@ protected:
     ProtocolResult runningHandler;
     StreamBuffer fieldAddress;
 
+    // Keep track of errors to reduce logging frequencies
     ProtocolResult previousResult = Success;
     time_t lastErrorTime;
+    int numberOfErrors = 0;
 
     StreamIoStatus lastInputStatus;
     bool unparsedInput;
@@ -233,6 +235,7 @@ public:
 
 private:
     char* printCommands(StreamBuffer& buffer, const char* c);
+    bool  checkShouldPrint(ProtocolResult newErrorType);
 };
 
 #endif
