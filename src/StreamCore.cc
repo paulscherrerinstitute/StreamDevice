@@ -27,6 +27,8 @@
 
 #define Z PRINTF_SIZE_T_PREFIX
 
+int DeadTime = 0;
+
 /// debug functions /////////////////////////////////////////////
 
 char* StreamCore::
@@ -1112,9 +1114,11 @@ readCallback(StreamIoStatus status,
         }
         else
         {
-            error("%s: Timeout after reading %" Z "d byte%s \"%s%s\"\n",
-                name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
-                inputBuffer.expand(-20)());
+            if (checkShouldPrint(ReadTimeout)) {
+                error("%s: Timeout after reading %" Z "d byte%s \"%s%s\"\n",
+                    name(), end, end==1 ? "" : "s", end > 20 ? "..." : "",
+                    inputBuffer.expand(-20)());
+            }
         }
     }
 
@@ -1844,11 +1848,11 @@ bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType)
         time(&lastErrorTime);
         return true;
     }
-    else if (time(NULL) - lastErrorTime > 5) {
+    else if (time(NULL) - lastErrorTime > DeadTime) {
         time(&lastErrorTime);
         if (numberOfErrors != 0) {
             error("%s: %i additional errors of the following type seen in the last %i seconds\n",
-                name(), numberOfErrors, 5);
+                name(), numberOfErrors, DeadTime);
         }
         numberOfErrors = 0;
         return true;
