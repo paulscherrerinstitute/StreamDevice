@@ -27,7 +27,7 @@
 
 #define Z PRINTF_SIZE_T_PREFIX
 
-int DeadTime = 0;
+int streamErrorDeadTime = 0;
 
 /// debug functions /////////////////////////////////////////////
 
@@ -1848,11 +1848,11 @@ bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType)
         time(&lastErrorTime);
         return true;
     }
-    else if (time(NULL) - lastErrorTime > DeadTime) {
+    else if (time(NULL) - lastErrorTime > streamErrorDeadTime) {
         time(&lastErrorTime);
         if (numberOfErrors != 0) {
             error("%s: %i additional errors of the following type seen in the last %i seconds\n",
-                name(), numberOfErrors, DeadTime);
+                name(), numberOfErrors, streamErrorDeadTime);
         }
         numberOfErrors = 0;
         return true;

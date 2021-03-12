@@ -199,6 +199,7 @@ extern "C" { // needed for Windows
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
 epicsExportAddress(int, streamDebugColored);
+epicsExportAddress(int, streamErrorDeadTime);
 }
 
 // for subroutine record
@@ -261,12 +262,6 @@ long streamSetLogfile(const char* filename)
     return OK;
 }
 
-long streamMessageDeadTime(int newDeadTime)
-{
-    DeadTime = newDeadTime;
-    return OK;
-}
-
 #ifndef EPICS_3_13
 static const iocshArg streamReloadArg0 =
     { "recordname", iocshArgString };
@@ -304,26 +299,11 @@ void streamSetLogfileFunc (const iocshArgBuf *args)
     streamSetLogfile(args[0].sval);
 }
 
-// Setting a dead time for messages at the IOC Console will cause repeated messages to only be periodically logged.
-static const iocshArg streamMessageDeadTimeArg0 =
-    { "dead time (s)", iocshArgInt };
-static const iocshArg * const streamMessageDeadTimeArgs[] =
-    { &streamMessageDeadTimeArg0 };
-static const iocshFuncDef messageDeadTimeDef =
-    { "streamMessageDeadTime", 1, streamMessageDeadTimeArgs };
-
-extern "C" void messageDeadTimeFunc(const iocshArgBuf *args)
-{
-    streamMessageDeadTime(args[0].ival);
-}
-
-
 static void streamRegistrar ()
 {
     iocshRegister(&streamReloadDef, streamReloadFunc);
     iocshRegister(&streamReportRecordDef, streamReportRecordFunc);
     iocshRegister(&streamSetLogfileDef, streamSetLogfileFunc);
-    iocshRegister(&messageDeadTimeDef, messageDeadTimeFunc);
     // make streamReload available for subroutine records
     registryFunctionAdd("streamReload",
         (REGISTRYFUNCTION)streamReloadSub);
