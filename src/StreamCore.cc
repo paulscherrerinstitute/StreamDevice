@@ -994,6 +994,12 @@ readCallback(StreamIoStatus status,
             }
             if (previousResult != ReplyTimeout) {
                 previousResult = ReplyTimeout;
+                time(&lastErrorTime);
+                error("%s: No reply within %ld ms to \"%s\"\n",
+                    name(), replyTimeout, outputLine.expand()());
+            }
+            else if (time(NULL) - lastErrorTime > 5) {
+                time(&lastErrorTime);
                 error("%s: No reply within %ld ms to \"%s\"\n",
                     name(), replyTimeout, outputLine.expand()());
             }
