@@ -54,4 +54,6 @@ write {
     out "%s  hexsum8   %0.12<hexsum8>";
     out "%s  cpi       %0.12<cpi>";
     out "%s  leybold   %0.12<leybold>";
+    out "%s  lrc       %0.12<lrc>";
+    out "%s  hexlrc    %0.12<hexlrc>";
 }
