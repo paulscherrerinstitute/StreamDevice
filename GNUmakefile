@@ -5,7 +5,7 @@ else
 include /ioc/tools/driver.makefile
 EXCLUDE_VERSIONS = 3.13.2
 PROJECT=stream
-BUILDCLASSES += Linux
+BUILDCLASSES += vxWorks Linux WIN32
 
 DOCUDIR = docs
 
