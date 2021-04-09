@@ -122,12 +122,11 @@ printProtocol(FILE* file)
 StreamCore* StreamCore::first = NULL;
 
 StreamCore::
-StreamCore() : activeCommand(end)
+StreamCore() : StreamBusInterface::Client(),
+    next(), streamname(), flags(None), inTerminatorDefined(), outTerminatorDefined(),
+    activeCommand(end), unparsedInput()
 {
     businterface = NULL;
-    flags = None;
-    next = NULL;
-    unparsedInput = false;
     // add myself to list of streams
     StreamCore** pstream;
     for (pstream = &first; *pstream; pstream = &(*pstream)->next);
