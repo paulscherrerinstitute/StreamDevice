@@ -522,6 +522,57 @@ static uint32_t brksCryo(const uint8_t* data, size_t len, uint32_t sum)
     return xsum;
 }
 
+// Longitudinal Redundancy Check
+static uint32_t lrc(const uint8_t* data, size_t len, uint32_t sum)
+{
+    while (len--) {
+        sum = (sum + (*data++)) & 0xFF;
+    }
+
+    sum = ((sum ^ 0xFF) + 1) & 0xFF;
+
+    return sum;
+}
+
+// Longitudinal Redundancy Check using ASCII representation of numbers, 2-by-2
+static uint32_t hexlrc(const uint8_t* data, size_t len, uint32_t sum)
+{
+    uint32_t d;
+    uint32_t final_digit = 0;
+
+    while (len--)
+    {
+        d = toupper(*data++);
+
+        // Convert all hex digits, ignore all other bytes
+        if (isxdigit(d))
+        {
+            // Convert digits from ASCII to number
+            if (isdigit(d)) {
+                d -= '0';
+            }
+            else {
+                d -= 'A' - 0x0A;
+            }
+
+            // For the most significant bits, shift 4 bits
+            if (len % 2) {
+                final_digit = d << 4;
+            // Least significant bits are summed to previous converted digit
+            } else {
+                d += final_digit;
+                final_digit = 0;
+                // Apply lrc rule
+                sum = (sum + d) & 0xFF;
+            }
+        }
+    }
+
+    // Apply lrc rule
+    sum = ((sum ^ 0xFF) + 1) & 0xFF;
+
+    return sum;
+}
 
 struct checksum
 {
@@ -565,7 +616,9 @@ static checksum checksumMap[] =
     {"hexsum8", hexsum,           0x00,       0x00,       1}, // 0x2D
     {"cpi",     CPI,              0x00,       0x00,       1}, // 0x7E
     {"leybold", leybold,          0x00,       0x00,       1}, // 0x22
-    {"brksCryo",brksCryo,         0x00,       0x00,       1}  // 0x4A
+    {"brksCryo",brksCryo,         0x00,       0x00,       1}, // 0x4A
+    {"lrc",     lrc,              0x00,       0x00,       1}, // 0x23 
+    {"hexlrc",  hexlrc,           0x00,       0x00,       1}  // 0xA7
 };
 
 static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
