@@ -33,6 +33,7 @@
 
 int streamDebug = 0;
 int streamError = 1;
+int streamDebugTS = 1;
 FILE *StreamDebugFile = NULL;
 
 #ifndef va_copy
@@ -115,7 +116,11 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
     char timestamp[40];
     if (!(streamError || streamDebug)) return; // Error logging disabled
-    StreamPrintTimestampFunction(timestamp, 40);
+    if (streamDebugTS){
+        StreamPrintTimestampFunction(timestamp, 40);
+    } else {
+        strcpy(timestamp, "");
+    }
 #ifdef va_copy
     if (StreamDebugFile)
     {

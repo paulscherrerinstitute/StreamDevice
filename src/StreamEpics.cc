@@ -199,6 +199,7 @@ extern "C" { // needed for Windows
 epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
 epicsExportAddress(int, streamDebugColored);
+epicsExportAddress(int, streamDebugTS);
 }
 
 // for subroutine record
