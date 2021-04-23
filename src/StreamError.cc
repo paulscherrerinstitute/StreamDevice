@@ -35,6 +35,9 @@ int streamDebug = 0;
 int streamError = 1;
 FILE *StreamDebugFile = NULL;
 
+/*0: disable timestamps on stream messages (both debug and error)*/
+int streamMsgTimeStamped = 1;
+
 #ifndef va_copy
 #ifdef __va_copy
 #define va_copy __va_copy
@@ -115,7 +118,11 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
     char timestamp[40];
     if (!(streamError || streamDebug)) return; // Error logging disabled
-    StreamPrintTimestampFunction(timestamp, 40);
+    strcpy(timestamp, "");
+    if (streamMsgTimeStamped != 0)
+    {
+        StreamPrintTimestampFunction(timestamp, 40);
+    }
 #ifdef va_copy
     if (StreamDebugFile)
     {
@@ -146,7 +153,10 @@ print(const char* fmt, ...)
     const char* f = strrchr(file, '/');
     if (f) f++; else f = file;
     FILE* fp = StreamDebugFile ? StreamDebugFile : stderr;
-    fprintf(fp, "%s ", timestamp);
+    if (streamMsgTimeStamped != 0)
+    {
+        fprintf(fp, "%s ", timestamp);
+    }
     fprintf(fp, "%s:%d: ", f, line);
     vfprintf(fp, fmt, args);
     fflush(fp);

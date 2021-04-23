@@ -200,6 +200,7 @@ epicsExportAddress(int, streamDebug);
 epicsExportAddress(int, streamError);
 epicsExportAddress(int, streamDebugColored);
 epicsExportAddress(int, streamErrorDeadTime);
+epicsExportAddress(int, streamMsgTimeStamped);
 }
 
 // for subroutine record

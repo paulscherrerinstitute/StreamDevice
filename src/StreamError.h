@@ -33,6 +33,7 @@
 extern int streamDebug;
 extern int streamError;
 extern int streamDebugColored;
+extern int streamMsgTimeStamped;
 extern void (*StreamPrintTimestampFunction)(char* buffer, size_t size);
 
 void StreamError(int line, const char* file, const char* fmt, ...)
