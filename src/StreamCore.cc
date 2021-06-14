@@ -126,7 +126,7 @@ StreamCore* StreamCore::first = NULL;
 StreamCore::
 StreamCore() : StreamBusInterface::Client(),
     next(), streamname(), flags(None), inTerminatorDefined(), outTerminatorDefined(),
-    activeCommand(end), unparsedInput()
+    activeCommand(end), previousResult(Success), numberOfErrors(0), unparsedInput()
 {
     businterface = NULL;
     // add myself to list of streams
