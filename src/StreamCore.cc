@@ -1834,13 +1834,13 @@ license(void)
  * \brief Checks whether an error message should be printed based on the new error type.
  *
  * Will check based on the error type and the time since last error of the same type
- * whether to print the new error. Also has a number of side effects such as counting 
+ * whether to print the new error. Also has a number of side effects such as counting
  * up errors of each type and resetting the time since last error.
  *
  * \param[in] newErrorType the type of the new error
  * \return true if the error should be preinted, else false
  */
-bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType) 
+bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType)
 {
     if (previousResult != newErrorType) {
         previousResult = newErrorType;
@@ -1848,7 +1848,7 @@ bool  StreamCore::checkShouldPrint(ProtocolResult newErrorType)
         time(&lastErrorTime);
         return true;
     }
-    else if (time(NULL) - lastErrorTime > streamErrorDeadTime) {
+    else if ((int)(time(NULL) - lastErrorTime) > streamErrorDeadTime) {
         time(&lastErrorTime);
         if (numberOfErrors != 0) {
             error("%s: %i additional errors of the following type seen in the last %i seconds\n",
