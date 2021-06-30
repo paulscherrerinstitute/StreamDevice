@@ -158,16 +158,8 @@ StreamProtocolParser* StreamProtocolParser::
 readFile(const char* filename)
 {
     FILE* file;
-#ifdef _WIN32
-    const char pathseparator = ';';
-    const char dirseparator = '\\';
-#else
-    const char pathseparator = ':';
-    const char dirseparator = '/';
-#endif
     StreamProtocolParser* parser;
     const char *p;
-    const char *s;
     size_t n;
     StreamBuffer dir;
 
@@ -175,14 +167,26 @@ readFile(const char* filename)
     for (p = path; *p; p += n)
     {
         dir.clear();
-        // get next dir from search path (avoiding strtok, strsep, strcspn)
-        s = strchr(p, pathseparator);
-        if (s) n = s - p;
-        else n = strlen(p);
+        // allow ':' or ';' for OS independence
+        // we need to be careful with drive letters though
+        n = strcspn(p, ":;");
+#ifdef _WIN32
+        if (n == 1 && p[1] == ':' && isalpha(p[0]))
+        {
+            // driver letter
+            n = 2 + strcspn(p+2, ":;");
+        }
+#endif
         dir.append(p, n);
-        if (n && p[n-1] != dirseparator) dir.append(dirseparator);
-        if (s) p++;
-        // append filename
+        // append / after everything except empty path [or drive letter]
+        // Windows is fine with / as well
+        if (n) {
+#ifdef _WIN32
+            if (n != 2 || p[1] != ':' || !isalpha(p[0]))
+#endif
+            dir.append('/');
+        }
+        if (p[n]) n++; // skip the path separator
         dir.append(filename);
         // try to read the file
         debug("StreamProtocolParser::readFile: try '%s'\n", dir());
