@@ -333,7 +333,6 @@ epicsExportAddress(drvet, stream);
 #ifdef EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, size_t size)
 {
-    size_t tlen;
     char* c;
     TS_STAMP tm;
     tsLocalTime (&tm);
@@ -342,16 +341,17 @@ void streamEpicsPrintTimestamp(char* buffer, size_t size)
     if (c) {
         c[4] = 0;
     }
-    tlen = strlen(buffer);
-    sprintf(buffer+tlen, " %.*s", (int)(size-tlen-2), taskName(0));
+}
+
+static const char* epicsThreadGetNameSelf()
+{
+    return taskName(0);
 }
 #else // !EPICS_3_13
 void streamEpicsPrintTimestamp(char* buffer, size_t size)
 {
-    size_t tlen;
     epicsTime tm = epicsTime::getCurrent();
-    tlen = tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%06f");
-    sprintf(buffer+tlen, " %.*s", (int)(size-tlen-2), epicsThreadGetNameSelf());
+    tm.strftime(buffer, size, "%Y/%m/%d %H:%M:%S.%06f");
 }
 #endif // !EPICS_3_13
 
@@ -471,6 +471,7 @@ drvInit()
     debug("StreamProtocolParser::path = %s\n",
         StreamProtocolParser::path);
     StreamPrintTimestampFunction = streamEpicsPrintTimestamp;
+    StreamGetThreadNameFunction = epicsThreadGetNameSelf;
 
 #ifdef WITH_IOC_RUN
     initHookRegister(initHook);

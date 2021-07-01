@@ -97,6 +97,7 @@ static void printTimestamp(char* buffer, size_t size)
 }
 
 void (*StreamPrintTimestampFunction)(char* buffer, size_t size) = printTimestamp;
+const char* (*StreamGetThreadNameFunction)(void) = NULL;
 
 void StreamError(const char* fmt, ...)
 {
@@ -116,12 +117,17 @@ void StreamError(int line, const char* file, const char* fmt, ...)
 
 void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
-    char timestamp[40];
     if (!(streamError || streamDebug)) return; // Error logging disabled
+    char timestamp[40];
+    const char *threadname = NULL;
     int timeStamped = streamMsgTimeStamped;
     if (timeStamped)
     {
         StreamPrintTimestampFunction(timestamp, sizeof(timestamp));
+    }
+    if (StreamGetThreadNameFunction)
+    {
+        threadname = StreamGetThreadNameFunction();
     }
 #ifdef va_copy
     if (StreamDebugFile)
@@ -132,6 +138,10 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
         {
             fprintf(StreamDebugFile, "%s ", timestamp);
         }
+        if (threadname)
+        {
+            fprintf(StreamDebugFile, "%s ", threadname);
+        }
         vfprintf(StreamDebugFile, fmt, args2);
         fflush(StreamDebugFile);
         va_end(args2);
@@ -141,6 +151,10 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
     if (timeStamped)
     {
         fprintf(stderr, "%s ", timestamp);
+    }
+    if (threadname)
+    {
+        fprintf(stderr, "%s ", threadname);
     }
     if (file)
     {
@@ -163,6 +177,10 @@ print(const char* fmt, ...)
         char timestamp[40];
         StreamPrintTimestampFunction(timestamp, sizeof(timestamp));
         fprintf(fp, "%s ", timestamp);
+    }
+    if (StreamGetThreadNameFunction)
+    {
+        fprintf(fp, "%s ", StreamGetThreadNameFunction());
     }
     fprintf(fp, "%s:%d: ", f, line);
     vfprintf(fp, fmt, args);

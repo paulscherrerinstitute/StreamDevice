@@ -35,6 +35,7 @@ extern int streamError;
 extern int streamDebugColored;
 extern int streamMsgTimeStamped;
 extern void (*StreamPrintTimestampFunction)(char* buffer, size_t size);
+extern const char* (*StreamGetThreadNameFunction)(void);
 
 void StreamError(int line, const char* file, const char* fmt, ...)
 __attribute__((__format__(__printf__,3,4)));
