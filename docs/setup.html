@@ -405,6 +405,10 @@ it but this can be set to always colored or never colored by setting
 <code>streamDebugColored</code> to 1 or 0 respectively.
 </p>
 <p>
+Error and debug messages are prefixed with a time stamp unless the variable
+<code>streamMsgTimeStamped</code> is set to 0.
+</p>
+<p>
 When a device is disconnected StreamDevice can produce many repeated timeout 
 messages. To reduce this logging you can set <code>streamErrorDeadTime</code>
 to an integer number of seconds. When this is set repeated timeout messages 
@@ -418,6 +422,7 @@ streamError=1
 streamDebug=1
 streamDebugColored=1
 streamErrorDeadTime=30
+streamMsgTimeStamped=1
 streamSetLogfile("logfile.txt")
 </pre>
 
@@ -427,6 +432,7 @@ var streamError 1
 var streamDebug 1
 var streamDebugColored 1
 var streamErrorDeadTime 30
+var streamMsgTimeStamped 1
 streamSetLogfile("logfile.txt")
 </pre>
 
