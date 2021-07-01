@@ -118,23 +118,30 @@ void StreamVError(int line, const char* file, const char* fmt, va_list args)
 {
     char timestamp[40];
     if (!(streamError || streamDebug)) return; // Error logging disabled
-    strcpy(timestamp, "");
-    if (streamMsgTimeStamped != 0)
+    int timeStamped = streamMsgTimeStamped;
+    if (timeStamped)
     {
-        StreamPrintTimestampFunction(timestamp, 40);
+        StreamPrintTimestampFunction(timestamp, sizeof(timestamp));
     }
 #ifdef va_copy
     if (StreamDebugFile)
     {
         va_list args2;
         va_copy(args2, args);
-        fprintf(StreamDebugFile, "%s ", timestamp);
+        if (timeStamped)
+        {
+            fprintf(StreamDebugFile, "%s ", timestamp);
+        }
         vfprintf(StreamDebugFile, fmt, args2);
         fflush(StreamDebugFile);
         va_end(args2);
     }
 #endif
-    fprintf(stderr, "%s%s ", ansiEscape(ANSI_RED_BOLD), timestamp);
+    fprintf(stderr, "%s", ansiEscape(ANSI_RED_BOLD));
+    if (timeStamped)
+    {
+        fprintf(stderr, "%s ", timestamp);
+    }
     if (file)
     {
         fprintf(stderr, "%s line %d: ", file, line);
@@ -147,14 +154,14 @@ int StreamDebugClass::
 print(const char* fmt, ...)
 {
     va_list args;
-    char timestamp[40];
-    StreamPrintTimestampFunction(timestamp, 40);
     va_start(args, fmt);
     const char* f = strrchr(file, '/');
     if (f) f++; else f = file;
     FILE* fp = StreamDebugFile ? StreamDebugFile : stderr;
-    if (streamMsgTimeStamped != 0)
+    if (streamMsgTimeStamped)
     {
+        char timestamp[40];
+        StreamPrintTimestampFunction(timestamp, sizeof(timestamp));
         fprintf(fp, "%s ", timestamp);
     }
     fprintf(fp, "%s:%d: ", f, line);
