@@ -72,11 +72,11 @@ static bool win_console_init() {
 }
 
 /* do isatty() call second as always want to run win_console_init() */
-int streamDebugColored = win_console_init() && _isatty(_fileno(stdout));
+int streamDebugColored = win_console_init() && _isatty(_fileno(stderr));
 
 #else
 
-int streamDebugColored = isatty(fileno(stdout));
+int streamDebugColored = isatty(fileno(stderr));
 
 #endif /* _WIN32 */
 
