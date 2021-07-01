@@ -76,7 +76,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
                 numEnums = -(numEnums+1);
                 info.append('\0');
                 memcpy(info(n), &numEnums, sizeof(numEnums));
-                debug("EnumConverter::parse %ld choices with default: %s\n",
+                debug2("EnumConverter::parse %ld choices with default: %s\n",
                     -numEnums, info.expand()());
                 return enum_format;
             }
@@ -99,7 +99,7 @@ parse(const StreamFormat& fmt, StreamBuffer& info,
             if (*source++ == '}')
             {
                 memcpy(info(n), &numEnums, sizeof(numEnums));
-                debug("EnumConverter::parse %ld choices: %s\n",
+                debug2("EnumConverter::parse %ld choices: %s\n",
                     numEnums, info.expand()());
                 return enum_format;
             }

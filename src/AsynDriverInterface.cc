@@ -887,14 +887,11 @@ readHandler()
             if (pasynOctet->setInputEos(pvtOctet, pasynUser,
                 deveos, (int)deveoslen) == asynSuccess)
             {
-                if (ioAction != AsyncRead)
-                {
-                    debug("AsynDriverInterface::readHandler(%s) "
-                        "input EOS changed from \"%s\" to \"%s\"\n",
-                        clientName(),
-                        StreamBuffer(oldeos, oldeoslen).expand()(),
-                        StreamBuffer(deveos, deveoslen).expand()());
-                }
+                debug2("AsynDriverInterface::readHandler(%s) "
+                    "input EOS changed from \"%s\" to \"%s\"\n",
+                    clientName(),
+                    StreamBuffer(oldeos, oldeoslen).expand()(),
+                    StreamBuffer(deveos, deveoslen).expand()());
                 break;
             }
             deveos++; deveoslen--;
@@ -948,20 +945,18 @@ readHandler()
         eomReason = 0;
         pasynUser->errorMessage[0] = 0;
 
-        debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
-            "read(..., bytesToRead=%" Z "u, ...) "
-            "[timeout=%g sec]\n",
-            clientName(), toStr(ioAction),
-            bytesToRead, pasynUser->timeout);
         status = pasynOctet->read(pvtOctet, pasynUser,
             buffer, bytesToRead, &received, &eomReason);
-        // Even though received is size_t I have seen (size_t)-1 here!
-        debug("AsynDriverInterface::readHandler(%s): "
-            "read returned %s: ioAction=%s received=%" Z "d, "
-            "eomReason=%s, buffer=\"%s\"\n",
-            clientName(), toStr(status), toStr(ioAction),
-            received, eomReasonToStr(eomReason),
-            StreamBuffer(buffer, received).expand()());
+        // Even though received is size_t I have seen (size_t)-1 here
+        // in case half a terminator had been read last time!
+        if (!(status == asynTimeout && pasynUser->timeout == 0 && received == 0))
+            debug("AsynDriverInterface::readHandler(%s): ioAction=%s "
+                "read(%" Z "u bytes, timeout=%g sec) returned status %s: received=%" Z "d bytes, "
+                "eomReason=%s, buffer=\"%s\"\n",
+                clientName(), toStr(ioAction),
+                bytesToRead, pasynUser->timeout, toStr(status), received,
+                eomReasonToStr(eomReason), StreamBuffer(buffer, received).expand()());
+
         // asyn 4.16 sets reason to ASYN_EOM_END when device disconnects.
         // What about earlier versions?
         if (!connected) eomReason |= ASYN_EOM_END;
@@ -1037,7 +1032,7 @@ readHandler()
                     // reply timeout
                     if (ioAction == AsyncRead)
                     {
-                        debug("AsynDriverInterface::readHandler(%s): "
+                        debug2("AsynDriverInterface::readHandler(%s): "
                             "no async input, retry in in %g seconds\n",
                             clientName(), replyTimeout);
                         // start next poll after timer expires
@@ -1140,9 +1135,10 @@ readHandler()
     {
         pasynOctet->setInputEos(pvtOctet, pasynUser,
             oldeos, oldeoslen);
-        debug("AsynDriverInterface::readHandler(%s) "
-            "input EOS restored to \"%s\"\n",
+        debug2("AsynDriverInterface::readHandler(%s) "
+            "input EOS restored from \"%s\" to \"%s\"\n",
             clientName(),
+            StreamBuffer(deveos, deveoslen).expand()(),
             StreamBuffer(oldeos, oldeoslen).expand()());
     }
 }
@@ -1360,8 +1356,6 @@ timerExpired()
             // at the moment if another asynUser got input right now.
             // queueRequest might fail if another request was just queued
             pasynManager->isAutoConnect(pasynUser, &autoconnect);
-            debug("%s: polling for I/O Intr: autoconnected: %d, connect: %d\n",
-                clientName(), autoconnect, connected);
             if (autoconnect && !connected)
             {
                 // has explicitely been disconnected
@@ -1375,7 +1369,7 @@ timerExpired()
                 asynStatus status = pasynManager->queueRequest(pasynUser,
                     asynQueuePriorityLow, -1.0);
                 // if this fails, we are already queued by another thread
-                debug("AsynDriverInterface::timerExpired %s: "
+                debug2("AsynDriverInterface::timerExpired %s: "
                     "queueRequest(..., priority=Low, queueTimeout=-1) = %s %s\n",
                     clientName(), toStr(status),
                     status!=asynSuccess ? pasynUser->errorMessage : "");
@@ -1493,7 +1487,7 @@ void AsynDriverInterface::
 handleRequest()
 {
     cancelTimer();
-    debug("AsynDriverInterface::handleRequest(%s) %s\n",
+    debug2("AsynDriverInterface::handleRequest(%s) %s\n",
         clientName(), toStr(ioAction));
     switch (ioAction)
     {
