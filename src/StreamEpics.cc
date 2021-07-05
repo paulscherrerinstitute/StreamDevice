@@ -461,8 +461,7 @@ drvInit()
 #endif
     if (!path)
         fprintf(stderr,
-            "drvStreamInit: Warning! STREAM_PROTOCOL_PATH not set. "
-            "Defaults to \"%s\"\n", StreamProtocolParser::path);
+            "drvStreamInit: Warning! STREAM_PROTOCOL_PATH not set.\n");
     else
         StreamProtocolParser::path = path;
     debug("StreamProtocolParser::path = %s\n",

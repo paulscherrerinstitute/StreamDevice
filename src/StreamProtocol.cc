@@ -53,7 +53,7 @@ class StreamProtocolParser::Protocol::Variable
 // StreamProtocolParser
 
 StreamProtocolParser* StreamProtocolParser::parsers = NULL;
-const char* StreamProtocolParser::path = ".";
+const char* StreamProtocolParser::path = NULL;
 static const char* specialChars = " ,;{}=()$'\"+-*/";
 
 // Client destructor
@@ -157,57 +157,70 @@ this after protocol arguments have been replaced.
 StreamProtocolParser* StreamProtocolParser::
 readFile(const char* filename)
 {
-    FILE* file;
+    FILE* file = NULL;
     StreamProtocolParser* parser;
     const char *p;
     size_t n;
     StreamBuffer dir;
 
-    // look for filename in every dir in search path
-    for (p = path; *p; p += n)
-    {
-        dir.clear();
-        // allow ':' or ';' for OS independence
-        // we need to be careful with drive letters though
-        n = strcspn(p, ":;");
+    // no path or absolute file name
+    if (!path || filename[0] == '/'
 #ifdef _WIN32
-        if (n == 1 && p[1] == ':' && isalpha(p[0]))
-        {
-            // driver letter
-            n = 2 + strcspn(p+2, ":;");
-        }
+        || filename[0] == '\\' || (isalpha(filename[0]) && filename[1] == ':')
 #endif
-        dir.append(p, n);
-        // append / after everything except empty path [or drive letter]
-        // Windows is fine with / as well
-        if (n) {
+        ) {
+        // absolute file name
+        file = fopen(filename, "r");
+        if (file) {
+            debug("StreamProtocolParser::readFile: found '%s'\n", filename);
+        } else {
+            error("Can't find readable file '%s'\n", filename);
+            return NULL;
+        }
+    } else {
+        // look for filename in every dir in search path
+        for (p = path; *p; p += n)
+        {
+            dir.clear();
+            // allow ':' or ';' for OS independence
+            // we need to be careful with drive letters though
+            n = strcspn(p, ":;");
 #ifdef _WIN32
-            if (n != 2 || p[1] != ':' || !isalpha(p[0]))
+            if (n == 1 && p[1] == ':' && isalpha(p[0]))
+            {
+                // driver letter
+                n = 2 + strcspn(p+2, ":;");
+            }
 #endif
-            dir.append('/');
+            dir.append(p, n);
+            // append / after everything except empty path [or drive letter]
+            // Windows is fine with / as well
+            if (n) {
+#ifdef _WIN32
+                if (n != 2 || p[1] != ':' || !isalpha(p[0]))
+#endif
+                dir.append('/');
+            }
+            if (p[n]) n++; // skip the path separator
+            dir.append(filename);
+            // try to read the file
+            debug("StreamProtocolParser::readFile: try '%s'\n", dir());
+            file = fopen(dir(), "r");
+            if (file) {
+                debug("StreamProtocolParser::readFile: found '%s'\n", dir());
+                break;
+            }
         }
-        if (p[n]) n++; // skip the path separator
-        dir.append(filename);
-        // try to read the file
-        debug("StreamProtocolParser::readFile: try '%s'\n", dir());
-        file = fopen(dir(), "r");
-        if (file)
-        {
-            // file found; create a parser to read it
-            debug("StreamProtocolParser::readFile: found '%s'\n", dir());
-            parser = new StreamProtocolParser(file, filename);
-            fclose(file);
-            if (!parser->valid) return NULL;
-//             printf(
-// "/---------------------------------------------------------------------\\\n");
-//             parser->report();
-//             printf(
-// "\\---------------------------------------------------------------------/\n");
-            return parser;
+        if (!file) {
+            error("Can't find readable file '%s' in '%s'\n", filename, path);
+            return NULL;
         }
     }
-    error("Can't find readable file '%s' in '%s'\n", filename, path);
-    return NULL;
+    // file found; create a parser to read it
+    parser = new StreamProtocolParser(file, filename);
+    fclose(file);
+    if (!parser->valid) return NULL;
+    return parser;
 }
 
 /*
