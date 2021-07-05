@@ -21,8 +21,15 @@
 *************************************************************************/
 
 #include <errno.h>
-#include "StreamCore.h"
-#include "StreamError.h"
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(vxWorks)
+#include <symLib.h>
+#include <sysSymTbl.h>
+#endif
 
 #include "epicsVersion.h"
 #ifdef BASE_VERSION
@@ -30,10 +37,11 @@
 #endif
 
 #ifdef EPICS_3_13
+#include <semLib.h>
+#include <wdLib.h>
+#include <taskLib.h>
+
 extern "C" {
-
-static char* epicsStrDup(const char *s) { char* c = (char*)malloc(strlen(s)+1); strcpy(c, s); return c; }
-
 #endif
 
 #define epicsAlarmGLOBAL
@@ -45,18 +53,11 @@ static char* epicsStrDup(const char *s) { char* c = (char*)malloc(strlen(s)+1); 
 #include "recGbl.h"
 #include "devLib.h"
 #include "callback.h"
+#include "initHooks.h"
 
-#include <ctype.h>
-#include <stdarg.h>
-#include <stdlib.h>
 #ifdef EPICS_3_13
-
-#include <semLib.h>
-#include <wdLib.h>
-#include <taskLib.h>
-
+static char* epicsStrDup(const char *s) { char* c = (char*)malloc(strlen(s)+1); strcpy(c, s); return c; }
 extern DBBASE *pdbbase;
-
 } // extern "C"
 
 #else // !EPICS_3_13
@@ -71,28 +72,24 @@ extern DBBASE *pdbbase;
 #include "iocsh.h"
 #include "epicsExport.h"
 
-#if defined(VERSION_INT) || EPICS_MODIFICATION >= 11
-#include "initHooks.h"
-#define WITH_IOC_RUN
-#endif
-
 #if !defined(VERSION_INT) && EPICS_MODIFICATION < 9
 // iocshCmd() is missing in iocsh.h (up to R3.14.8.2)
-// To build with win32-x86, you MUST fix iocsh.h.
+// To build for Windows, you MUST fix iocsh.h.
 // Move the declaration below to iocsh.h and rebuild base.
 extern "C" epicsShareFunc int epicsShareAPI iocshCmd(const char *command);
 #endif
 
 #endif // !EPICS_3_13
 
-#if defined(__vxworks) || defined(vxWorks)
-#include <symLib.h>
-#include <sysSymTbl.h>
-#endif
-
+#include "StreamCore.h"
+#include "StreamError.h"
 #include "devStream.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
+
+#if defined(VERSION_INT) || EPICS_MODIFICATION >= 11
+#define WITH_IOC_RUN
+#endif
 
 // More flags: 0x00FFFFFF used by StreamCore
 const unsigned long InDestructor  = 0x0100000;
@@ -447,7 +444,7 @@ drvInit()
     char* path;
     debug("drvStreamInit()\n");
     path = getenv("STREAM_PROTOCOL_PATH");
-#if defined(__vxworks) || defined(vxWorks)
+#if defined(vxWorks)
     // for compatibility reasons look for global symbols
     if (!path)
     {

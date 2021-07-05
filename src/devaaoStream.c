@@ -20,7 +20,6 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#include <stdio.h>
 #include "epicsString.h"
 #include "aaoRecord.h"
 #include "devStream.h"

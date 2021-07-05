@@ -23,6 +23,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdarg.h>
+
 #include "StreamProtocol.h"
 #include "StreamFormatConverter.h"
 #include "StreamError.h"

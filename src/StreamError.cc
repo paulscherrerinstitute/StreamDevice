@@ -20,16 +20,18 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#include "StreamError.h"
+#include <string.h>
+#include <time.h>
+#include <stdio.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
 #else
 #include <unistd.h>
 #endif /* _WIN32 */
-#include <string.h>
-#include <time.h>
-#include <stdio.h>
+
+#include "StreamError.h"
 
 int streamDebug = 0;
 int streamError = 1;

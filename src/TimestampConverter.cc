@@ -20,13 +20,13 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#include "StreamFormatConverter.h"
-#include "StreamError.h"
-
 #include <time.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
+
+#include "StreamFormatConverter.h"
+#include "StreamError.h"
 
 /* timezone in UNIX contains the seconds between UTC and local time,
 but not in Free-BSD! Here timezone() is a function delivering

@@ -22,9 +22,10 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
+#include <math.h>
+
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
-#include <math.h>
 
 // Exponential Converter %m
 // Eric Berryman requested a double format that reads

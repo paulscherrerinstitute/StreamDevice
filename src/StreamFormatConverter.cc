@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
+
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 

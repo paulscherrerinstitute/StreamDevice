@@ -25,9 +25,6 @@
 #define _BSD_SOURCE
 #endif
 
-#include "StreamBuffer.h"
-#include "StreamError.h"
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -40,6 +37,7 @@
 
 #include <vxWorks.h>
 #include <fioLib.h>
+#include <string.h>
 
 struct outStr_s {
     char *str;
@@ -73,6 +71,9 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
 }
 #endif // ! _WRS_VXWORKS_MAJOR
 #endif // vxWorks
+
+#include "StreamBuffer.h"
+#include "StreamError.h"
 
 #define P PRINTF_SIZE_T_PREFIX
 

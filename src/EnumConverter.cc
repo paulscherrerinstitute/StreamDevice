@@ -20,10 +20,11 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
+#include <stdlib.h>
+
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 #include "StreamProtocol.h"
-#include <stdlib.h>
 
 // Enum %{string0|string1|...}
 

@@ -34,18 +34,16 @@ extern "C" {
 #include "iocsh.h"
 #endif
 
-#include "StreamBusInterface.h"
-#include "StreamError.h"
-#include "StreamBuffer.h"
-
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynInt32.h"
 #include "asynUInt32Digital.h"
 #include "asynGpibDriver.h"
 
+#include "StreamBusInterface.h"
+#include "StreamError.h"
+#include "StreamBuffer.h"
 #include "devStream.h"
-
 #include "MacroMagic.h"
 
 #define Z PRINTF_SIZE_T_PREFIX

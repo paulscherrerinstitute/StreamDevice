@@ -20,10 +20,7 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#include "StreamFormatConverter.h"
-#include "StreamError.h"
-#include <ctype.h>
-#if defined(__vxworks) || defined(vxWorks)
+#if defined(vxWorks)
 #include <version.h>
 #if defined(_WRS_VXWORKS_MAJOR) && _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR > 8)
 #include <stdint.h>
@@ -46,23 +43,20 @@
 #include <stdint.h>
 #include <inttypes.h>
 #endif
+#include <ctype.h>
 
-#if defined(__vxworks) || defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
+#if defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
 // These systems have no strncasecmp
-#include "epicsVersion.h"
-#ifdef BASE_VERSION
-// 3.13
 static int strncasecmp(const char *s1, const char *s2, size_t n)
 {
     int r=0;
     while (n && (r = toupper(*s1)-toupper(*s2)) == 0) { n--; s1++; s2++; };
     return r;
 }
-#else
-#include "epicsString.h"
-#define strncasecmp epicsStrnCaseCmp
 #endif
-#endif
+
+#include "StreamFormatConverter.h"
+#include "StreamError.h"
 
 typedef uint32_t (*checksumFunc)(const uint8_t* data, size_t len,  uint32_t init);
 

@@ -20,10 +20,11 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#include "StreamCore.h"
-#include "StreamError.h"
 #include <ctype.h>
 #include <stdlib.h>
+
+#include "StreamCore.h"
+#include "StreamError.h"
 
 #define Z PRINTF_SIZE_T_PREFIX
 

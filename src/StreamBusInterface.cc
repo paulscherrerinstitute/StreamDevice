@@ -21,6 +21,7 @@
 *************************************************************************/
 
 #include <stdio.h>
+
 #include "StreamBusInterface.h"
 #include "StreamError.h"
 
