@@ -167,10 +167,7 @@ class Stream : protected StreamCore
     bool print(format_t *format, va_list ap);
     ssize_t scan(format_t *format, void* pvalue, size_t maxStringSize);
     bool process();
-
-#ifdef WITH_IOC_RUN
     static void initHook(initHookState);
-#endif
 
 // device support functions
     friend long streamInitRecord(dbCommon *record, const struct link *ioLink,
@@ -468,47 +465,80 @@ drvInit()
         StreamProtocolParser::path);
     StreamPrintTimestampFunction = streamEpicsPrintTimestamp;
     StreamGetThreadNameFunction = epicsThreadGetNameSelf;
-
-#ifdef WITH_IOC_RUN
     initHookRegister(initHook);
-#endif
 
     return OK;
 }
 
-#ifdef WITH_IOC_RUN
 void Stream::
 initHook(initHookState state)
 {
     Stream* stream;
 
-    if (state == initHookAtIocRun)
-    {
-        debug("Stream::initHook(initHookAtIocRun) interruptAccept=%d\n", interruptAccept);
-
-        static int inIocInit = 1;
-        if (inIocInit)
+    switch (state) {
+#ifdef WITH_IOC_RUN
+        case initHookAtIocRun:
         {
-            // We don't want to run @init twice in iocInit
-            inIocInit = 0;
-            return;
-        }
-
-        for (stream = static_cast<Stream*>(first); stream;
-            stream = static_cast<Stream*>(stream->next))
-        {
-            if (!stream->onInit) continue;
-            debug("Stream::initHook(initHookAtIocRun) Re-inititializing %s\n", stream->name());
-            if (!stream->startProtocol(StartInit))
+            // re-run @init handlers after restart
+            static int inIocInit = 1;
+            if (inIocInit)
             {
-                error("%s: Re-initialization failed.\n",
-                    stream->name());
+                // We don't want to run @init twice in iocInit
+                inIocInit = 0;
+                return;
             }
-            stream->initDone.wait();
+
+            for (stream = static_cast<Stream*>(first); stream;
+                stream = static_cast<Stream*>(stream->next))
+            {
+                if (!stream->onInit) continue;
+                debug("%s: running @init handler\n", stream->name());
+                if (!stream->startProtocol(StartInit))
+                {
+                    error("%s: @init handler failed.\n",
+                        stream->name());
+                }
+                stream->initDone.wait();
+            }
+            break;
         }
+        case initHookAtIocPause:
+        {
+            // stop polling I/O Intr
+            for (stream = static_cast<Stream*>(first); stream;
+                stream = static_cast<Stream*>(stream->next))
+            {
+                if (stream->record->scan == SCAN_IO_EVENT) {
+                    debug("%s: stopping \"I/O Intr\"\n", stream->name());
+                    stream->finishProtocol(Stream::Abort);
+                }
+            }
+            break;
+        }
+        case initHookAfterIocRunning:
+#else
+        case initHookAfterInterruptAccept:
+#endif
+        {
+            // start polling I/O Intr
+            for (stream = static_cast<Stream*>(first); stream;
+                stream = static_cast<Stream*>(stream->next))
+            {
+                if (stream->record->scan == SCAN_IO_EVENT) {
+                    debug("%s: starting \"I/O Intr\"\n", stream->name());
+                    if (!stream->startProtocol(StartAsync))
+                    {
+                        error("%s: Can't start \"I/O Intr\" protocol\n",
+                            stream->name());
+                    }
+                }
+            }
+            break;
+        }
+        default:
+            break;
     }
 }
-#endif
 
 // device support (C interface) //////////////////////////////////////////
 
@@ -622,7 +652,16 @@ long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt)
     *ppvt = stream->ioscanpvt;
     if (cmd == 0)
     {
-        debug("streamGetIointInfo: starting protocol\n");
+#ifdef WITH_IOC_RUN
+        if (!interruptAccept) {
+            // We will start polling later in initHook.
+            debug("streamGetIointInfo(%s): start later...\n",
+                record->name);
+            return OK;
+        }
+#endif
+        debug("streamGetIointInfo(%s): start protocol\n",
+            record->name);
         // SCAN has been set to "I/O Intr"
         if (!stream->startProtocol(Stream::StartAsync))
         {
@@ -633,6 +672,8 @@ long streamGetIointInfo(int cmd, dbCommon *record, IOSCANPVT *ppvt)
     else
     {
         // SCAN is no longer "I/O Intr"
+        debug("streamGetIointInfo(%s): abort protocol\n",
+            record->name);
         stream->finishProtocol(Stream::Abort);
     }
     return OK;
