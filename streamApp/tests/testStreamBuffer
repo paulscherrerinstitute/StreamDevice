@@ -1,6 +1,7 @@
 rm -f test.*
 
 cat > test.cc << EOF
+#include <StreamError.h>
 #include <StreamBuffer.h>
 #include <assert.h>
 #include <stdio.h>
@@ -55,14 +56,14 @@ EOF
 
 if [ "$1" = "-sls" ]
 then
-    O=../../O.*_$EPICS_HOST_ARCH/StreamBuffer.o
+    O=../../O.*_$EPICS_HOST_ARCH
 else
-    O=../../src/O.$EPICS_HOST_ARCH/StreamBuffer.o
+    O=../../src/O.$EPICS_HOST_ARCH
 fi
 
 for o in $O
 do
-    g++ -I ../../src $o test.cc -o test.exe
+    g++ -I ../../src $o/StreamBuffer.o $o/StreamError.o test.cc -o test.exe
     ./test.exe
     if [ $? != 0 ]
     then
