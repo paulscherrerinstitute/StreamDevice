@@ -435,6 +435,14 @@ long streamReportRecord(const char* recordname)
     return OK;
 }
 
+#if defined(_WIN32) && !defined(_WIN64)
+static const char* epicsThreadGetNameSelfWrapper(void)
+{
+    return epicsThreadGetNameSelf();
+}
+#define epicsThreadGetNameSelf epicsThreadGetNameSelfWrapper
+#endif
+
 long Stream::
 drvInit()
 {
