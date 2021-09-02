@@ -31,7 +31,7 @@ LIBRARY_IOC = stream
 
 DBD += stream.dbd
 DBD += stream-base.dbd
-ifdef CALC
+ifneq ($(words $(CALC) $(SYNAPPS)), 0)
 DBD += stream-scalcout.dbd
 endif
 
@@ -106,7 +106,7 @@ stream-base.dbd$(DEP): ../CONFIG_STREAM
 
 STREAM_DBD_FILES = stream-base.dbd
 
-ifdef CALC
+ifneq ($(words $(CALC) $(SYNAPPS)), 0)
 # create stream-scalcout.dbd for scalcout record
 $(COMMON_DIR)/stream-scalcout.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl --rec-only scalcout > $@
