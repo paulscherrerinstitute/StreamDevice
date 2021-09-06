@@ -45,7 +45,7 @@
 #endif
 #include <ctype.h>
 
-#if defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
+#if (defined(vxWorks) || defined(_WIN32) || defined(__rtems__)) && !defined(__MINGW32__)
 // These systems have no strncasecmp
 static int strncasecmp(const char *s1, const char *s2, size_t n)
 {
