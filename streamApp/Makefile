@@ -78,6 +78,13 @@ endif
 
 PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
 
+# Some linux systems moved RPC related symbols to libtirpc
+# Define TIRPC in configure/CONFIG_SITE in this case
+ifeq ($(TIRPC),YES)
+  USR_INCLUDES_Linux += -I/usr/include/tirpc
+  PROD_SYS_LIBS_DEFAULT += tirpc
+endif
+
 # switch off annoying rset warnings in 3.16+
 CPPFLAGS += -DUSE_TYPED_RSET
 
