@@ -60,6 +60,9 @@ ifneq ($(words $(PCRE_LIB) $(PCRE_INCLUDE)),0)
 LIB_SYS_LIBS_DEFAULT += pcre
 LIB_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre
 SHRLIB_DEPLIB_DIRS += $(PCRE_LIB)
+ifdef ENABLE_STATIC
+CPPFLAGS += -DPCRE_STATIC
+endif
 endif
 endif
 
