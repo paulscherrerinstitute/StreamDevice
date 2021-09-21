@@ -2,7 +2,7 @@
 
 TOP=..
 
-include $(TOP)/configure/CONFIG_APP
+include $(TOP)/configure/CONFIG
 
 # Set the following to NO to disable consistency checking of
 # the support applications defined in $(TOP)/configure/RELEASE
