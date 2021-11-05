@@ -43,7 +43,7 @@ static long readData(dbCommon *record, format_t *format)
         strncmp(so->oval, so->val, sizeof(so->val)))
     {
         monitor_mask |= DBE_VALUE | DBE_LOG;
-        strncpy(so->oval, so->val, sizeof(so->val));
+        strncpy(so->oval, so->val, sizeof(so->oval));
     }
     if (monitor_mask)
         db_post_events(record, so->val, monitor_mask);
