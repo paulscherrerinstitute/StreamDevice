@@ -45,14 +45,20 @@
 #endif
 #include <ctype.h>
 
-#if defined(vxWorks) || defined(_WIN32) || defined(__rtems__)
-// These systems have no strncasecmp
-static int strncasecmp(const char *s1, const char *s2, size_t n)
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#endif
+
+#if defined(vxWorks) || defined(__rtems__)
+// These systems have no strncasecmp at the moment
+// But avoid compiler errors in case strncasecmp exists in future versions
+static int mystrncasecmp(const char *s1, const char *s2, size_t n)
 {
     int r=0;
     while (n && (r = toupper(*s1)-toupper(*s2)) == 0) { n--; s1++; s2++; };
     return r;
 }
+#define strncasecmp mystrncasecmp
 #endif
 
 #include "StreamFormatConverter.h"
