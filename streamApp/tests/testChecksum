@@ -52,7 +52,11 @@ set protocol {
         out "jamcrc   %s %9.1<jamcrc>";      in "jamcrc   %=s %9.1<jamcrc>";
         out "adler32  %s %9.1<adler32>";     in "adler32  %=s %9.1<adler32>";
         out "hexsum8  %s %9.1<hexsum8>";     in "hexsum8  %=s %9.1<hexsum8>";
-        
+        out "bitsum   %s %9.1<bitsum>";      in "bitsum   %=s %9.1<bitsum>";
+        out "bitsum8  %s %9.1<bitsum8>";     in "bitsum8  %=s %9.1<bitsum8>";
+        out "bitsum16 %s %9.1<bitsum16>";    in "bitsum16 %=s %9.1<bitsum16>";
+        out "bitsum32 %s %9.1<bitsum32>";    in "bitsum32 %=s %9.1<bitsum32>";
+
         out "sum      %s %09.1<sum>";        in "sum      %=s %09.1<sum>";
         out "sum8     %s %09.1<sum8>";       in "sum8     %=s %09.1<sum8>";
         out "sum16    %s %09.1<sum16>";      in "sum16    %=s %09.1<sum16>";
@@ -88,6 +92,10 @@ set protocol {
         out "jamcrc   %s %09.1<jamcrc>";     in "jamcrc   %=s %09.1<jamcrc>";
         out "adler32  %s %09.1<adler32>";    in "adler32  %=s %09.1<adler32>";
         out "hexsum8  %s %09.1<hexsum8>";    in "hexsum8  %=s %09.1<hexsum8>";
+        out "bitsum   %s %09.1<bitsum>";     in "bitsum   %=s %09.1<bitsum>";
+        out "bitsum8  %s %09.1<bitsum8>";    in "bitsum8  %=s %09.1<bitsum8>";
+        out "bitsum16 %s %09.1<bitsum16>";   in "bitsum16 %=s %09.1<bitsum16>";
+        out "bitsum32 %s %09.1<bitsum32>";   in "bitsum32 %=s %09.1<bitsum32>";
 
         out "sum      %s %-9.1<sum>";        in "sum      %=s %-9.1<sum>";
         out "sum8     %s %-9.1<sum8>";       in "sum8     %=s %-9.1<sum8>";
@@ -124,6 +132,10 @@ set protocol {
         out "jamcrc   %s %-9.1<jamcrc>";     in "jamcrc   %=s %-9.1<jamcrc>";
         out "adler32  %s %-9.1<adler32>";    in "adler32  %=s %-9.1<adler32>";
         out "hexsum8  %s %-9.1<hexsum8>";    in "hexsum8  %=s %-9.1<hexsum8>";
+        out "bitsum   %s %-9.1<bitsum>";     in "bitsum   %=s %-9.1<bitsum>";
+        out "bitsum8  %s %-9.1<bitsum8>";    in "bitsum8  %=s %-9.1<bitsum8>";
+        out "bitsum16 %s %-9.1<bitsum16>";   in "bitsum16 %=s %-9.1<bitsum16>";
+        out "bitsum32 %s %-9.1<bitsum32>";   in "bitsum32 %=s %-9.1<bitsum32>";
 
         out "sum      %s %#9.1<sum>";        in "sum      %=s %#9.1<sum>";
         out "sum8     %s %#9.1<sum8>";       in "sum8     %=s %#9.1<sum8>";
@@ -160,7 +172,11 @@ set protocol {
         out "jamcrc   %s %#9.1<jamcrc>";     in "jamcrc   %=s %#9.1<jamcrc>";
         out "adler32  %s %#9.1<adler32>";    in "adler32  %=s %#9.1<adler32>";
         out "hexsum8  %s %#9.1<hexsum8>";    in "hexsum8  %=s %#9.1<hexsum8>";
-        
+        out "bitsum   %s %#9.1<bitsum>";     in "bitsum   %=s %#9.1<bitsum>";
+        out "bitsum8  %s %#9.1<bitsum8>";    in "bitsum8  %=s %#9.1<bitsum8>";
+        out "bitsum16 %s %#9.1<bitsum16>";   in "bitsum16 %=s %#9.1<bitsum16>";
+        out "bitsum32 %s %#9.1<bitsum32>";   in "bitsum32 %=s %#9.1<bitsum32>";
+
         out "sum      %s %#09.1<sum>";       in "sum      %=s %#09.1<sum>";
         out "sum8     %s %#09.1<sum8>";      in "sum8     %=s %#09.1<sum8>";
         out "sum16    %s %#09.1<sum16>";     in "sum16    %=s %#09.1<sum16>";
@@ -196,7 +212,11 @@ set protocol {
         out "jamcrc   %s %#09.1<jamcrc>";    in "jamcrc   %=s %#09.1<jamcrc>";
         out "adler32  %s %#09.1<adler32>";   in "adler32  %=s %#09.1<adler32>";
         out "hexsum8  %s %#09.1<hexsum8>";   in "hexsum8  %=s %#09.1<hexsum8>";
-        
+        out "bitsum   %s %#09.1<bitsum>";    in "bitsum   %=s %#09.1<bitsum>";
+        out "bitsum8  %s %#09.1<bitsum8>";   in "bitsum8  %=s %#09.1<bitsum8>";
+        out "bitsum16 %s %#09.1<bitsum16>";  in "bitsum16 %=s %#09.1<bitsum16>";
+        out "bitsum32 %s %#09.1<bitsum32>";  in "bitsum32 %=s %#09.1<bitsum32>";
+
         out "sum      %s %#-9.1<sum>";       in "sum      %=s %#-9.1<sum>";
         out "sum8     %s %#-9.1<sum8>";      in "sum8     %=s %#-9.1<sum8>";
         out "sum16    %s %#-9.1<sum16>";     in "sum16    %=s %#-9.1<sum16>";
@@ -232,6 +252,10 @@ set protocol {
         out "jamcrc   %s %#-9.1<jamcrc>";    in "jamcrc   %=s %#-9.1<jamcrc>";
         out "adler32  %s %#-9.1<adler32>";   in "adler32  %=s %#-9.1<adler32>";
         out "hexsum8  %s %#-9.1<hexsum8>";   in "hexsum8  %=s %#-9.1<hexsum8>";
+        out "bitsum   %s %#-9.1<bitsum>";    in "bitsum   %=s %#-9.1<bitsum>";
+        out "bitsum8  %s %#-9.1<bitsum8>";   in "bitsum8  %=s %#-9.1<bitsum8>";
+        out "bitsum16 %s %#-9.1<bitsum16>";  in "bitsum16 %=s %#-9.1<bitsum16>";
+        out "bitsum32 %s %#-9.1<bitsum32>";  in "bitsum32 %=s %#-9.1<bitsum32>";
         out "DONE";
     }
 }
@@ -313,7 +337,15 @@ assure "adler32  123456789 \x09\x1E\x01\xDE\n"
 send   "adler32  123456789 \x09\x1E\x01\xDE\n"
 assure "hexsum8  123456789 \x2D\n"
 send   "hexsum8  123456789 \x2D\n"
-                
+assure "bitsum   123456789 \x21\n"
+send   "bitsum   123456789 \x21\n"
+assure "bitsum8  123456789 \x21\n"
+send   "bitsum8  123456789 \x21\n"
+assure "bitsum16 123456789 \x00\x21\n"
+send   "bitsum16 123456789 \x00\x21\n"
+assure "bitsum32 123456789 \x00\x00\x00\x21\n"
+send   "bitsum32 123456789 \x00\x00\x00\x21\n"
+
 assure "sum      123456789 DD\n"
 send   "sum      123456789 DD\n"
 assure "sum8     123456789 DD\n"
@@ -384,7 +416,15 @@ assure "adler32  123456789 091E01DE\n"
 send   "adler32  123456789 091E01DE\n"
 assure "hexsum8  123456789 2D\n"
 send   "hexsum8  123456789 2D\n"
-                
+assure "bitsum   123456789 21\n"
+send   "bitsum   123456789 21\n"
+assure "bitsum8  123456789 21\n"
+send   "bitsum8  123456789 21\n"
+assure "bitsum16 123456789 0021\n"
+send   "bitsum16 123456789 0021\n"
+assure "bitsum32 123456789 00000021\n"
+send   "bitsum32 123456789 00000021\n"
+
 assure "sum      123456789 \x3D\x3D\n"
 send   "sum      123456789 \x3D\x3D\n"
 assure "sum8     123456789 \x3D\x3D\n"
@@ -455,7 +495,15 @@ assure "adler32  123456789 \x30\x39\x31\x3E\x30\x31\x3D\x3E\n"
 send   "adler32  123456789 \x30\x39\x31\x3E\x30\x31\x3D\x3E\n"
 assure "hexsum8  123456789 \x32\x3D\n"
 send   "hexsum8  123456789 \x32\x3D\n"
-                
+assure "bitsum   123456789 \x32\x31\n"
+send   "bitsum   123456789 \x32\x31\n"
+assure "bitsum8  123456789 \x32\x31\n"
+send   "bitsum8  123456789 \x32\x31\n"
+assure "bitsum16 123456789 \x30\x30\x32\x31\n"
+send   "bitsum16 123456789 \x30\x30\x32\x31\n"
+assure "bitsum32 123456789 \x30\x30\x30\x30\x30\x30\x32\x31\n"
+send   "bitsum32 123456789 \x30\x30\x30\x30\x30\x30\x32\x31\n"
+
 assure "sum      123456789 \xDD\n"
 send   "sum      123456789 \xDD\n"
 assure "sum8     123456789 \xDD\n"
@@ -526,7 +574,15 @@ assure "adler32  123456789 \xDE\x01\x1E\x09\n"
 send   "adler32  123456789 \xDE\x01\x1E\x09\n"
 assure "hexsum8  123456789 \x2D\n"
 send   "hexsum8  123456789 \x2D\n"
-                
+assure "bitsum   123456789 \x21\n"
+send   "bitsum   123456789 \x21\n"
+assure "bitsum8  123456789 \x21\n"
+send   "bitsum8  123456789 \x21\n"
+assure "bitsum16 123456789 \x21\x00\n"
+send   "bitsum16 123456789 \x21\x00\n"
+assure "bitsum32 123456789 \x21\x00\x00\x00\n"
+send   "bitsum32 123456789 \x21\x00\x00\x00\n"
+
 assure "sum      123456789 DD\n"
 send   "sum      123456789 DD\n"
 assure "sum8     123456789 DD\n"
@@ -597,7 +653,15 @@ assure "adler32  123456789 DE011E09\n"
 send   "adler32  123456789 DE011E09\n"
 assure "hexsum8  123456789 2D\n"
 send   "hexsum8  123456789 2D\n"
-                
+assure "bitsum   123456789 21\n"
+send   "bitsum   123456789 21\n"
+assure "bitsum8  123456789 21\n"
+send   "bitsum8  123456789 21\n"
+assure "bitsum16 123456789 2100\n"
+send   "bitsum16 123456789 2100\n"
+assure "bitsum32 123456789 21000000\n"
+send   "bitsum32 123456789 21000000\n"
+
 assure "sum      123456789 \x3D\x3D\n"
 send   "sum      123456789 \x3D\x3D\n"
 assure "sum8     123456789 \x3D\x3D\n"
@@ -668,6 +732,14 @@ assure "adler32  123456789 \x3D\x3E\x30\x31\x31\x3E\x30\x39\n"
 send   "adler32  123456789 \x3D\x3E\x30\x31\x31\x3E\x30\x39\n"
 assure "hexsum8  123456789 \x32\x3D\n"
 send   "hexsum8  123456789 \x32\x3D\n"
+assure "bitsum   123456789 \x32\x31\n"
+send   "bitsum   123456789 \x32\x31\n"
+assure "bitsum8  123456789 \x32\x31\n"
+send   "bitsum8  123456789 \x32\x31\n"
+assure "bitsum16 123456789 \x32\x31\x30\x30\n"
+send   "bitsum16 123456789 \x32\x31\x30\x30\n"
+assure "bitsum32 123456789 \x32\x31\x30\x30\x30\x30\x30\x30\n"
+send   "bitsum32 123456789 \x32\x31\x30\x30\x30\x30\x30\x30\n"
 assure "DONE\n"
                 
 finish

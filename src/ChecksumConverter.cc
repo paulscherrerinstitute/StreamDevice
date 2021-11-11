@@ -89,6 +89,33 @@ static uint32_t xor7(const uint8_t* data, size_t len, uint32_t sum)
     return xor8(data, len, sum) & 0x7F;
 }
 
+static uint32_t bitsum(const uint8_t* data, size_t len, uint32_t sum)
+{
+    // number of set bits in each byte
+    const uint8_t table[256] = {
+        0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,
+        1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+        1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+        1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+        2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+        3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+        3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+        4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8};
+    while (len--)
+    {
+        sum += table[*data++];
+    }
+    return sum;
+}
+
 static uint32_t crc_0x07(const uint8_t* data, size_t len, uint32_t crc)
 {
     // x^8 + x^2 + x^1 + x^0 (0x07)
@@ -618,7 +645,11 @@ static checksum checksumMap[] =
     {"leybold", leybold,          0x00,       0x00,       1}, // 0x22
     {"brksCryo",brksCryo,         0x00,       0x00,       1}, // 0x4A
     {"lrc",     lrc,              0x00,       0x00,       1}, // 0x23 
-    {"hexlrc",  hexlrc,           0x00,       0x00,       1}  // 0xA7
+    {"hexlrc",  hexlrc,           0x00,       0x00,       1}, // 0xA7
+    {"bitsum",  bitsum,           0x00,       0x00,       1}, // 0x21
+    {"bitsum8", bitsum,           0x00,       0x00,       1}, // 0x21
+    {"bitsum16",bitsum,           0x0000,     0x0000,     2}, // 0x0021
+    {"bitsum32",bitsum,           0x00000000, 0x00000000, 4}, // 0x00000021
 };
 
 static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
