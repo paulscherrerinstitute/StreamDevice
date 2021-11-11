@@ -734,8 +734,13 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     uint_fast8_t fnum = extract<uint8_t>(info);
 
     size_t start = format.width;
-    size_t length = output.length()-format.width;
-    if (format.prec > 0) length -= format.prec;
+    size_t length = output.length();
+    if (length >= start) length -= start;
+    else length = 0;
+    if (format.prec > 0) {
+        if (length >= (size_t)format.prec) length -= format.prec;
+        else length = 0;
+    }
 
     debug("ChecksumConverter %s: output to check: \"%s\"\n",
         checksumMap[fnum].name, output.expand(start,length)());
@@ -808,9 +813,13 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     uint32_t xorout = extract<uint32_t>(info);
     size_t start = format.width;
     uint_fast8_t fnum = extract<uint8_t>(info);
-    size_t length = cursor-format.width;
-
-    if (format.prec > 0) length -= format.prec;
+    size_t length = cursor;
+    if (length >= start) length -= start;
+    else length = 0;
+    if (format.prec > 0) {
+        if (length >= (size_t)format.prec) length -= format.prec;
+        else length = 0;
+    }
 
     debug("ChecksumConverter %s: input to check: \"%s\n",
         checksumMap[fnum].name, input.expand(start,length)());
