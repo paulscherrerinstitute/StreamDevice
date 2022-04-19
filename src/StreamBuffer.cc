@@ -358,7 +358,7 @@ dump() const
     StreamBuffer result;
     size_t i;
     result.print("%" P "d,%" P "d,%" P "d:", offs, len, cap);
-    if (offs) result.print(ansiEscape(ANSI_BG_WHITE));
+    if (offs) result.print("%s", ansiEscape(ANSI_BG_WHITE));
     char c;
     for (i = 0; i < cap; i++)
     {
