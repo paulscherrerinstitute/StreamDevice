@@ -20,6 +20,8 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
+#include <stdlib.h>
+
 #if defined(vxWorks)
 #include <version.h>
 #if defined(_WRS_VXWORKS_MAJOR) && _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR > 8)
