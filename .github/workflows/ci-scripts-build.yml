@@ -1,0 +1,164 @@
+# .github/workflows/ci-scripts-build.yml for use with EPICS Base ci-scripts
+# (see: https://github.com/epics-base/ci-scripts)
+
+# This is YAML - indentation levels are crucial
+
+# Workflow name, shared by all branches
+
+name: StreamDevice
+
+# Trigger on pushes and PRs to any branch
+on:
+  push:
+    paths-ignore:
+      - 'docs/*'
+      - '.gitattributes'
+      - '.gitignore'
+      - '**/*.html'
+      - '**/*.md'
+  pull_request:
+    paths-ignore:
+      - 'docs/*'
+      - '.gitattributes'
+      - '.gitignore'
+      - '**/*.html'
+      - '**/*.md'
+
+env:
+    SETUP_PATH: .ci-local:.ci
+    EPICS_TEST_IMPRECISE_TIMING: YES
+
+jobs:
+  native:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    # Set environment variables from matrix parameters
+    env:
+      CMP: ${{ matrix.cmp }}
+      BCFG: ${{ matrix.configuration }}
+      BASE: ${{ matrix.base }}
+      WINE: ${{ matrix.wine }}
+      RTEMS: ${{ matrix.rtems }}
+      RTEMS_TARGET: ${{ matrix.rtems_target }}
+      TEST: ${{ matrix.test }}
+      EXTRA: ${{ matrix.extra }}
+      VV: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Native Linux (WError)
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            extra: "CMD_CPPFLAGS=-Werror"
+            pcre: apt
+
+          - name: Cross mingw64 DLL
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            wine: "64"
+            pcre: no
+
+          - name: Cross mingw64 static
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: static
+            base: "7.0"
+            wine: "64"
+            pcre: no
+
+          - name: RTEMS 4.10
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            rtems: "4.10"
+            rtems_target: RTEMS-pc386-qemu
+            pcre: no
+ 
+          - name: Native Linux with clang
+            os: ubuntu-20.04
+            cmp: clang
+            configuration: default
+            base: "7.0"
+            pcre: apt
+
+          - name: Native Linux with 3.15
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: default
+            base: "3.15"
+            pcre: apt
+
+          - name: Native Linux with 3.14
+            os: ubuntu-20.04
+            cmp: gcc
+            configuration: default
+            base: "3.14"
+            pcre: apt
+
+          - name: OSX
+            os: macos-latest
+            cmp: clang
+            configuration: default
+            base: "7.0"
+            pcre: no
+
+          - name: vs2019 DLL
+            os: windows-2019
+            cmp: vs2019
+            configuration: debug
+            base: "7.0"
+            pcre: no
+            extra: "CMD_CFLAGS=-analysis CMD_CXXFLAGS=-analysis"
+
+          - name: vs2019 static
+            os: windows-2019
+            cmp: vs2019
+            configuration: static-debug
+            base: "7.0"
+            pcre: no
+            extra: "CMD_CFLAGS=-analysis CMD_CXXFLAGS=-analysis"
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Automatic core dumper analysis
+      uses: mdavidsaver/ci-core-dumper@master
+    - name: "apt-get install"
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install qemu-system-x86 g++-mingw-w64-x86-64 gdb
+      if: runner.os == 'Linux'
+
+    - name: Reset RELEASE
+      shell: bash
+      # 'make' on Mac doesn't understand "undefine PCRE"
+      # so replace the whole file
+      run: |
+        cat <<EOF > configure/RELEASE
+        -include \$(TOP)/../RELEASE.local
+        -include \$(TOP)/../RELEASE.\$(EPICS_HOST_ARCH).local
+        -include \$(TOP)/configure/RELEASE.local
+        EOF
+
+    - name: Prepare and compile dependencies
+      run: python .ci/cue.py prepare
+
+    - name: "apt-get install pcre"
+      if: matrix.pcre == 'apt'
+      shell: bash
+      run: |
+        sudo apt-get -y install libpcre3-dev
+        cat <<EOF >> configure/CONFIG_SITE.local
+        PCRE_INCLUDE=/usr/include
+        PCRE_LIB=/usr/lib
+        EOF
+
+    - name: Build main module
+      run: python .ci/cue.py build

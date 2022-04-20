@@ -1,0 +1,12 @@
+MODULES=calc asyn
+
+# EPICS Base
+BASE_DIRNAME=base
+BASE_REPONAME=epics-base
+BASE_REPOOWNER=epics-base
+BASE_VARNAME=EPICS_BASE
+BASE_RECURSIVE=no
+
+ASYN_REPOOWNER=epics-modules
+
+CALC_REPOOWNER=epics-modules
