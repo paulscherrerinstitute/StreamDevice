@@ -1,10 +1,22 @@
 #/bin/sh
-if ! wkhtmltopdf -V >/dev/null 2>&1
-then
+wkhtmltopdf --enable-local-file-access -V >/dev/null 2>&1
+case $? in
+  127)
     echo "wkhtmltopdf not installed." >&2
     echo "See https://wkhtmltopdf.org" >&2
     exit 1
-fi
+    ;;
+  0)
+    # have (and need) --enable-local-file-access
+    ENABLE_FILE_ACCESS=--enable-local-file-access
+    ;;
+  1)
+    # have no (and need no) --enable-local-file-access
+    ;;
+  *)
+    # Some error but I don't know what it means. Try anyway.
+    ;;
+esac
 
 PAGES="
 index.html
@@ -43,5 +55,5 @@ osinterface.html
 "
 
 rm -f stream.pdf
-wkhtmltopdf --print-media-type --dpi 1200 --zoom 0.85 --page-size Letter \
-$PAGES stream.pdf
+wkhtmltopdf --print-media-type --page-size Letter \
+$ENABLE_FILE_ACCESS $PAGES stream.pdf
