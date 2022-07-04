@@ -293,9 +293,10 @@ record (stringout, "$(DEVICE):clean_2") {<br>
 <a name="web"></a>
 <h2>I need to read a web page</h2>
 <p>
-First you have to send a correctly formatted HTML request.
-Note that this request must contain the full URL like
-"http://server/page" and must be terminated with <u>two</u> newlines.
+First you have to send a correctly formatted HTML header for a GET request.
+Note that this header must contain the full URL like
+"http://server/page" and must be terminated with <u>two</u>
+CR LF sequences (<code>"\r\n\r\n"</code> or <code>CR LF CR LF</code>).
 The server should be the same as in the
 <a href="setup.html#sta"><code>drvAsynIPPortConfigure</code></a>
 command (if not using a http proxy).
@@ -313,17 +314,18 @@ Read the title of a web page.
 get_title {<br>
 &nbsp;&nbsp;extrainput = ignore;<br>
 &nbsp;&nbsp;replyTimeout = 1000;<br>
-&nbsp;&nbsp;out "GET http://\$1\n\n";<br>
+&nbsp;&nbsp;out "GET http://\$1\r\n\r\n";<br>
 &nbsp;&nbsp;in "%+.1/(?im)&lt;title&gt(.*)&lt\/title&gt;/";<br>
 }
 </code>
 </p>
 <p>
-Terminate the request with two newlines, either explicit like here
-<u>or</u> using an 
+Terminate the request with two carriage return + newlines, either explicit
+like here <u>or</u> using an 
 <a href="protocol.html#sysvar"><code>outTerminator</code></a>.
 The URI (without http:// but including the web server host name)
-is passed as <a href="protocol.html#argvar">argument</a> 1 to <code>\$1</code>.
+is passed as <a href="protocol.html#argvar">argument</a> 1 to <code>\$1</code>
+in this example.
 Note that web servers may be slow, so allow some
 <a href="protocol.html#argvar"><code>replyTimeout</code></a>.
 </p>
@@ -390,7 +392,7 @@ Then we read the number.
 get_title {<br>
 &nbsp;&nbsp;extrainput = ignore;<br>
 &nbsp;&nbsp;replyTimeout = 1000;<br>
-&nbsp;&nbsp;out "GET http://\$1\n\n";<br>
+&nbsp;&nbsp;out "GET http://\$1\r\n\r\n";<br>
 &nbsp;&nbsp;in "%*/Interesting value:/%f more text";<br>
 }
 </code>
