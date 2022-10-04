@@ -20,9 +20,16 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#if defined(vxWorks)
+#ifdef vxWorks
 #include <version.h>
-#if defined(_WRS_VXWORKS_MAJOR) && _WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR > 8)
+#ifdef _WRS_VXWORKS_MAJOR
+/* VxWorks has strings.h with strncasecmp since version 6 */
+#include <strings.h>
+#else
+#define NEED_strncasecmp
+#endif
+/* VxWorks has stdint.h since version 6.9 */
+#if defined(_WRS_VXWORKS_MAJOR) && (_WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR >= 9))
 #include <stdint.h>
 #define PRIX32 "X"
 #define PRIu32 "u"
@@ -44,23 +51,28 @@
 #include <inttypes.h>
 #endif
 #include <ctype.h>
+#include <stdlib.h>
+
+#ifdef __rtems__
+/* RTEMS has strncasecmp since version 5 */
+#if __RTEMS_MAJOR__ < 5
+#define NEED_strncasecmp
+#endif
+#endif
 
 #ifdef _MSC_VER
 #define strncasecmp _strnicmp
 #endif
 
-#if defined(vxWorks) || defined(__rtems__)
-// These systems have no strncasecmp at the moment
-// But avoid compiler errors in case strncasecmp exists in future versions
+#ifdef NEED_strncasecmp
+// Have no strncasecmp but avoid compiler errors in case it exists in future versions
 extern "C" {
-
     static int mystrncasecmp(const char *s1, const char *s2, size_t n)
     {
         int r=0;
         while (n && (r = toupper(*s1)-toupper(*s2)) == 0) { n--; s1++; s2++; };
         return r;
     }
-
 }
 #define strncasecmp mystrncasecmp
 #endif
