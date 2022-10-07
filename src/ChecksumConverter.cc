@@ -21,47 +21,45 @@
 *************************************************************************/
 
 #ifdef vxWorks
-#include <version.h>
-#ifdef _WRS_VXWORKS_MAJOR
-/* VxWorks has strings.h with strncasecmp since version 6 */
-#include <strings.h>
+  #include <version.h>
+  /* VxWorks has strncasecmp since version 6
+     but availability depends on configuration.
+     We cannot know.
+  */
+  #define NEED_strncasecmp
+  /* VxWorks does not have inttypes.h and uint32_t differs between versions */
+  #if defined(_WRS_VXWORKS_MAJOR) && (_WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR >= 9))
+    #define PRIX32 "X"
+    #define PRIu32 "u"
+  #else
+    #define PRIX32 "lX"
+    #define PRIu32 "lu"
+  #endif
+  #define PRIX8  "X"
+#elif defined(_MSC_VER) && _MSC_VER < 1700
+  /* Visual Studio 2010 does not have inttypes.h */
+  #define PRIX32 "X"
+  #define PRIu32 "u"
+  #define PRIX8  "X"
 #else
-#define NEED_strncasecmp
+  #define __STDC_FORMAT_MACROS
+  #include <inttypes.h>
 #endif
-/* VxWorks has stdint.h since version 6.9 */
-#if defined(_WRS_VXWORKS_MAJOR) && (_WRS_VXWORKS_MAJOR > 6 || (_WRS_VXWORKS_MAJOR == 6 && _WRS_VXWORKS_MINOR >= 9))
-#include <stdint.h>
-#define PRIX32 "X"
-#define PRIu32 "u"
-#else
-#define PRIX32 "lX"
-#define PRIu32 "lu"
-#endif
-#define PRIX8  "X"
-#define uint_fast8_t uint8_t
-#define int_fast8_t int8_t
-#elif defined(_MSC_VER) && _MSC_VER < 1700 /* Visual Studio 2010 does not have inttypes.h */
-#include <stdint.h>
-#define PRIX32 "X"
-#define PRIu32 "u"
-#define PRIX8  "X"
-#else
-#define __STDC_FORMAT_MACROS
-#include <stdint.h>
-#include <inttypes.h>
-#endif
+
 #include <ctype.h>
 #include <stdlib.h>
 
-#ifdef __rtems__
-/* RTEMS has strncasecmp since version 5 */
-#if __RTEMS_MAJOR__ < 5
-#define NEED_strncasecmp
-#endif
+#if defined(__rtems__)
+  #include <rtems.h>
+  #if __RTEMS_MAJOR__ < 5
+    /* RTEMS has strncasecmp since version 5 */
+    #define NEED_strncasecmp
+  #endif
 #endif
 
 #ifdef _MSC_VER
-#define strncasecmp _strnicmp
+  /* Windows strncasecmp has a different name. */
+  #define strncasecmp _strnicmp
 #endif
 
 #ifdef NEED_strncasecmp
@@ -747,7 +745,7 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     const char* info = format.info;
     uint32_t init = extract<uint32_t>(info);
     uint32_t xorout = extract<uint32_t>(info);
-    uint_fast8_t fnum = extract<uint8_t>(info);
+    uint8_t fnum = extract<uint8_t>(info);
 
     size_t start = format.width;
     size_t length = output.length();
@@ -768,8 +766,8 @@ printPseudo(const StreamFormat& format, StreamBuffer& output)
     debug("ChecksumConverter %s: output checksum is 0x%" PRIX32 "\n",
         checksumMap[fnum].name, sum);
 
-    uint_fast8_t i;
-    uint_fast8_t outchar;
+    uint8_t i;
+    uint8_t outchar;
 
     if (format.flags & sign_flag) // decimal
     {
@@ -828,7 +826,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     uint32_t init = extract<uint32_t>(info);
     uint32_t xorout = extract<uint32_t>(info);
     size_t start = format.width;
-    uint_fast8_t fnum = extract<uint8_t>(info);
+    uint8_t fnum = extract<uint8_t>(info);
     size_t length = cursor;
     if (length >= start) length -= start;
     else length = 0;
@@ -840,7 +838,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     debug("ChecksumConverter %s: input to check: \"%s\n",
         checksumMap[fnum].name, input.expand(start,length)());
 
-    uint_fast8_t nDigits =
+    uint8_t nDigits =
         // get number of decimal digits from number of bytes: ceil(bytes*2.5)
         format.flags & sign_flag ? (checksumMap[fnum].bytes + 1) * 25 / 10 - 2 :
         format.flags & (zero_flag|left_flag) ? 2 * checksumMap[fnum].bytes :
@@ -883,7 +881,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     else
     if (format.flags & alt_flag) // lsb first (little endian)
     {
-        uint_fast8_t i;
+        uint8_t i;
         for (i = 0; i < checksumMap[fnum].bytes; i++)
         {
             if (format.flags & zero_flag) // ASCII
@@ -926,8 +924,8 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
     }
     else // msb first (big endian)
     {
-        int_fast8_t i;
-        uint_fast8_t j;
+        int8_t i;
+        uint8_t j;
         for (i = checksumMap[fnum].bytes-1, j = 0; i >= 0; i--, j++)
         {
             if (format.flags & zero_flag) // ASCII
