@@ -594,6 +594,18 @@ In input, the next byte or bytes must match the checksum.
    href="https://en.wikipedia.org/wiki/Longitudinal_redundancy_check">Wikipedia</a>.</dd>
  <dt><code>%&lt;hexlrc&gt;</code></dt>
   <dd>One byte. The LRC for the hex digits. (Other characters are ignored.)</dd>
+ <dt><code>%&lt;leybold&gt;</code></dt>
+  <dd>One byte. Used by some Leybold products. 255-bytesum%255 (+32 if result would be <32)</dd>
+ <dt><code>%&lt;brksCryo&gt;</code></dt>
+  <dd>One byte. Used by Brooks Cryopumps.</dd>
+ <dt><code>%&lt;CPI&gt;</code></dt>
+  <dd>One byte. Used by TRIUMF CPI RF amplifier.</dd>
+ <dt><code>%&lt;bitsum&gt;</code> or <code>%&lt;bitsum8&gt;</code></dt>
+  <dd>One byte. Number of 1 bits in all characters.</dd>
+ <dt><code>%&lt;bitsum16&gt;</code></dt>
+  <dd>Two bytes. Number of 1 bits in all characters.</dd>
+ <dt><code>%&lt;bitsum32&gt;</code></dt>
+  <dd>Four bytes. Number of 1 bits in all characters.</dd>
 </dl>
 
 <a name="regex"></a>
