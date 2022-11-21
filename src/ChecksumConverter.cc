@@ -548,6 +548,7 @@ static uint32_t leybold(const uint8_t* data, size_t len, uint32_t sum)
         sum += *data++;
     }
     sum = ~sum;
+    sum &= 0xff;
     if (sum < 32) sum+=32;
     return sum;
 }
