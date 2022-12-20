@@ -24,11 +24,11 @@ HEADERS += src/StreamFormat.h
 HEADERS += src/StreamFormatConverter.h
 HEADERS += src/StreamBuffer.h
 HEADERS += src/StreamError.h
-HEADERS += src/StreamVersion.h
 HEADERS += src/StreamProtocol.h
 HEADERS += src/StreamBusInterface.h
 HEADERS += src/StreamCore.h
 HEADERS += src/MacroMagic.h
+HEADERS += $(COMMON_DIR)/StreamVersion.h
 
 CPPFLAGS += -DSTREAM_INTERNAL -I$(COMMON_DIR)
 
