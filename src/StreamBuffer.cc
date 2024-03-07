@@ -75,6 +75,57 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
 #include "StreamBuffer.h"
 #include "StreamError.h"
 
+#ifndef HEXDUMP_COLS
+#define HEXDUMP_COLS 16
+#endif
+
+#include <stdio.h>
+#include <ctype.h>
+void hexdump(void *mem, unsigned int len)
+{
+    unsigned int i, j;
+
+    for (i = 0; i < len + ((len % HEXDUMP_COLS) ? (HEXDUMP_COLS - len % HEXDUMP_COLS) : 0); i++)
+    {
+        /* print offset */
+        if (i % HEXDUMP_COLS == 0)
+        {
+            printf("0x%06x: ", i);
+        }
+
+        /* print hex data */
+        if (i < len)
+        {
+            printf("%02x ", 0xFF & ((char *)mem)[i]);
+        }
+        else /* end of block, just aligning for ASCII dump */
+        {
+            printf("   ");
+        }
+
+        /* print ASCII dump */
+        if (i % HEXDUMP_COLS == (HEXDUMP_COLS - 1))
+        {
+            for (j = i - (HEXDUMP_COLS - 1); j <= i; j++)
+            {
+                if (j >= len) /* end of block, not really printing */
+                {
+                    putchar(' ');
+                }
+                else if (isprint(((char *)mem)[j])) /* printable char */
+                {
+                    putchar(0xFF & ((char *)mem)[j]);
+                }
+                else /* other char */
+                {
+                    putchar('.');
+                }
+            }
+            putchar('\n');
+        }
+    }
+}
+
 #define P PRINTF_SIZE_T_PREFIX
 
 void StreamBuffer::
@@ -274,21 +325,37 @@ replace(ssize_t remstart, ssize_t remlen, const void* ins, ssize_t inslen)
     }
     else
     {
+        hexdump(buffer, cap + 16);
         if (newlen+offs<=cap)
         {
+            printf("%s:%d case 1 %ld <= %ld\n", __func__, __LINE__, newlen+offs, cap);
             // move to start of buffer
             memmove(buffer+offs+remstart+inslen, buffer+offs+remend, len-remend);
             memcpy(buffer+offs+remstart, ins, inslen);
-            if (newlen<len) memset(buffer+offs+newlen, 0, len-newlen);
+            if (newlen<len) {
+                printf("%s:%d case 1 memset from %ld size %ld\n", __func__, __LINE__, offs+newlen, len-newlen);
+                memset(buffer+offs+newlen, 0, len-newlen);
+            }
         }
         else
         {
+            printf("%s:%d case 2 %ld > %ld\n", __func__, __LINE__, newlen+offs, cap);
+            printf("%s:%d case 2 remstart %ld, offs %ld, remend %ld, len-remend %ld, newlen %ld\n", __func__, __LINE__, remstart, offs, remend, len-remend, newlen);
             memmove(buffer,buffer+offs,remstart);
             memmove(buffer+remstart+inslen, buffer+offs+remend, len-remend);
             memcpy(buffer+remstart, ins, inslen);
-            if (newlen<len) memset(buffer+newlen, 0, len-newlen);
+            if (newlen<len) {
+                printf("%s:%d case 2 A memset from %ld size %ld\n", __func__, __LINE__, newlen, len-newlen);
+                memset(buffer+newlen, 0, len-newlen);
+            } else {
+                // HK: this is new!
+                // Seems to solve the isseu when newlen > len; will put \0 right after the string
+                printf("%s:%d case 2 B memset from %ld size %ld\n", __func__, __LINE__, newlen, cap-newlen);
+                memset(buffer+newlen, 0, cap-newlen);
+            }
             offs = 0;
         }
+        hexdump(buffer, cap + 16);
     }
     len = newlen;
     return *this;
