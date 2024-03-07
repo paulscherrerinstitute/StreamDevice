@@ -1553,13 +1553,24 @@ scanValue(const StreamFormat& fmt, char* value, size_t& size)
             value[0] = 0;
             consumed = 0;
         }
-        else return -1;
+        else {
+            printf("%s:%d returning %ld\n", __func__, __LINE__, consumed);
+            return -1;
+        }
     }
     debug("StreamCore::scanValue(%s, format=%%%c, char*, size=%" Z "d) input=\"%s\" value=\"%s\"\n",
         name(), fmt.conv, size, inputLine.expand(consumedInput)(),
         StreamBuffer(value, size).expand()());
-    if (fmt.flags & fix_width_flag && consumed != (ssize_t)fmt.width) return -1;
-    if ((size_t)consumed > inputLine.length()-consumedInput) return -1;
+    if (fmt.flags & fix_width_flag && consumed != (ssize_t)fmt.width) {
+        printf("%s:%d returning %ld\n", __func__, __LINE__, consumed);
+        return -1;
+    }
+    if ((size_t)consumed > inputLine.length()-consumedInput) {
+        // HK: hitting this case when 'Input "A03" does not match format "%s"'
+        printf("%s:%d returning %ld\n", __func__, __LINE__, consumed);
+        return -1;
+    }
+
     flags |= GotValue;
     return consumed;
 }

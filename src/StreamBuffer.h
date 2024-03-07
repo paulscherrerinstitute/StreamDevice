@@ -38,6 +38,8 @@ typedef ptrdiff_t ssize_t;
 class StreamBuffer
 {
     char local[64];
+    // HK: used to terminate the local buffer if string is 64 bytes long
+    char term;
     size_t len;
     size_t cap;
     size_t offs;

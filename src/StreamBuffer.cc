@@ -135,6 +135,8 @@ init(const void* s, ssize_t minsize)
     offs = 0;
     buffer = local;
     cap = sizeof(local);
+    // HK: used to terminate the local buffer if string is 64 bytes long
+    term = 0;
     if (minsize < 0) minsize = 0;
     if ((size_t)minsize >= cap)
     {
