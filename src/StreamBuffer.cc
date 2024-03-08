@@ -327,37 +327,37 @@ replace(ssize_t remstart, ssize_t remlen, const void* ins, ssize_t inslen)
     }
     else
     {
-        hexdump(buffer, cap + 16);
+        // hexdump(buffer, cap + 16);
         if (newlen+offs<=cap)
         {
-            printf("%s:%d case 1 %ld <= %ld\n", __func__, __LINE__, newlen+offs, cap);
+            // printf("%s:%d case 1 %ld <= %ld\n", __func__, __LINE__, newlen+offs, cap);
             // move to start of buffer
             memmove(buffer+offs+remstart+inslen, buffer+offs+remend, len-remend);
             memcpy(buffer+offs+remstart, ins, inslen);
             if (newlen<len) {
-                printf("%s:%d case 1 memset from %ld size %ld\n", __func__, __LINE__, offs+newlen, len-newlen);
+                // printf("%s:%d case 1 memset from %ld size %ld\n", __func__, __LINE__, offs+newlen, len-newlen);
                 memset(buffer+offs+newlen, 0, len-newlen);
             }
         }
         else
         {
-            printf("%s:%d case 2 %ld > %ld\n", __func__, __LINE__, newlen+offs, cap);
-            printf("%s:%d case 2 remstart %ld, offs %ld, remend %ld, len-remend %ld, newlen %ld\n", __func__, __LINE__, remstart, offs, remend, len-remend, newlen);
+            // printf("%s:%d case 2 %ld > %ld\n", __func__, __LINE__, newlen+offs, cap);
+            // printf("%s:%d case 2 remstart %ld, offs %ld, remend %ld, len-remend %ld, newlen %ld\n", __func__, __LINE__, remstart, offs, remend, len-remend, newlen);
             memmove(buffer,buffer+offs,remstart);
             memmove(buffer+remstart+inslen, buffer+offs+remend, len-remend);
             memcpy(buffer+remstart, ins, inslen);
             if (newlen<len) {
-                printf("%s:%d case 2 A memset from %ld size %ld\n", __func__, __LINE__, newlen, len-newlen);
+                // printf("%s:%d case 2 A memset from %ld size %ld\n", __func__, __LINE__, newlen, len-newlen);
                 memset(buffer+newlen, 0, len-newlen);
             } else {
                 // HK: this is new!
                 // Seems to solve the isseu when newlen > len; will put \0 right after the string
-                printf("%s:%d case 2 B memset from %ld size %ld\n", __func__, __LINE__, newlen, cap-newlen);
+                // printf("%s:%d case 2 B memset from %ld size %ld\n", __func__, __LINE__, newlen, cap-newlen);
                 memset(buffer+newlen, 0, cap-newlen);
             }
             offs = 0;
         }
-        hexdump(buffer, cap + 16);
+        // hexdump(buffer, cap + 16);
     }
     len = newlen;
     return *this;
