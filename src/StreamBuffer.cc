@@ -102,7 +102,7 @@ init(const void* s, ssize_t minsize)
 }
 
 // How the buffer looks like:
-// |----free-----|####used####|--------00--------|
+// |----junk-----|####used####|--------00--------|
 ///|<--- offs -->|<-- len --->|<- cap-offs-len ->|
 // 0            offs      offs+len              cap
 //               |<-------------- minsize --------------->
@@ -254,39 +254,71 @@ replace(ssize_t remstart, ssize_t remlen, const void* ins, ssize_t inslen)
     if (inslen < 0) inslen = 0;
     size_t remend = remstart+remlen;
     size_t newlen = len+inslen-remlen;
+
+// How the buffer looks like before and after:
+// |---junk---|##content_start##|/////////remove_this////////|##content_end##|0000|
+// |<- offs ->|<-- remstart --->|<--------- remlen --------->|               |    |
+// |          |<--------------------- len ---------------------------------->|    |
+// 0         offs           offs+remstart                offs+remend    offs+len cap
+//
+// If content size stays the same, no need to move old content:
+// |---junk---|##content_start##|+++++++inserted_text++++++++|##content_end##|0000|
+//                              |<----- inslen==remlen ----->|         newlen==len
+//
+// If content shrinks (need to clear end of buffer):          |< clear this >|
+// |---junk---|##content_start##|inserted_text|##content_end##|00000000000000|0000|
+// 0         offs               |<- inslen -->|               |< len-newlen >|
+//                                                        offs+newlen    offs+len
+//
+// If content grows but still fits (make sure to keep at least one 0 byte at end):
+// |---junk---|##content_start##|++++++++inserted_text++++++++++|##content_end##|0|
+// |<- offs ->|<--------------------- newlen ---------------------------------->| |
+// 0         offs                                                           offs+newlen<cap
+//
+// If content would overflow, moving to offs 0 may help:
+// May need to clear end if newlen < offs+len:                       |<clear>|
+// |##content_start##|++++++++inserted_text++++++++++|##content_end##|0000000|0000|
+// |<--------------------- newlen ---------------------------------->|       |
+//                                                                newlen  offs+len
+// 
+// Otherwise we need to copy to a new buffer.
+
+
     if (cap <= newlen)
     {
-        // buffer too short
+        // buffer too short, copy to new buffer
         size_t newcap;
         for (newcap = sizeof(local)*2; newcap <= newlen; newcap *= 2);
         char* newbuffer = new char[newcap];
-        memcpy(newbuffer, buffer+offs, remstart);
-        memcpy(newbuffer+remstart, ins, inslen);
-        memcpy(newbuffer+remstart+inslen, buffer+offs+remend, len-remend);
-        memset(newbuffer+newlen, 0, newcap-newlen);
+        memcpy(newbuffer, buffer+offs, remstart);                           // copy content start
+        memcpy(newbuffer+remstart, ins, inslen);                            // insert
+        memcpy(newbuffer+remstart+inslen, buffer+offs+remend, len-remend);  // copy content end
+        memset(newbuffer+newlen, 0, newcap-newlen);                         // clear buffer end
         if (buffer != local)
-        {
-            delete [] buffer;
-        }
+            delete[] buffer;
         buffer = newbuffer;
         cap = newcap;
         offs = 0;
     }
     else
     {
-        if (newlen+offs<=cap)
+        if (offs+newlen < cap)
         {
-            // move to start of buffer
-            memmove(buffer+offs+remstart+inslen, buffer+offs+remend, len-remend);
-            memcpy(buffer+offs+remstart, ins, inslen);
-            if (newlen<len) memset(buffer+offs+newlen, 0, len-newlen);
+            // modified content still fits with current offs, just move content end
+            if (newlen != len)
+                memmove(buffer+offs+remstart+inslen, buffer+offs+remend, len-remend); // move old content end if necessary
+            memcpy(buffer+offs+remstart, ins, inslen);                                // insert before
+            if (newlen < len)
+                memset(buffer+offs+newlen, 0, len-newlen);                            // clear buffer end if content shrunk
         }
         else
         {
-            memmove(buffer,buffer+offs,remstart);
-            memmove(buffer+remstart+inslen, buffer+offs+remend, len-remend);
-            memcpy(buffer+remstart, ins, inslen);
-            if (newlen<len) memset(buffer+newlen, 0, len-newlen);
+            // move content to start of buffer
+            memmove(buffer, buffer+offs, remstart);                                   // move content start to 0 offs
+            memmove(buffer+remstart+inslen, buffer+offs+remend, len-remend);          // move content end
+            memcpy(buffer+remstart, ins, inslen);                                     // insert in between
+            if (newlen < offs+len)
+                memset(buffer+newlen, 0, offs+len-newlen);                            // clear buffer end if necessary
             offs = 0;
         }
     }
