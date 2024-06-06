@@ -19,7 +19,7 @@
 # along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 #########################################################################/
 
-terminator = CR LF;
+terminator = LF;
 
 cmd {
     out "%s";
