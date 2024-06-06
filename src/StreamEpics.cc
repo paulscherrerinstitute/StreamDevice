@@ -137,6 +137,7 @@ class Stream : protected StreamCore
 #endif
 
 // StreamCore methods
+    void inputHook(const void* input, size_t size);
     void protocolFinishHook(ProtocolResult);
     void startTimer(unsigned long timeout);
     bool getFieldAddress(const char* fieldname,
@@ -934,6 +935,10 @@ process()
     debug("Stream::process(%s) start\n", name());
     status = NO_ALARM;
     convert = OK;
+    if (record->tpro)
+    {
+        StreamDebugClass(record->name).print("start protocol '%s'\n", protocolname());
+    }
     if (!startProtocol(record->proc == 2 ? StreamCore::StartInit : StreamCore::StartNormal))
     {
         debug("Stream::process(%s): could not start %sprotocol, status=%s (%d)\n",
@@ -1029,10 +1034,25 @@ expire(const epicsTime&)
 // StreamCore virtual methods ////////////////////////////////////////////
 
 void Stream::
+inputHook(const void* input, size_t size)
+{
+    if (record->tpro > 1)
+    {
+        StreamDebugClass(record->name).print("received \"%s\"\n",
+            StreamBuffer(input, size).expand()());
+    }
+}
+
+void Stream::
 protocolFinishHook(ProtocolResult result)
 {
     debug("Stream::protocolFinishHook(%s, %s)\n",
         name(), toStr(result));
+    if (record->tpro)
+    {
+        StreamDebugClass(record->name).print("%s. out=\"%s\", in=\"%s\"\n",
+            toStr(result), outputLine.expand()(), inputLine.expand()());
+    }
     switch (result)
     {
         case Success:

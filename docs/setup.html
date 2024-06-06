@@ -385,35 +385,45 @@ See the <a href="protocol.html">next chapter</a> for protocol files in depth.
 Generation of debug and error messages is controlled with two shell variables,
 <code>streamDebug</code> and <code>streamError</code>.
 Setting those variables to 1 (actually to any number but 0) enables the
-messages.
+messages. A few noisy and rarely useful debug messages are only enabled when
+setting <code>streamDebug</code> to 2.
 Per default debug messages are switched off and error messages are switched on.
 Errors occuring while loading protocol files are always shown.
 </p>
 <p>
-Warning: Enabling debug messages can create a lot of output!
-At the moment, there is no way to set filters on debug or error messages.
+Warning: Enabling debug messages this way can create a lot of output!
+Therefore, some limited debugging can be enabled per record, independent of
+the <code>streamDebug</code> variable using the <code>.TPRO</code> field of
+the record. Currently, setting <code>.TPRO</code> to 1 or 2 enables some
+basic information about the processing of a record and its i/o.
 </p>
 <p>
 Debug output can be redirected to a file with the command
 <code>streamSetLogfile("<var>filename</var>")</code>.
-When called without a filename, debug output is directed back
-to the console.
+If the file already exists, it will be overwritten, not appended to.
+While debug messages are only written to the defined log file, error messages
+are still printed to <var>stderr</var> too.
+Calling <code>streamSetLogfile</code> without a filename directs debug output
+back to <var>stderr</var> and closes the log file.
 </p>
 <p>
-By default the debug/error output is set to be colored if the terminal allows
-it but this can be set to always colored or never colored by setting 
-<code>streamDebugColored</code> to 1 or 0 respectively.
+By default, error messages to the console are printed in red color if
+<var>stderr</var> is a tty at startup time, using ANSI color codes. Some
+terminals may not support this properly.
+The variable <code>streamDebugColored</code> can be set to 0 or 1 to
+disable or enable colored error messages explicitly.
+Error messages written to a log file do not use colors.
 </p>
 <p>
 Error and debug messages are prefixed with a time stamp unless the variable
 <code>streamMsgTimeStamped</code> is set to 0.
 </p>
 <p>
-When a device is disconnected StreamDevice can produce many repeated timeout 
-messages. To reduce this logging you can set <code>streamErrorDeadTime</code>
-to an integer number of seconds. When this is set repeated timeout messages 
-will not be printed in the specified dead time after the last message. The 
-default dead time is 0, resulting in every message being printed.
+when a device is unresponsive, StreamDevice may produce many repeated timeout 
+messages. To reduce this, you can set <code>streamErrorDeadTime</code>
+to an integer number of seconds. In this case, repeated timeout messages 
+will not be printed during the specified dead time after the last printed
+message. The default dead time is 0, resulting in every message being printed.
 </p>
 
 <h3>Example (vxWorks):</h3>

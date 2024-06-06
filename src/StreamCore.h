@@ -219,6 +219,7 @@ protected:
 
 // virtual methods
     virtual void protocolStartHook() {}
+    virtual void inputHook(const void* input, size_t size) {};
     virtual void protocolFinishHook(ProtocolResult) {}
     virtual void startTimer(unsigned long timeout) = 0;
     virtual bool formatValue(const StreamFormat&, const void* fieldaddress) = 0;
