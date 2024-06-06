@@ -171,8 +171,6 @@ print(const char* fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    const char* f = strrchr(file, '/');
-    if (f) f++; else f = file;
     FILE* fp = StreamDebugFile ? StreamDebugFile : stderr;
     if (streamMsgTimeStamped)
     {
@@ -184,7 +182,13 @@ print(const char* fmt, ...)
     {
         fprintf(fp, "%s ", StreamGetThreadNameFunction());
     }
-    fprintf(fp, "%s:%d: ", f, line);
+    if (file) {
+        const char* f = strrchr(file, '/');
+        if (f) f++; else f = file;
+        fprintf(fp, "%s:", f);
+        if (line) fprintf(fp, "%d:", line);
+        fprintf(fp, " ");
+    }
     vfprintf(fp, fmt, args);
     fflush(fp);
     va_end(args);

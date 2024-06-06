@@ -56,7 +56,7 @@ class StreamDebugClass
     const char* file;
     int line;
 public:
-    StreamDebugClass(const char* file, int line) :
+    StreamDebugClass(const char* file = NULL, int line = 0) :
         file(file), line(line) {}
     int print(const char* fmt, ...)
         __attribute__((__format__(__printf__,2,3)));
