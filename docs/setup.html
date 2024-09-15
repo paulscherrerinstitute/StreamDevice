@@ -85,7 +85,7 @@ Make sure that the <em>asyn</em> library can be found by adding the path to the
 ASYN=/home/epics/asyn4-30
 </pre>
 
-<h4>Support for <em>sCalcout</em> record</h4>
+<h4 id="scalcout">Support for <em>sCalcout</em> record</h4>
 <p>
 The <a 
 href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/epics-modules/calc/R3-6-1/documentation/sCalcoutRecord.html"
@@ -109,7 +109,10 @@ modules. Release R2-8 or newer is recommended.
 </p>
 <p>
 Support for the <em>sCalcout</em> is optional. <em>StreamDevice</em> works
-as well without <em>sCalcout</em> or <em>SynApps</em>.
+as well without <em>sCalcout</em> or <em>SynApps</em>. If your application does
+not need this record support, you may load <kbd>stream-base.dbd</kbd> instead of
+<kbd>stream.dbd</kbd>, making it optional to include <em>calc</em> as an
+application dependency.
 </p>
 
 <h4>Support for regular expression matching</h4>
@@ -185,13 +188,14 @@ Regular expressions are optional. If you don't want them, you don't need this.
 Go to the <em>StreamDevice</em> directory
 and run <code>make</code> (or <code>gmake</code>).
 This will create and install the <em>stream</em> library and the
-<kbd>stream.dbd</kbd> file and an example IOC application.
+<em>StreamDevice</em> database definition files and an example IOC application.
 </p>
 
 <p>
 To use <em>StreamDevice</em>, your own application must be built with the
 <em>stream</em> and <em>asyn</em> (and optionally <em>pcre</em>) libraries
-and must load <kbd>asyn.dbd</kbd> and <kbd>stream.dbd</kbd>.
+and must load <kbd>asyn.dbd</kbd> and <kbd>stream.dbd</kbd> (or alternatively
+<kbd>stream-base.dbd</kbd>; see <a href="#scalcout">Support for sCalcout record</a>).
 </p>
 <p>
 Include the following lines in your application <kbd>Makefile</kbd>:
