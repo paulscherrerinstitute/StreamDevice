@@ -616,6 +616,16 @@ static uint32_t hexlrc(const uint8_t* data, size_t len, uint32_t sum)
     return sum;
 }
 
+// Checksum used by Spellman High Voltage Supplies MPS
+static uint32_t hv_mps(const uint8_t* data, size_t len, uint32_t sum)
+{
+    while (len--)
+    {
+        sum += *data++;
+    }
+    return (~sum & 0x7F) | 0x40;
+}
+
 struct checksum
 {
     const char* name;
@@ -665,6 +675,7 @@ static checksum checksumMap[] =
     {"bitsum8", bitsum,           0x00,       0x00,       1}, // 0x21
     {"bitsum16",bitsum,           0x0000,     0x0000,     2}, // 0x0021
     {"bitsum32",bitsum,           0x00000000, 0x00000000, 4}, // 0x00000021
+    {"hv_mps",  hv_mps,           0xFF,       0x00,       1}  // 0x63
 };
 
 static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
