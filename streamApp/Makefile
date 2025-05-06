@@ -42,10 +42,12 @@ PROD_SRCS_vxWorks = -nil-
 PROD_LIBS = stream
 
 ifdef ASYN
-# edit asynRegistrars.dbd if necessary
-streamApp_DBD += asynRegistrars.dbd
-# add asynRecord.dbd if you like
-streamApp_DBD += asynRecord.dbd
+streamApp_DBD += asyn.dbd
+streamApp_DBD += drvAsynIPPort.dbd
+streamApp_DBD += drvAsynSerialPort.dbd
+# vxi11 support is optional in recent asyn versions
+#streamApp_DBD += drvVxi11.dbd
+
 PROD_LIBS += asyn
 # cygwin needs separate RPC library for asyn
 PROD_SYS_LIBS_cygwin32 += $(CYGWIN_RPC_LIB)
