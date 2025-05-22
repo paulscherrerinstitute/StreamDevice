@@ -144,7 +144,7 @@ grow(size_t minsize)
         // just move contents to start of buffer and clear end
         // to avoid reallocation
         memmove(buffer, buffer+offs, len);
-        memset(buffer+len, 0, offs);
+        memset(buffer+len, 0, cap-len);
         offs = 0;
         return;
     }
