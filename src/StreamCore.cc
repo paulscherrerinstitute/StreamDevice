@@ -1132,7 +1132,7 @@ readCallback(StreamIoStatus status,
     inputBuffer.remove(end + termlen);
     if (inputBuffer)
     {
-        debug("StreamCore::readCallback(%s) unpared input left: \"%s\"\n",
+        debug("StreamCore::readCallback(%s) unparsed input left: \"%s\"\n",
             name(), inputBuffer.expand()());
         unparsedInput = true;
     }
