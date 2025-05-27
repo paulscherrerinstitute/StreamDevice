@@ -682,13 +682,13 @@ static uint32_t mask[5] = {0, 0xFF, 0xFFFF, 0xFFFFFF, 0xFFFFFFFF};
 
 class ChecksumConverter : public StreamFormatConverter
 {
-    int parse (const StreamFormat&, StreamBuffer&, const char*&, bool);
+    int parse (const StreamFormat&, StreamBuffer&, const char*&, bool scanFormat);
     bool printPseudo(const StreamFormat&, StreamBuffer&);
     ssize_t scanPseudo(const StreamFormat&, StreamBuffer&, size_t& cursor);
 };
 
 int ChecksumConverter::
-parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
+parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool scanFormat)
 {
     const char* p = strchr(source, '>');
     if (!p)
@@ -742,7 +742,7 @@ parse(const StreamFormat&, StreamBuffer& info, const char*& source, bool)
             info.append(&xorout, sizeof(xorout));
             info.append(fnum);
             source = p+1;
-            return pseudo_format;
+            return scanFormat ? needs_original_format : pseudo_format;
         }
     }
 
@@ -847,7 +847,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
         else length = 0;
     }
 
-    debug("ChecksumConverter %s: input to check: \"%s\n",
+    debug("ChecksumConverter %s: input to check: \"%s\"\n",
         checksumMap[fnum].name, input.expand(start,length)());
 
     uint8_t nDigits =
@@ -859,8 +859,8 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
 
     if ((ssize_t)( input.length() - cursor ) < expectedLength)
     {
-        debug("ChecksumConverter %s: Input '%s' too short for checksum\n",
-            checksumMap[fnum].name, input.expand(cursor)());
+        debug("ChecksumConverter %s: Input '%s' too short (%zu-%zu<%zu) for checksum\n",
+            checksumMap[fnum].name, input.expand(cursor)(), input.length(), cursor, expectedLength);
         return -1;
     }
 

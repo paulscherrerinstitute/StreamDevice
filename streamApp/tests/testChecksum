@@ -256,6 +256,9 @@ set protocol {
         out "bitsum8  %s %#-9.1<bitsum8>";   in "bitsum8  %=s %#-9.1<bitsum8>";
         out "bitsum16 %s %#-9.1<bitsum16>";  in "bitsum16 %=s %#-9.1<bitsum16>";
         out "bitsum32 %s %#-9.1<bitsum32>";  in "bitsum32 %=s %#-9.1<bitsum32>";
+
+# Check combination of regsub and checksum. Always check what the device sees.
+        out "crc8     %s%#/[0-9]{2}/&:/ %9.1<crc8>";        in "crc8     %#/[0-9]{2}/&:/%s %9.1<crc8>"; out "%s";
         out "DONE";
     }
 }
@@ -740,6 +743,12 @@ assure "bitsum16 123456789 \x32\x31\x30\x30\n"
 send   "bitsum16 123456789 \x32\x31\x30\x30\n"
 assure "bitsum32 123456789 \x32\x31\x30\x30\x30\x30\x30\x30\n"
 send   "bitsum32 123456789 \x32\x31\x30\x30\x30\x30\x30\x30\n"
+
+# check regsub and checksums
+assure "crc8     12:34:56:78:9 \x07\n" ;# modified output string and checksum
+send   "crc8     123456789 \xF4\n"     ;# original input string and checksum
+assure "12:34:56:78:9\n"               ;# modified input string
+
 assure "DONE\n"
                 
 finish

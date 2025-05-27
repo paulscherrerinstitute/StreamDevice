@@ -42,7 +42,8 @@ typedef enum {
     enum_format,
     double_format,
     string_format,
-    pseudo_format
+    pseudo_format,
+    needs_original_format
 } StreamFormatType;
 
 extern const char* StreamFormatTypeStr[];

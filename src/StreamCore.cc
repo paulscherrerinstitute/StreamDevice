@@ -1184,6 +1184,7 @@ matchInput()
     char command;
     const char* fieldName = NULL;
     StreamBuffer formatstring;
+    ssize_t delta = 0;
 
     consumedInput = 0;
 
@@ -1218,7 +1219,7 @@ normal_format:
                 debug("StreamCore::matchInput(%s): format = \"%%%s\"\n",
                     name(), formatstring());
 
-                if (fmt.flags & skip_flag || fmt.type == pseudo_format)
+                if (fmt.flags & skip_flag || fmt.type == pseudo_format || fmt.type == needs_original_format)
                 {
                     long ldummy;
                     double ddummy;
@@ -1240,9 +1241,20 @@ normal_format:
                                 scanString(fmt, inputLine(consumedInput), NULL, size);
                             break;
                         case pseudo_format:
-                            // pass complete input
+                            // pass complete input line for scan and/or re-write
+                            size = inputLine.length();
                             consumed = StreamFormatConverter::find(fmt.conv)->
                                 scanPseudo(fmt, inputLine, consumedInput);
+                            delta += inputLine.length() - size; // track length changes
+                            debug("after rewrite delta=%zi\n", delta);
+                            break;
+                        case needs_original_format:
+                            // pass original input with adjusted current position
+                            debug("before checksum delta=%zi\n", delta);
+                            consumedInput -= delta; // correct for length changes
+                            consumed = StreamFormatConverter::find(fmt.conv)->
+                                scanPseudo(fmt, inputBuffer, consumedInput);
+                            consumedInput += delta;
                             break;
                         default:
                             error("INTERNAL ERROR (%s): illegal format.type 0x%02x\n",

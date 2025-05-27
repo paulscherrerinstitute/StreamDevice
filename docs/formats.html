@@ -485,6 +485,12 @@ than 9.
 <p>
 This is not a normal "converter", because no user data is converted.
 Instead, a checksum is calculated from the input or output.
+<span class="new">
+Any pre-processing of input, e.g. by the <a href="#regsub">regsub</a> converter
+if ignored for the calculation of the checksum.
+</span>
+</p>
+<p>
 The <em>width</em> field is the byte number from which to start
 calculating the checksum.
 Default is 0, i.e. the first byte of the input or output of the current
@@ -711,10 +717,14 @@ However if an empty string is matched, searching advances by 1 character in orde
 avoid matching the same empty string again.</span>
 </p>
 <p>
-In input this converter pre-processes data received from the device before
+In input, this converter pre-processes data received from the device before
 following converters read it.
 Converters preceding this one will read unmodified input.
 Thus place this converter before those whose input should be pre-processed.
+<span class="new">
+However, <a href="#chksum">checksum</a> converters will always use the unmodified
+input as sent by the device because the modified input would not match the checksum.
+</span>
 </p>
 <p>
 In output it post-processes data already formatted by preceding converters
