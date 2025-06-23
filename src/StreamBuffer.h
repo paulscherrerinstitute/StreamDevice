@@ -236,7 +236,7 @@ public:
 };
 
 // printf size prefix for size_t and ssize_t
-#if defined (__GNUC__) && __GNUC__ >= 3
+#if defined (__GNUC__) && __GNUC__ >= 3 && !defined(_MINGW)
 #define PRINTF_SIZE_T_PREFIX "z"
 #elif defined (_WIN32)
 #define PRINTF_SIZE_T_PREFIX "I"

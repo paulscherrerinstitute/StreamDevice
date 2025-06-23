@@ -78,6 +78,8 @@ extern "C" {
 #include "StreamFormatConverter.h"
 #include "StreamError.h"
 
+#define Z PRINTF_SIZE_T_PREFIX
+
 typedef uint32_t (*checksumFunc)(const uint8_t* data, size_t len,  uint32_t init);
 
 static uint32_t sum(const uint8_t* data, size_t len, uint32_t sum)
@@ -859,7 +861,7 @@ scanPseudo(const StreamFormat& format, StreamBuffer& input, size_t& cursor)
 
     if ((ssize_t)( input.length() - cursor ) < expectedLength)
     {
-        debug("ChecksumConverter %s: Input '%s' too short (%zu-%zu<%zu) for checksum\n",
+        debug("ChecksumConverter %s: Input '%s' too short (%" Z "u-%" Z "u<%" Z "u) for checksum\n",
             checksumMap[fnum].name, input.expand(cursor)(), input.length(), cursor, expectedLength);
         return -1;
     }

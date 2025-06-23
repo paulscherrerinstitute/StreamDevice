@@ -58,7 +58,7 @@ int streamMsgTimeStamped = 1;
 static bool win_console_init() {
     HANDLE hCons[] = { GetStdHandle(STD_ERROR_HANDLE),
                        GetStdHandle(STD_OUTPUT_HANDLE) };
-    for(int i=0; i < sizeof(hCons) / sizeof(HANDLE); ++i)
+    for(size_t i=0; i < sizeof(hCons) / sizeof(HANDLE); ++i)
     {
         DWORD dwMode = 0;
         if (hCons[i] == NULL ||

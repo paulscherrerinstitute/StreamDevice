@@ -1246,11 +1246,11 @@ normal_format:
                             consumed = StreamFormatConverter::find(fmt.conv)->
                                 scanPseudo(fmt, inputLine, consumedInput);
                             delta += inputLine.length() - size; // track length changes
-                            debug("after rewrite delta=%zi\n", delta);
+                            debug("after rewrite delta=%" Z "i\n", delta);
                             break;
                         case needs_original_format:
                             // pass original input with adjusted current position
-                            debug("before checksum delta=%zi\n", delta);
+                            debug("before checksum delta=%" Z "i\n", delta);
                             consumedInput -= delta; // correct for length changes
                             consumed = StreamFormatConverter::find(fmt.conv)->
                                 scanPseudo(fmt, inputBuffer, consumedInput);
