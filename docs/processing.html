@@ -15,10 +15,9 @@
 <a name="proc"></a>
 <h2>1. Normal Processing</h2>
 <p>
-<em>StreamDevice</em> is an asynchronous device support
-(see <a href="http://www.aps.anl.gov/epics/base/R3-14/12-docs/AppDevGuide.pdf"
-target="ex">IOC Application Developer's Guide</a> chapter 12:
-Device Support).
+<em>StreamDevice</em> is an
+<a href="https://docs.epics-controls.org/en/latest/appdevguide/deviceSupport.html#synchronous-vs-asynchronous-device-support"
+target="ex">asynchronous device support</a>.
 Whenever the record is processed, the <a href="protocol.html">protocol</a>
 is scheduled to start and the record is left active (<code>PACT=1</code>).
 The protocol itself runs in another thread.

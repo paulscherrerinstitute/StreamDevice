@@ -200,10 +200,10 @@ like this:
 using a macro for the prefix part which is then used for <code>\$1</code>.
 </p>
 <p>
-If the other record is passive and the field has the PP
+If the other record is passive and the field has the <code>PP</code>
 attribute (see
-<a href="http://www.aps.anl.gov/asd/controls/epics/EpicsDocumentation/AppDevManuals/RecordRef/Recordref-1.html"
-target="ex">Record Reference Manual</a>), the record will be processed.
+<a href="https://docs.epics-controls.org/en/latest/appdevguide/databaseDefinition.html#definitions-1"
+target="ex">EPICS Application Developer's Guide</a>), the record will be processed.
 It is your responsibility that the data type of the record field is
 compatible to the the data type of the converter.
 STRING formats are compatible with arrays of CHAR or UCHAR.
@@ -570,12 +570,12 @@ In input, the next byte or bytes must match the checksum.
   (poly=0x8005, init=0xffff, xorout=0x0000, reflected)</dd>
  <dt><code>%&lt;ccitt16&gt;</code></dt>
   <dd>Two bytes. The usual (but <a target="ex"
-   href="http://srecord.sourceforge.net/crc16-ccitt.html">wrong?</a>)
+   href="https://srecord.sourceforge.net/crc16-ccitt.html">wrong?</a>)
    implementation of the CCITT standard 16 bit crc checksum
    (poly=0x1021, init=0xFFFF, xorout=0x0000).</dd>
  <dt><code>%&lt;ccitt16a&gt;</code></dt>
   <dd>Two bytes. The unusual (but <a target="ex"
-   href="http://srecord.sourceforge.net/crc16-ccitt.html">correct?</a>)
+   href="https://srecord.sourceforge.net/crc16-ccitt.html">correct?</a>)
    implementation of the CCITT standard 16 bit crc checksum with augment.
    (poly=0x1021, init=0x1D0F, xorout=0x0000).</dd>
  <dt><code>%&lt;ccitt16x&gt;</code> or <code>%&lt;crc16c&gt;</code> or <code>%&lt;xmodem&gt;</code></dt>
@@ -592,7 +592,7 @@ In input, the next byte or bytes must match the checksum.
    (poly=0x04C11DB7, init=0xFFFFFFFF, xorout=0x00000000, reflected).</dd>
  <dt><code>%&lt;adler32&gt;</code></dt>
   <dd>Four bytes. The Adler32 checksum according to <a target="ex"
-   href="http://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.</dd>
+   href="https://www.ietf.org/rfc/rfc1950.txt">RFC 1950</a>.</dd>
  <dt><code>%&lt;hexsum8&gt;</code></dt>
   <dd>One byte. The sum of all hex digits. (Other characters are ignored.)</dd>
  <dt><code>%&lt;lrc&gt;</code></dt>
@@ -618,7 +618,7 @@ In input, the next byte or bytes must match the checksum.
 <h2>13. Regular Expresion STRING Converter (<code>%/<em>regex</em>/</code>)</h2>
 <p>
 This input-only format matches <a target="ex"
-href="http://www.pcre.org/" >Perl compatible regular expressions (PCRE)</a>.
+href="https://www.pcre.org/" >Perl compatible regular expressions (PCRE)</a>.
 It is only available if a PCRE library is installed.
 </p>
 <div class="box">
@@ -626,7 +626,7 @@ It is only available if a PCRE library is installed.
 If PCRE is not available for your host or cross architecture, download
 the sourcecode from <a target="ex" href="https://www.pcre.org/">www.pcre.org</a>
 and try my EPICS compatible <a target="ex"
-href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>
+href="https://epics.web.psi.ch/software/streamdevice/pcre/Makefile">Makefile</a>
 to compile it like a normal EPICS support module.
 The Makefile is known to work with EPICS 3.14.8 and PCRE 7.2.
 In your RELEASE file define the variable <code>PCRE</code> so that

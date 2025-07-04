@@ -5,7 +5,7 @@ a:hover   { color: #FF0000; }
 body {
     margin-right: 1em;
     margin-left: 15em;
-    margin-top: 75px;
+    margin-top: 5em;
     padding-top: 1px;
     font-family: Helvetica, Arial, sans-serif;
     font-size: 100%;
@@ -61,7 +61,7 @@ h1 {
     border-width: 0;
     border-bottom: 3px solid #1b4486;
     white-space: nowrap;
-    background-image: url(PSI.png);
+    background-image: url(PSI.svg);
     background-repeat: no-repeat;
     background-position: 10px 5px;
     text-shadow: .1em .1em .1em lightgray;
@@ -136,7 +136,7 @@ small {
     position: fixed;
     left: 0;
     top: 0;
-    padding-top: 70px;
+    padding-top: 5em;
     width: 14em;
     height: 100%;
     border-style: solid;

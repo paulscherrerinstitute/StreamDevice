@@ -16,8 +16,8 @@
 <h2>1. Prerequisites</h2>
 <p>
 <em>StreamDevice</em> works with
-<a href="https://epics.anl.gov/base/index.php">EPICS base</a>
-versions from R3.14.6 on, tested up to 7.0.3.
+<a href="https://epics-controls.org/">EPICS base</a>
+versions from R3.14.6 on, tested up to 7.0.9.
 <p>
 Download and build the EPICS version of your choice first before continuing.
 </p>
@@ -61,7 +61,7 @@ Edit the <kbd>configure/RELEASE</kbd> file to specify the install location
 of EPICS base and of additional software modules or add a
 <kbd>configure/RELEASE.local</kbd> file to overwrite, for example:
 <pre>
-EPICS_BASE=/home/epics/base-3.16.1
+EPICS_BASE=/home/epics/base-7.0.9
 </pre>
 
 <h4>Support for <em>asynDriver</em></h4>
@@ -69,31 +69,30 @@ EPICS_BASE=/home/epics/base-3.16.1
 You most probably want to have <em>asynDriver</em> support included, because
 that is the standard way for <em>StreamDevice</em> to talk to hardware.
 First get and install
-<a href="https://www.aps.anl.gov/epics/modules/soft/asyn/"
-><em>asynDriver</em></a> version 4-3 or higher before you build
-<em>StreamDevice</em>.
-I have tested <em>StreamDevice</em> with <em>asynDriver</em> versions up to 4-30.
+<a href="https://github.com/epics-modules/asyn"><em>asynDriver</em></a>
+version 4-3 or higher before you build <em>StreamDevice</em>.
+I have tested <em>StreamDevice</em> with <em>asynDriver</em> versions up to 4-45.
 Make sure that the <em>asyn</em> library can be found by adding the path to the
 <em>&lt;top&gt;</em> directory of your <em>asyn</em> installation to the
 <kbd>configure/RELEASE</kbd> file:
 <pre>
-ASYN=/home/epics/asyn4-30
+ASYN=/home/epics/asyn4-45
 </pre>
 
 <h4 id="scalcout">Support for <em>sCalcout</em> record</h4>
 <p>
 The <a 
-href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/epics-modules/calc/R3-6-1/documentation/sCalcoutRecord.html"
+href="https://epics-modules.github.io/calc/sCalcoutRecord.html"
 ><em>sCalcout</em></a> record is part of <a
-href="https://www.aps.anl.gov/BCDA/synApps"
+href="https://epics-synapps.github.io/support/synApps.html"
 ><em>synApps</em></a>.
 If <em>streamDevice</em> should be built with support for this record,
 you have to install at least the <a
-href="https://epics.anl.gov/bcda/synApps/calc/calc.html"
+href="https://github.com/epics-modules/calc"
 ><em>calc</em> module</a> from <em>SynApps</em> first.
 Add references to the <kbd>RELEASE</kbd> file as shown here:
 <pre>
-CALC=/home/epics/synApps/calc-R3-6-1
+CALC=/home/epics/synApps/calc-R3-7-5
 </pre>
 <p>
 Up to <em>calc</em> release R2-6 (<em>synApps</em> release R5_1),
@@ -155,9 +154,9 @@ Extract the <em>PCRE</em> package in the <kbd>&lt;top&gt;</kbd> directory of
 <code>makeBaseApp.pl</code>.
 </li>
 <li>
-Download this <a href="http://epics.web.psi.ch/software/streamdevice/pcre/Makefile"
+Download this <a href="https://epics.web.psi.ch/software/streamdevice/pcre/Makefile"
 >Makefile</a> and this
-<a href="http://epics.web.psi.ch/software/streamdevice/pcre/fixforvxworks.pl"
+<a href="https://epics.web.psi.ch/software/streamdevice/pcre/fixforvxworks.pl"
 >fixforvxworks.pl</a> script and save them to the extracted pcre directory.
 </li>
 <li>
