@@ -1,5 +1,40 @@
 # Changelog
 
+Checksums after regsub use original input now, because in the modified
+string the checksum would no longer match.
+New checksum "hv_mps" for Spellman High Voltage Supplies MPS.
+Fix for newer asyn version (> R4-45) which makes vxi11 support optional.
+Documentation fixes.
+
+## Changes in release 2.8.25
+
+Per-record debugging. Use `.TPRO` field to enable.
+Supported debug levels are 1 or 2.
+
+Fix bug in StreamBuffer::replace() that could lead to unterminated strings.
+
+## Changes in release 2.8.24
+
+Fix "leybold" checksum.
+Documentation updates.
+
+## Changes in release 2.8.23
+
+Update for newer wkhtmltopdf pdf generator version.
+Documentation updates.
+Fixes for VxWorks 6 and RTEMS 5.
+Github actions added.
+
+## Changes in release 2.8.22
+
+New checksum "bitsum" counting the 1 bits.
+Fix possible buffer underflow crash in checksum.
+
+## Changes in release 2.8.21
+
+Some fixes for Windows and MinGW
+Support for TIRPC.
+
 ## Changes in release 2.8.20
 
 Fix missing initialization of `inTerminator` and `outTerminator`.
