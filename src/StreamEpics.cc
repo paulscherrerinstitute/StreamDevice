@@ -51,6 +51,7 @@
 #include "epicsString.h"
 #include "registryFunction.h"
 #include "iocsh.h"
+#include "epicsExit.h"
 #include "epicsExport.h"
 
 #if !defined(VERSION_INT) && EPICS_MODIFICATION < 9
@@ -377,6 +378,12 @@ static const char* epicsThreadGetNameSelfWrapper(void)
 #define epicsThreadGetNameSelf epicsThreadGetNameSelfWrapper
 #endif
 
+static int terminating = 0;
+static void streamExitHook(void*)
+{
+    terminating = 1;
+}
+
 long Stream::
 drvInit()
 {
@@ -408,6 +415,7 @@ drvInit()
     StreamPrintTimestampFunction = streamEpicsPrintTimestamp;
     StreamGetThreadNameFunction = epicsThreadGetNameSelf;
     initHookRegister(initHook);
+    epicsAtExit(streamExitHook, NULL);
 
     return OK;
 }
@@ -1027,7 +1035,7 @@ protocolFinishHook(ProtocolResult result)
         flags |= AcceptInput;
     }
 
-    if (record->pact || record->scan == SCAN_IO_EVENT)
+    if ((record->pact || record->scan == SCAN_IO_EVENT) && !terminating)
     {
         // process record in callback thread to break possible recursion
         callbackSetPriority(priority(), &processCallback);
