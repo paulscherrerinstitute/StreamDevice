@@ -1,5 +1,6 @@
 # Changelog
 
+Drop support for EPICS base R3.13, 15 years after its death.
 Checksums after regsub use original input now, because in the modified
 string the checksum would no longer match.
 New checksum "hv_mps" for Spellman High Voltage Supplies MPS.

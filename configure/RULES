@@ -1,9 +1,6 @@
-#CONFIG
-ifneq ($(wildcard $(EPICS_BASE)/configure),)
-include $(EPICS_BASE)/configure/RULES
-else
-include $(EPICS_BASE)/config/RULES_ARCHS
-endif
+# RULES
+
+include $(CONFIG)/RULES
 
 # Library should be rebuilt because LIBOBJS may have changed.
 $(LIBNAME): ../Makefile

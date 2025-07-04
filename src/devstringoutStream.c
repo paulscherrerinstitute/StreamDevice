@@ -33,12 +33,10 @@ static long readData(dbCommon *record, format_t *format)
     if (record->pact) return OK;
     /* In @init handler, no processing, enforce monitor updates. */
     monitor_mask = recGblResetAlarms(record);
-#ifndef EPICS_3_13
     if (so->mpst == stringoutPOST_Always)
         monitor_mask |= DBE_VALUE;
     if (so->apst == stringoutPOST_Always)
         monitor_mask |= DBE_LOG;
-#endif
     if (monitor_mask != (DBE_VALUE|DBE_LOG) &&
         strncmp(so->oval, so->val, sizeof(so->val)))
     {

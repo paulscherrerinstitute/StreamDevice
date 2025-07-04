@@ -50,14 +50,6 @@
 #endif
 
 #include "epicsVersion.h"
-#ifdef BASE_VERSION
-#define EPICS_3_13
-/* EPICS 3.13 include files are not C++ ready. */
-#ifdef __cplusplus
-extern "C" {
-#endif
-#endif
-
 #include "dbCommon.h"
 #include "dbScan.h"
 #include "devSup.h"
@@ -67,14 +59,7 @@ extern "C" {
 #include "recGbl.h"
 #include "dbEvent.h"
 #include "epicsMath.h"
-
-#ifdef EPICS_3_13
-#ifdef __cplusplus
-}
-#endif
-#else
 #include "epicsStdioRedirect.h"
-#endif
 
 #ifdef devStream_epicsExportSharedSymbols
 #   undef devStream_epicsExportSharedSymbols
@@ -124,10 +109,6 @@ ssize_t streamScanfN(dbCommon *record, format_t *format,
 #define streamWrite streamReadWrite
 #define streamReport NULL
 
-#ifdef EPICS_3_13
-#define epicsExportAddress(a,b) extern int dummy
-#else
 #include "epicsExport.h"
-#endif
 
 #endif

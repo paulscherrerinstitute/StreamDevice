@@ -3,7 +3,7 @@ $(info If you are not using the PSI build environment, GNUmakefile can be remove
 include Makefile
 else
 include /ioc/tools/driver.makefile
-EXCLUDE_VERSIONS = 3.13.2
+EXCLUDE_VERSIONS = 3.13
 PROJECT=stream
 BUILDCLASSES += vxWorks Linux WIN32
 

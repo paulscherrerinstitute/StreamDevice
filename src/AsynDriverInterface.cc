@@ -20,19 +20,10 @@
 * along with StreamDevice. If not, see https://www.gnu.org/licenses/.
 *************************************************************************/
 
-#ifdef EPICS_3_13
-#include <assert.h>
-#include <wdLib.h>
-#include <sysLib.h>
-extern "C" {
-#include "callback.h"
-}
-#else
 #include "epicsAssert.h"
 #include "epicsTime.h"
 #include "epicsTimer.h"
 #include "iocsh.h"
-#endif
 
 #include "asynDriver.h"
 #include "asynOctet.h"
@@ -110,10 +101,7 @@ something, arrange for periodical read polls.
 
 */
 
-class AsynDriverInterface : StreamBusInterface
-#ifndef EPICS_3_13
- , epicsTimerNotify
-#endif
+class AsynDriverInterface : StreamBusInterface, epicsTimerNotify
 {
     ENUM (IoAction,
         None, Lock, Write, Read, AsyncRead, AsyncReadMore,
@@ -170,13 +158,8 @@ class AsynDriverInterface : StreamBusInterface
     const char* outputBuffer;
     size_t outputSize;
     size_t peeksize;
-#ifdef EPICS_3_13
-    WDOG_ID timer;
-    CALLBACK timeoutCallback;
-#else
     epicsTimerQueueActive* timerQueue;
     epicsTimer* timer;
-#endif
     asynStatus previousAsynStatus;
 
     AsynDriverInterface(Client* client);
@@ -196,12 +179,8 @@ class AsynDriverInterface : StreamBusInterface
     bool disconnectRequest();
     void finish();
 
-#ifdef EPICS_3_13
-    static void expire(CALLBACK *pcallback);
-#else
     // epicsTimerNotify methods
     epicsTimerNotify::expireStatus expire(const epicsTime &);
-#endif
 
     // local methods
     void timerExpired();
@@ -218,23 +197,12 @@ class AsynDriverInterface : StreamBusInterface
             (StreamBusInterface::priority());
     }
     void startTimer(double timeout) {
-#ifdef EPICS_3_13
-        callbackSetPriority(priority(), &timeoutCallback);
-        wdStart(timer, (int)((timeout+1)*sysClkRateGet())-1,
-            reinterpret_cast<FUNCPTR>(callbackRequest),
-            reinterpret_cast<int>(&timeoutCallback));
-#else
         timer->start(*this, timeout
             +epicsThreadSleepQuantum()*0.5
         );
-#endif
     }
     void cancelTimer() {
-#ifdef EPICS_3_13
-        wdCancel(timer);
-#else
         timer->cancel();
-#endif
     }
     void reportAsynStatus(asynStatus status, const char *name);
 
@@ -301,12 +269,6 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
         handleTimeout);
     assert(pasynUser);
     pasynUser->userPvt = this;
-#ifdef EPICS_3_13
-    debug ("AsynDriverInterface(%s) wdCreate()\n", client->name());
-    timer = wdCreate();
-    callbackSetCallback(expire, &timeoutCallback);
-    callbackSetUser(this, &timeoutCallback);
-#else
     debug ("AsynDriverInterface(%s) epicsTimerQueueActive::allocate(true)\n",
         client->name());
     timerQueue = &epicsTimerQueueActive::allocate(true);
@@ -314,7 +276,6 @@ AsynDriverInterface(Client* client) : StreamBusInterface(client)
     debug ("AsynDriverInterface(%s) timerQueue->createTimer()\n", client->name());
     timer = &timerQueue->createTimer();
     assert(timer);
-#endif
     debug ("AsynDriverInterface(%s) done\n", client->name());
 }
 
@@ -349,12 +310,8 @@ AsynDriverInterface::
     }
     // Now, no handler is running any more and none will start.
 
-#ifdef EPICS_3_13
-    wdDelete(timer);
-#else
     timer->destroy();
     timerQueue->release();
-#endif
     pasynManager->disconnect(pasynUser);
     pasynManager->freeAsynUser(pasynUser);
     pasynUser = NULL;
@@ -1383,22 +1340,12 @@ timerExpired()
     }
 }
 
-#ifdef EPICS_3_13
-void AsynDriverInterface::
-expire(CALLBACK *pcallback)
-{
-    AsynDriverInterface* interface =
-        static_cast<AsynDriverInterface*>(pcallback->user);
-    interface->timerExpired();
-}
-#else
 epicsTimerNotify::expireStatus AsynDriverInterface::
 expire(const epicsTime &)
 {
     timerExpired();
     return noRestart;
 }
-#endif
 
 bool AsynDriverInterface::
 connectRequest(unsigned long connecttimeout_ms)
@@ -1577,7 +1524,6 @@ extern "C" long streamReinit(const char* portname, int addr)
     return status;
 }
 
-#ifndef EPICS_3_13
 static const iocshArg streamReinitArg0 =
     { "portname", iocshArgString };
 static const iocshArg streamReinitArg1 =
@@ -1599,5 +1545,3 @@ static void AsynDriverInterfaceRegistrar ()
 extern "C" {
 epicsExportRegistrar(AsynDriverInterfaceRegistrar);
 }
-
-#endif

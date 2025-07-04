@@ -54,9 +54,7 @@ static long readData(dbCommon *record, format_t *format)
             if (ao->linr == menuConvertNO_CONVERSION) {
                 ; /*do nothing*/
             } else if ((ao->linr == menuConvertLINEAR)
-#ifndef EPICS_3_13
                     || (ao->linr == menuConvertSLOPE)
-#endif
                     ) {
                 val = val * ao->eslo + ao->eoff;
             } else {
