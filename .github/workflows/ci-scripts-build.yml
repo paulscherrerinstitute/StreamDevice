@@ -125,7 +125,7 @@ jobs:
             extra: "CMD_CFLAGS=-analysis CMD_CXXFLAGS=-analysis"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
