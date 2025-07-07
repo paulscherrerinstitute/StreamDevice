@@ -48,7 +48,7 @@ jobs:
       matrix:
         include:
           - name: Native Linux (WError)
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
@@ -56,7 +56,7 @@ jobs:
             pcre: apt
 
           - name: Cross mingw64 DLL
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
@@ -64,7 +64,7 @@ jobs:
             pcre: no
 
           - name: Cross mingw64 static
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: static
             base: "7.0"
@@ -72,7 +72,7 @@ jobs:
             pcre: no
 
           - name: RTEMS 4.10
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
@@ -81,21 +81,21 @@ jobs:
             pcre: no
  
           - name: Native Linux with clang
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: clang
             configuration: default
             base: "7.0"
             pcre: apt
 
           - name: Native Linux with 3.15
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "3.15"
             pcre: apt
 
           - name: Native Linux with 3.14
-            os: ubuntu-20.04
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "3.14"
@@ -108,17 +108,17 @@ jobs:
             base: "7.0"
             pcre: no
 
-          - name: vs2019 DLL
-            os: windows-2019
-            cmp: vs2019
+          - name: vs2022 DLL
+            os: windows-2022
+            cmp: vs2022
             configuration: debug
             base: "7.0"
             pcre: no
             extra: "CMD_CFLAGS=-analysis CMD_CXXFLAGS=-analysis"
 
-          - name: vs2019 static
-            os: windows-2019
-            cmp: vs2019
+          - name: vs2022 static
+            os: windows-2022
+            cmp: vs2022
             configuration: static-debug
             base: "7.0"
             pcre: no
@@ -128,13 +128,15 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Automatic core dumper analysis
-      uses: mdavidsaver/ci-core-dumper@master
+
     - name: "apt-get install"
       run: |
         sudo apt-get update
-        sudo apt-get -y install qemu-system-x86 g++-mingw-w64-x86-64 gdb
+        sudo apt-get -y install libreadline-dev libtirpc-dev g++-mingw-w64-x86-64 cmake gdb qemu-system-x86
       if: runner.os == 'Linux'
+
+    - name: Automatic core dumper analysis
+      uses: mdavidsaver/ci-core-dumper@master
 
     - name: Reset RELEASE
       shell: bash
