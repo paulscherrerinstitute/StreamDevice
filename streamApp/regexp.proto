@@ -32,8 +32,8 @@ interminator = "</html>" NL;  # terminators can have arbitrary length
 readTitle {
     extraInput=ignore;
     
-    connect 1000;                        # connect to server, 1 second timeout
-    out "GET http://epics.web.psi.ch/";  # HTTP request
-    in "%.1/<title>(.*)<\/title>/";      # get string in <title></title>
+    connect 10000;                       # connect to server, 10 second timeout
+    out "GET http://www.example.com/";   # HTTP request
+    in "%.1/(?im)<title>(.*)<\/title>/"; # get string in <title></title> (case insenitive match)
     disconnect;                          # servers closes, so do we.
 }
