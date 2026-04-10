@@ -69,11 +69,11 @@ endif
 streamApp_DBD += stream.dbd
 
 ifdef PCRE
-PROD_LIBS += pcre
+PROD_LIBS += pcre2-8
 else
 ifneq ($(words $(PCRE_LIB) $(PCRE_INCLUDE)),0)
-PROD_SYS_LIBS_DEFAULT += pcre
-PROD_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre
+PROD_SYS_LIBS_DEFAULT += pcre2-8
+PROD_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre2-8
 SHRLIB_DEPLIB_DIRS += $(PCRE_LIB)
 endif
 endif

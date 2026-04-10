@@ -24,9 +24,11 @@
 #include <limits.h>
 #include <ctype.h>
 
-#if PCRE == 2
+#if PCRE == 2 || __has_include("pcre2.h")
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include "pcre2.h"
+#undef PCRE
+#define PCRE 2
 #else
 #include "pcre.h"
 #endif

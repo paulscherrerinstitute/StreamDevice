@@ -54,11 +54,11 @@ ifdef PCRE_INCLUDE
 RegexpConverter_INCLUDES += -I$(PCRE_INCLUDE)
 endif
 ifdef PCRE
-LIB_LIBS += pcre
+LIB_LIBS += pcre2-8
 else
 ifneq ($(words $(PCRE_LIB) $(PCRE_INCLUDE)),0)
-LIB_SYS_LIBS_DEFAULT += pcre
-LIB_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre
+LIB_SYS_LIBS_DEFAULT += pcre2-8
+LIB_SYS_LIBS_WIN32 += $(PCRE_LIB)\\pcre2-8
 SHRLIB_DEPLIB_DIRS += $(PCRE_LIB)
 ifdef ENABLE_STATIC
 CPPFLAGS += -DPCRE_STATIC
@@ -105,7 +105,7 @@ $(COMMON_DIR)/stream-base.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(filter-out scalcout, $(RECORDTYPES)) > $@
 
 stream-base.dbd$(DEP): ../CONFIG_STREAM
-        echo stream-base.dbd: $< > $@
+	echo $(COMMON_DIR)/stream-base.dbd: $< > $@
 
 STREAM_DBD_FILES = stream-base.dbd
 
@@ -115,7 +115,7 @@ $(COMMON_DIR)/stream-scalcout.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl --rec-only scalcout > $@
 
 stream-scalcout.dbd$(DEP): ../CONFIG_STREAM
-        echo stream-scalcout.dbd: $< > $@
+	echo $(COMMON_DIR)/stream-scalcout.dbd: $< > $@
 
 STREAM_DBD_FILES += stream-scalcout.dbd
 endif
@@ -125,4 +125,4 @@ $(COMMON_DIR)/stream.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(RECORDTYPES) > $@
 
 stream.dbd$(DEP): ../CONFIG_STREAM
-        echo stream.dbd: $< > $@
+	echo $(COMMON_DIR)/stream.dbd: $< > $@
