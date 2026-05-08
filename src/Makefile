@@ -105,7 +105,7 @@ $(COMMON_DIR)/stream-base.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(filter-out scalcout, $(RECORDTYPES)) > $@
 
 stream-base.dbd$(DEP): ../CONFIG_STREAM
-        echo stream-base.dbd: $< > $@
+	echo stream-base.dbd: $< > $@
 
 STREAM_DBD_FILES = stream-base.dbd
 
@@ -115,7 +115,7 @@ $(COMMON_DIR)/stream-scalcout.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl --rec-only scalcout > $@
 
 stream-scalcout.dbd$(DEP): ../CONFIG_STREAM
-        echo stream-scalcout.dbd: $< > $@
+	echo stream-scalcout.dbd: $< > $@
 
 STREAM_DBD_FILES += stream-scalcout.dbd
 endif
@@ -125,4 +125,4 @@ $(COMMON_DIR)/stream.dbd: ../CONFIG_STREAM
 	$(PERL) ../makedbd.pl $(if $(ASYN),--with-asyn) $(if $(BASE_3_14),,-3.13) $(RECORDTYPES) > $@
 
 stream.dbd$(DEP): ../CONFIG_STREAM
-        echo stream.dbd: $< > $@
+	echo stream.dbd: $< > $@
